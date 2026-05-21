@@ -6,6 +6,7 @@ import * as d3 from 'd3';
 
 // Globe.gl import (safe due to dynamic import on page level)
 import Globe from 'react-globe.gl';
+import HormuzSentinelView from './HormuzSentinelView';
 
 // Asset coordinate mappings
 const ASSETS_COORDS: Record<string, { lat: number, lng: number, label: string, name: string }> = {
@@ -153,7 +154,7 @@ function GlitchCounter({ value, className }: { value: string; className?: string
 
 export default function Dashboard() {
   // Navigation & View layout states
-  const [activeView, setActiveView] = useState<'split' | '3d' | '2d'>('split');
+  const [activeView, setActiveView] = useState<'split' | '3d' | '2d' | 'hormuz'>('split');
   const [selectedTarget, setSelectedTarget] = useState<string>('BTC');
   const [isBottomMonitorExpanded, setIsBottomMonitorExpanded] = useState<boolean>(false);
   const [fastMode, setFastMode] = useState<boolean>(false);
@@ -1391,6 +1392,12 @@ ${eqText}
           >
             2D地図
           </button>
+          <button 
+            className={`${styles.btn} ${activeView === 'hormuz' ? styles.activeBtn : ''}`}
+            onClick={() => setActiveView('hormuz')}
+          >
+            ⚓ ホルムズ監視
+          </button>
         </div>
       </header>
 
@@ -1400,9 +1407,12 @@ ${eqText}
         </div>
       ) : (
         <main className={styles.content}>
-          
-          {/* Left Panel: Real-Time Grid */}
-          <div className={`${styles.floatingLeftPanel} glass-panel`}>
+          {activeView === 'hormuz' ? (
+            <HormuzSentinelView />
+          ) : (
+            <>
+              {/* Left Panel: Real-Time Grid */}
+              <div className={`${styles.floatingLeftPanel} glass-panel`}>
             <h3 className={styles.sectionTitle}>価格予測マトリクス</h3>
             <table className={styles.assetTable}>
               <thead>
@@ -2286,6 +2296,8 @@ ${eqText}
               )}
             </div>
           </div>
+            </>
+          )}
         </main>
       )}
       
