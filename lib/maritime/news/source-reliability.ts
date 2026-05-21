@@ -1,0 +1,34 @@
+import { GeopoliticalNews } from '../types';
+
+export function evaluateConfidence(
+  sourceType: GeopoliticalNews['sourceType'],
+  verificationStatus: GeopoliticalNews['verificationStatus']
+): 'LOW' | 'MEDIUM' | 'HIGH' {
+  // If the news is unconfirmed or from a social media source, it should NEVER have HIGH confidence
+  if (verificationStatus === 'UNCONFIRMED') {
+    return 'LOW';
+  }
+
+  if (sourceType === 'SOCIAL') {
+    return 'MEDIUM'; // Or LOW if unconfirmed
+  }
+
+  if (sourceType === 'MOCK' || verificationStatus === 'SIMULATED') {
+    // For demo/simulated scenarios, confidence is fixed at MEDIUM or HIGH for simulation purposes
+    return 'HIGH';
+  }
+
+  // Official verified statements get HIGH
+  if (sourceType === 'OFFICIAL' && verificationStatus === 'OFFICIAL') {
+    return 'HIGH';
+  }
+
+  // Reported OSINT or news agency reports get MEDIUM or HIGH depending on status
+  if (sourceType === 'OSINT') {
+    if (verificationStatus === 'OFFICIAL') return 'HIGH';
+    if (verificationStatus === 'REPORTED') return 'MEDIUM';
+    return 'LOW';
+  }
+
+  return 'LOW';
+}

@@ -1,0 +1,468 @@
+.container {
+  display: flex;
+  width: 100%;
+  height: calc(100vh - 60px);
+  margin-top: 60px; /* Accounts for the absolute header */
+  position: relative;
+  background-color: #030712;
+  font-family: var(--font-outfit), var(--font-inter), sans-serif;
+  color: #f3f4f6;
+  overflow: hidden;
+}
+
+/* Tactical Grid Background */
+.gridBg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: 
+    linear-gradient(rgba(6, 182, 212, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(6, 182, 212, 0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Radar Sweep Effect */
+.radarSweep {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: conic-gradient(from 0deg at 50% 50%, rgba(6, 182, 212, 0.08) 0deg, transparent 90deg, transparent 360deg);
+  pointer-events: none;
+  z-index: 1;
+  animation: sweep 12s linear infinite;
+}
+
+@keyframes sweep {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Map area */
+.mapWrapper {
+  flex: 1;
+  position: relative;
+  height: 100%;
+  z-index: 2;
+  cursor: grab;
+}
+
+.mapWrapper:active {
+  cursor: grabbing;
+}
+
+/* Map controls (+/- resets) */
+.mapControls {
+  position: absolute;
+  bottom: 140px;
+  left: 360px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 10;
+}
+
+.mapControlBtn {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid rgba(6, 182, 212, 0.2);
+  color: #06b6d4;
+  font-size: 1.2rem;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  backdrop-filter: blur(8px);
+}
+
+.mapControlBtn:hover {
+  background: rgba(6, 182, 212, 0.2);
+  color: #fff;
+  border-color: rgba(6, 182, 212, 0.4);
+}
+
+/* Panels */
+.glassPanel {
+  background: rgba(10, 15, 30, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(6, 182, 212, 0.15);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  z-index: 5;
+  transition: border-color 0.3s;
+}
+
+.glassPanel:hover {
+  border-color: rgba(6, 182, 212, 0.3);
+}
+
+.leftPanel {
+  position: absolute;
+  top: 24px;
+  left: 24px;
+  bottom: 130px;
+  width: 320px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.rightPanel {
+  position: absolute;
+  top: 24px;
+  right: 24px;
+  bottom: 130px;
+  width: 380px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.bottomPanel {
+  position: absolute;
+  left: 24px;
+  right: 24px;
+  bottom: 24px;
+  height: 90px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 24px;
+}
+
+/* Tension score widgets */
+.tensionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.tensionTitle {
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: #9ca3af;
+  text-transform: uppercase;
+}
+
+.tensionScoreArea {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.tensionScoreVal {
+  font-size: 2.2rem;
+  font-weight: 800;
+  font-family: monospace;
+}
+
+.tensionLevelBadge {
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 4px;
+  letter-spacing: 0.5px;
+}
+
+/* Tension Levels Colors */
+.levelLOW { color: #10b981; border: 1px solid rgba(16, 185, 129, 0.2); background: rgba(16, 185, 129, 0.05); }
+.levelGUARDED { color: #06b6d4; border: 1px solid rgba(6, 182, 212, 0.2); background: rgba(6, 182, 212, 0.05); }
+.levelELEVATED { color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.2); background: rgba(245, 158, 11, 0.05); }
+.levelHIGH { color: #f97316; border: 1px solid rgba(249, 115, 22, 0.2); background: rgba(249, 115, 22, 0.05); }
+.levelCRITICAL { color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2); background: rgba(239, 68, 68, 0.05); }
+
+/* Tension Breakdown list */
+.breakdownList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.breakdownItem {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.breakdownLabelRow {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: #9ca3af;
+}
+
+.progressBarBg {
+  height: 6px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.progressBarFill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.8s ease-in-out;
+}
+
+/* Weather UI */
+.weatherGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.weatherCard {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.weatherLabel {
+  font-size: 0.7rem;
+  color: #9ca3af;
+}
+
+.weatherValue {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #fff;
+}
+
+/* News List */
+.newsList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 280px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.newsCard {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  padding: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.newsCard:hover {
+  background: rgba(6, 182, 212, 0.06);
+  border-color: rgba(6, 182, 212, 0.25);
+  transform: translateY(-1px);
+}
+
+.newsCardActive {
+  background: rgba(6, 182, 212, 0.1) !important;
+  border-color: rgba(6, 182, 212, 0.4) !important;
+}
+
+.newsTitle {
+  font-size: 0.8rem;
+  font-weight: 600;
+  line-height: 1.3;
+  margin-bottom: 8px;
+  color: #fff;
+}
+
+.newsMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.newsTag {
+  font-size: 0.62rem;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 3px;
+}
+
+.newsSource {
+  font-size: 0.65rem;
+  color: #9ca3af;
+  margin-left: auto;
+}
+
+/* Actor Matrix */
+.actorTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.75rem;
+}
+
+.actorTable th {
+  text-align: left;
+  padding: 6px 8px;
+  color: #9ca3af;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  font-weight: 600;
+}
+
+.actorTable td {
+  padding: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.actorName {
+  font-weight: 700;
+  color: #e5e7eb;
+}
+
+/* Vessel detail details */
+.detailSectionTitle {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #06b6d4;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  border-bottom: 1px solid rgba(6, 182, 212, 0.2);
+  padding-bottom: 4px;
+  margin-bottom: 10px;
+}
+
+.vesselDetailGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  font-size: 0.75rem;
+  margin-bottom: 16px;
+}
+
+.vesselDetailItem {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.vesselDetailLabel {
+  color: #9ca3af;
+}
+
+.vesselDetailVal {
+  font-weight: 600;
+  color: #fff;
+}
+
+.vesselEstimatedCard {
+  background: rgba(245, 158, 11, 0.04);
+  border: 1px solid rgba(245, 158, 11, 0.15);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 0.75rem;
+  margin-bottom: 12px;
+}
+
+.vesselEstimatedTitle {
+  font-weight: 700;
+  color: #f59e0b;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+  font-size: 0.78rem;
+}
+
+/* Timeline */
+.timelineContainer {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  width: 100%;
+  padding-bottom: 4px;
+}
+
+.timelineEvent {
+  min-width: 250px;
+  max-width: 250px;
+  background: rgba(255, 255, 255, 0.02);
+  border-left: 2px solid #4b5563;
+  padding: 6px 12px;
+  font-size: 0.7rem;
+}
+
+.timelineTime {
+  color: #9ca3af;
+  font-family: monospace;
+  margin-bottom: 4px;
+}
+
+.timelineDesc {
+  color: #fff;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Anomaly blink ring */
+@keyframes ringBlink {
+  0% {
+    stroke-width: 1px;
+    opacity: 1;
+    r: 6px;
+  }
+  100% {
+    stroke-width: 2px;
+    opacity: 0;
+    r: 18px;
+  }
+}
+
+.pulseRing {
+  animation: ringBlink 1.8s ease-out infinite;
+}
+
+/* Watermark & Disclaimers */
+.watermark {
+  position: absolute;
+  top: 15px;
+  left: 360px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: rgba(6, 182, 212, 0.4);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  pointer-events: none;
+  z-index: 3;
+}
+
+.watermarkLabel {
+  background: rgba(6, 182, 212, 0.1);
+  border: 1px solid rgba(6, 182, 212, 0.3);
+  padding: 3px 8px;
+  border-radius: 4px;
+}
+
+.bottomDisclaimerText {
+  font-size: 0.65rem;
+  color: rgba(255, 255, 255, 0.35);
+  text-align: right;
+  line-height: 1.4;
+}
