@@ -32,6 +32,12 @@ try {
       correct_predictions INTEGER DEFAULT 0,
       last_updated INTEGER
     );
+
+    CREATE TABLE IF NOT EXISTS daily_summaries (
+      date TEXT PRIMARY KEY,
+      summary_data TEXT NOT NULL,
+      created_at INTEGER NOT NULL
+    );
   `);
 
   // 初期シードデータ (ai_bias_feedback に初期値を入れておく)

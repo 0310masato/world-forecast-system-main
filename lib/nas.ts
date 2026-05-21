@@ -76,3 +76,28 @@ export async function saveLogToNAS(logData: NASLogData): Promise<boolean> {
     return false;
   }
 }
+
+/**
+ * 朝のシグナル集約サマリーをNASに保存する
+ */
+export async function saveDailySummaryToNAS(dateStr: string, summaryData: any): Promise<boolean> {
+  try {
+    const dailyDir = path.join(NAS_BASE_PATH, 'daily_summaries');
+    if (!fs.existsSync(dailyDir)) {
+      try {
+        fs.mkdirSync(dailyDir, { recursive: true });
+      } catch (dirError: any) {
+        console.error(`[NAS] Failed to create daily summaries directory at ${dailyDir}:`, dirError.message);
+        return false;
+      }
+    }
+    const jsonPath = path.join(dailyDir, `daily_summary_${dateStr}.json`);
+    fs.writeFileSync(jsonPath, JSON.stringify(summaryData, null, 2), 'utf8');
+    console.log(`[NAS] Successfully saved daily summary for ${dateStr} to NAS (${jsonPath})`);
+    return true;
+  } catch (error: any) {
+    console.error(`[NAS] Error writing daily summary to A: drive (NAS offline or sleep):`, error.message);
+    return false;
+  }
+}
+

@@ -10,17 +10,23 @@
 
 /* Header styling */
 .header {
-  height: 60px;
-  min-height: 60px;
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  right: 16px;
+  height: 56px;
+  min-height: 56px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0 24px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-  background: rgba(5, 5, 12, 0.85);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  padding: 0 20px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  background: rgba(5, 5, 12, 0.65);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   z-index: 100;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
 }
 
 .titleArea h1 {
@@ -82,7 +88,7 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 60px);
+  height: 100vh;
   position: relative;
   overflow: hidden;
 }
@@ -143,22 +149,27 @@
 /* Floating overlay panels */
 .floatingPanel {
   position: absolute;
-  top: 20px;
-  right: 20px;
+  top: 88px;
+  right: 16px;
   width: 320px;
-  max-height: calc(100% - 40px);
+  max-height: calc(100vh - 110px);
   overflow-y: auto;
   z-index: 10;
   padding: 18px;
   pointer-events: auto;
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.floatingPanelExpanded {
+  width: 640px !important;
 }
 
 .floatingLeftPanel {
   position: absolute;
-  top: 20px;
-  left: 20px;
+  top: 88px;
+  left: 16px;
   width: 320px;
-  max-height: calc(100% - 40px);
+  max-height: calc(100vh - 110px);
   overflow-y: auto;
   z-index: 10;
   padding: 18px;
@@ -190,3 +201,476 @@
   margin: 20px;
   width: calc(100% - 40px);
 }
+
+/* Tab Switching in console */
+.tabHeader {
+  display: flex;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  margin-bottom: 12px;
+  gap: 12px;
+}
+
+.tabBtn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  padding: 6px 4px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s ease;
+  font-family: inherit;
+  letter-spacing: 0.5px;
+}
+
+.tabBtn:hover {
+  color: #fff;
+}
+
+.activeTabBtn {
+  color: var(--secondary) !important;
+  border-bottom-color: var(--secondary) !important;
+}
+
+/* News List & Cards */
+.newsTimeline {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
+}
+
+.newsTimeline::-webkit-scrollbar {
+  width: 4px;
+}
+
+.newsTimeline::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+}
+
+.newsCard {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.newsCard:hover {
+  background: rgba(255, 255, 255, 0.06) !important;
+  border-color: rgba(6, 182, 212, 0.3) !important;
+  box-shadow: 0 4px 12px rgba(6, 182, 212, 0.05);
+  transform: translateY(-1px);
+}
+
+.newsMeta {
+  display: flex;
+  justify-content: space-between;
+}
+
+.newsSource {
+  color: var(--secondary);
+}
+
+.newsTitle {
+  font-weight: 500;
+}
+
+.resizerHandleWidth {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 8px; /* Leave space for bottom corner resizer */
+  width: 6px;
+  cursor: col-resize;
+  z-index: 100;
+  transition: background-color 0.2s;
+  background-color: transparent;
+}
+
+.resizerHandleWidth:hover,
+.resizerHandleWidth:active {
+  background-color: rgba(6, 182, 212, 0.3);
+  box-shadow: -2px 0 8px rgba(6, 182, 212, 0.6);
+}
+
+.resizerHandleHeight {
+  position: absolute;
+  left: 8px; /* Leave space for bottom corner resizer */
+  right: 0;
+  bottom: 0;
+  height: 6px;
+  cursor: row-resize;
+  z-index: 100;
+  transition: background-color 0.2s;
+  background-color: transparent;
+}
+
+.resizerHandleHeight:hover,
+.resizerHandleHeight:active {
+  background-color: rgba(6, 182, 212, 0.3);
+  box-shadow: 0 2px 8px rgba(6, 182, 212, 0.6);
+}
+
+.resizerHandleCorner {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 10px;
+  height: 10px;
+  cursor: nesw-resize;
+  z-index: 101;
+  transition: background-color 0.2s;
+  background-color: transparent;
+}
+
+.resizerHandleCorner:hover,
+.resizerHandleCorner:active {
+  background-color: rgba(6, 182, 212, 0.6);
+  box-shadow: -2px 2px 10px rgba(6, 182, 212, 0.8);
+  border-radius: 2px;
+}
+
+.minimizedStatusWidget {
+  position: absolute;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 8px 18px;
+  border-radius: 20px;
+  background: rgba(5, 5, 12, 0.75);
+  border: 1.5px solid rgba(99, 102, 241, 0.25);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4), 0 0 10px rgba(99, 102, 241, 0.1);
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 90;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+  pointer-events: auto;
+}
+
+.minimizedStatusWidget:hover {
+  background: rgba(5, 5, 12, 0.85);
+  border-color: rgba(99, 102, 241, 0.5);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.5), 0 0 15px rgba(99, 102, 241, 0.25);
+  transform: translateX(-50%) translateY(-2px);
+}
+
+/* --- Project Neon Sentinel UI Additions --- */
+
+/* HUD overlays */
+.hudScanlines {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    rgba(18, 16, 16, 0) 50%, 
+    rgba(0, 0, 0, 0.15) 50%
+  ), linear-gradient(
+    90deg,
+    rgba(255, 0, 0, 0.03),
+    rgba(0, 255, 0, 0.01),
+    rgba(0, 0, 255, 0.03)
+  );
+  background-size: 100% 3px, 3px 100%;
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0.4;
+}
+
+.hudGridPoints {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 24px 24px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.hudCorner {
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  border: 2px solid rgba(6, 182, 212, 0.5);
+  pointer-events: none;
+  z-index: 9999;
+  box-shadow: 0 0 8px rgba(6, 182, 212, 0.2);
+}
+
+.hudCornerTopLeft {
+  top: 10px;
+  left: 10px;
+  border-right: none;
+  border-bottom: none;
+}
+
+.hudCornerTopRight {
+  top: 10px;
+  right: 10px;
+  border-left: none;
+  border-bottom: none;
+}
+
+.hudCornerBottomLeft {
+  bottom: 10px;
+  left: 10px;
+  border-right: none;
+  border-top: none;
+}
+
+.hudCornerBottomRight {
+  bottom: 10px;
+  right: 10px;
+  border-left: none;
+  border-top: none;
+}
+
+/* Glitch Animations */
+@keyframes glitch {
+  0% {
+    clip-path: inset(40% 0 61% 0);
+    transform: skew(0.3deg);
+  }
+  20% {
+    clip-path: inset(92% 0 1% 0);
+    transform: skew(-0.5deg);
+  }
+  40% {
+    clip-path: inset(15% 0 80% 0);
+    transform: skew(0.5deg);
+  }
+  60% {
+    clip-path: inset(80% 0 5% 0);
+    transform: skew(-0.3deg);
+  }
+  80% {
+    clip-path: inset(3% 0 92% 0);
+    transform: skew(0.8deg);
+  }
+  100% {
+    clip-path: inset(0 0 0 0);
+    transform: skew(0deg);
+  }
+}
+
+.glitchActive {
+  animation: glitch 0.3s cubic-bezier(.25, .46, .45, .94) both;
+}
+
+@keyframes textFlicker {
+  0% { opacity: 0.8; text-shadow: 0 0 4px rgba(6, 182, 212, 0.6); }
+  10% { opacity: 0.3; }
+  15% { opacity: 1; text-shadow: 0 0 8px rgba(6, 182, 212, 0.8); }
+  25% { opacity: 0.4; }
+  30% { opacity: 1; }
+  55% { opacity: 0.7; }
+  60% { opacity: 1; }
+  90% { opacity: 0.5; }
+  100% { opacity: 1; text-shadow: 0 0 4px rgba(6, 182, 212, 0.4); }
+}
+
+.textGlitch {
+  animation: textFlicker 0.25s linear;
+}
+
+/* Rebuilt Assets Table */
+.assetTable {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+  font-size: 0.78rem;
+  font-family: monospace;
+}
+
+.assetTable th {
+  text-align: left;
+  padding: 8px 4px;
+  color: var(--text-muted);
+  font-weight: 600;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  text-transform: uppercase;
+  font-size: 0.68rem;
+  letter-spacing: 0.5px;
+}
+
+.assetTable td {
+  padding: 8px 4px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  vertical-align: middle;
+}
+
+.assetRow {
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.assetRow:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.selectedAssetRow {
+  background: rgba(6, 182, 212, 0.08) !important;
+  border-left: 2px solid var(--secondary);
+}
+
+.assetId {
+  font-weight: bold;
+  color: #fff;
+}
+
+.assetValue {
+  color: #ededed;
+}
+
+.changePos {
+  color: #10b981;
+}
+
+.changeNeg {
+  color: #f43f5e;
+}
+
+.changeFlat {
+  color: var(--text-muted);
+}
+
+.riskBadge {
+  display: inline-block;
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-size: 0.62rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  text-align: center;
+  min-width: 48px;
+}
+
+.riskLow {
+  background: rgba(6, 182, 212, 0.15);
+  color: #06b6d4;
+  border: 1px solid rgba(6, 182, 212, 0.3);
+}
+
+.riskStable {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.riskMedium {
+  background: rgba(245, 158, 11, 0.15);
+  color: #f59e0b;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.riskHigh {
+  background: rgba(249, 115, 22, 0.15);
+  color: #f97316;
+  border: 1px solid rgba(249, 115, 22, 0.3);
+}
+
+.riskCritical {
+  background: rgba(244, 63, 94, 0.15);
+  color: #f43f5e;
+  border: 1px solid rgba(244, 63, 94, 0.3);
+}
+
+/* Widgets Styling */
+.widgetContainer {
+  margin-top: 20px;
+  padding-top: 15px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.regionalChart {
+  display: flex;
+  justify-content: space-around;
+  align-items: flex-end;
+  height: 85px;
+  margin-top: 10px;
+  padding: 0 5px;
+}
+
+.regionalBarContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  height: 100%;
+  justify-content: flex-end;
+}
+
+.regionalBarWrapper {
+  width: 14px;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 2px;
+  height: 55px;
+  display: flex;
+  align-items: flex-end;
+  overflow: hidden;
+  position: relative;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.regionalBar {
+  width: 100%;
+  border-radius: 1px;
+  transition: height 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  background: linear-gradient(to top, var(--primary), var(--secondary));
+  box-shadow: 0 0 8px rgba(6, 182, 212, 0.3);
+}
+
+.regionalLabel {
+  font-size: 0.58rem;
+  color: var(--text-muted);
+  margin-top: 4px;
+  text-align: center;
+  font-family: monospace;
+}
+
+.regionalValue {
+  font-size: 0.6rem;
+  color: #fff;
+  font-weight: 600;
+  margin-bottom: 2px;
+  font-family: monospace;
+}
+
+.volatilityForecast {
+  margin-top: 16px;
+  padding: 8px;
+  background: rgba(255, 255, 255, 0.01);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 6px;
+}
+
+.volatilityTitle {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.volatilityChartContainer {
+  height: 60px;
+  width: 100%;
+  position: relative;
+}
+
+.volatilitySparkline {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
