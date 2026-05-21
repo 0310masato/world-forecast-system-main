@@ -65,3 +65,19 @@ JAPAN_BOUND_TANKER_NAS_LOG_INTERVAL_SECONDS=60
 
 **※ セキュリティ上の警告**: 本番運用時であっても、APIキーが含まれる `.env` や `.env.local` を絶対にGitHubなどの公開リポジトリにコミットしないでください。
 
+## World Pattern Memory v0.1
+
+This repository is being extended from a real-time world forecast dashboard into a World Pattern Memory system.
+
+Planned layers:
+1. Real-time Monitor
+2. World Pattern Memory
+3. AI Agent Operations Room
+
+See:
+- docs/current-system.md
+- docs/roadmap-world-pattern-memory.md
+- docs/data-model-v0.1.md
+- docs/agent-architecture-v0.1.md
+- docs/safety-policy.md
+
