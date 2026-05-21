@@ -40,18 +40,8 @@ export default function HormuzSentinelView() {
   // Fetch vessels, weather, tension
   const fetchHormuzData = async () => {
     try {
-      const res = await fetch('/app/api/hormuz', { method: 'GET' }).catch(() => null);
-      if (!res) {
-        // Fallback for direct next.js routing structure check
-        const resAlt = await fetch('/api/hormuz');
-        const data = await resAlt.json();
-        if (data.success) {
-          setVessels(data.vessels);
-          setWeather(data.weather);
-          setTension(data.tension);
-        }
-        return;
-      }
+      const res = await fetch('/api/hormuz', { method: 'GET' });
+      if (!res.ok) throw new Error(`Hormuz API failed: ${res.status}`);
       const data = await res.json();
       if (data.success) {
         setVessels(data.vessels);
@@ -66,15 +56,8 @@ export default function HormuzSentinelView() {
   // Fetch news
   const fetchNewsData = async () => {
     try {
-      const res = await fetch('/app/api/hormuz/news', { method: 'GET' }).catch(() => null);
-      if (!res) {
-        const resAlt = await fetch('/api/hormuz/news');
-        const data = await resAlt.json();
-        if (data.success) {
-          setNews(data.news);
-        }
-        return;
-      }
+      const res = await fetch('/api/hormuz/news', { method: 'GET' });
+      if (!res.ok) throw new Error(`Hormuz news API failed: ${res.status}`);
       const data = await res.json();
       if (data.success) {
         setNews(data.news);

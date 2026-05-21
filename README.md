@@ -54,7 +54,7 @@ HORMUZ_NEWS_USE_MOCK=true
 # 外部サービスAPIキー (オプション)
 # GEMINI_API_KEY=your_gemini_api_key
 # AISSTREAM_API_KEY=your_aisstream_key
-# NEWS_API_KEY=your_news_api_key
+# NEWSAPI_API_KEY=your_newsapi_api_key
 ```
 
 **※ セキュリティ上の警告**: 本番運用時であっても、APIキーが含まれる `.env` や `.env.local` を絶対にGitHubなどの公開リポジトリにコミットしないでください。

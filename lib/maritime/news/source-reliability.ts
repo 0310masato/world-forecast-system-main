@@ -4,6 +4,10 @@ export function evaluateConfidence(
   sourceType: GeopoliticalNews['sourceType'],
   verificationStatus: GeopoliticalNews['verificationStatus']
 ): 'LOW' | 'MEDIUM' | 'HIGH' {
+  if (sourceType === 'MOCK' || verificationStatus === 'SIMULATED') {
+    return 'MEDIUM';
+  }
+
   // If the news is unconfirmed or from a social media source, it should NEVER have HIGH confidence
   if (verificationStatus === 'UNCONFIRMED') {
     return 'LOW';
@@ -11,11 +15,6 @@ export function evaluateConfidence(
 
   if (sourceType === 'SOCIAL') {
     return 'MEDIUM'; // Or LOW if unconfirmed
-  }
-
-  if (sourceType === 'MOCK' || verificationStatus === 'SIMULATED') {
-    // For demo/simulated scenarios, confidence is fixed at MEDIUM or HIGH for simulation purposes
-    return 'HIGH';
   }
 
   // Official verified statements get HIGH

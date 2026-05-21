@@ -10,7 +10,7 @@ export function getMockNews(timestamp: number = Date.now()): GeopoliticalNews[] 
       source: 'Mock Scenario Feed',
       sourceType: 'MOCK',
       verificationStatus: 'SIMULATED',
-      confidence: 'HIGH',
+      confidence: 'MEDIUM',
       timestamp: new Date(timestamp - 1000 * 60 * 45).toISOString(), // 45m ago
       categories: ['REGIONAL_MILITARY'],
       actors: ['Iran'],
@@ -55,7 +55,7 @@ export function getMockNews(timestamp: number = Date.now()): GeopoliticalNews[] 
       source: 'Simulated Maritime News',
       sourceType: 'MOCK',
       verificationStatus: 'SIMULATED',
-      confidence: 'HIGH',
+      confidence: 'MEDIUM',
       timestamp: new Date(timestamp - 1000 * 60 * 720).toISOString(), // 12 hours ago
       categories: ['ENERGY_SECURITY', 'US_IRAN'],
       actors: ['US', 'Iran', 'Saudi Arabia'],
