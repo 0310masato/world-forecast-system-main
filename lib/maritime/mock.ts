@@ -1,4 +1,4 @@
-import { Vessel, WeatherCondition } from './types';
+import type { JapanVoyageProfile, Vessel, WeatherCondition } from './types';
 import { SHIPPING_LANES } from './constants';
 
 // Helper to interpolate along shipping lanes
@@ -29,6 +29,56 @@ function interpolateCoordinates(
   return { lat, lng, heading };
 }
 
+function createJapanVoyageProfile(
+  vessel: Vessel,
+  timestamp: number,
+  route: Omit<
+    JapanVoyageProfile,
+    'isJapanBound' | 'hormuzPassageHistory' | 'sourceType' | 'recordId' | 'cautionLabel' | 'safetyLabel'
+  >
+): JapanVoyageProfile {
+  const currentPositionTime = new Date(timestamp).toISOString();
+  const enteredAt = new Date(timestamp - 1000 * 60 * 95).toISOString();
+  const chokePointAt = new Date(timestamp - 1000 * 60 * 42).toISOString();
+  const cautionLabel =
+    'SIMULATED / ESTIMATED: Phase 1のAIS風モック推定です。実航行・実物流・投資判断には使用しないでください。';
+
+  return {
+    ...route,
+    isJapanBound: true,
+    recordId: `hormuz-japan-${vessel.id}`,
+    sourceType: 'SIMULATED',
+    cautionLabel,
+    safetyLabel: cautionLabel,
+    hormuzPassageHistory: [
+      {
+        timestamp: enteredAt,
+        label: 'ホルムズ海峡分離通航帯に進入した推定記録',
+        lat: 26.45,
+        lng: 56.05,
+        confidence: route.voyageConfidence,
+        source: 'MOCK_AIS_ESTIMATE',
+      },
+      {
+        timestamp: chokePointAt,
+        label: 'ホルムズ海峡最狭部付近を通過した推定記録',
+        lat: 26.58,
+        lng: 56.42,
+        confidence: route.voyageConfidence,
+        source: 'MOCK_AIS_ESTIMATE',
+      },
+      {
+        timestamp: currentPositionTime,
+        label: '日本向け航路として監視継続中の現在位置スナップショット',
+        lat: vessel.lat,
+        lng: vessel.lng,
+        confidence: route.voyageConfidence,
+        source: 'MOCK_AIS_ESTIMATE',
+      },
+    ],
+  };
+}
+
 // Generate dynamic vessels based on timestamp
 export function getMockVessels(timestamp: number = Date.now()): Vessel[] {
   const timeSec = timestamp / 1000;
@@ -44,9 +94,9 @@ export function getMockVessels(timestamp: number = Date.now()): Vessel[] {
       status: 'Under way using engine',
       destination: 'CHIBA, JAPAN',
       origin: 'RAS TANURA, SAUDI ARABIA',
-      cargo: '原油 (約200万バレル - 推定)',
-      cargoConfidence: 'HIGH',
-      routeConfidence: 'HIGH',
+      cargo: '日本向け原油 (約200万バレル - 推定)',
+      cargoConfidence: 'MEDIUM',
+      routeConfidence: 'MEDIUM',
       stopReason: null,
       stopReasonConfidence: null,
       aisAnomalySuspicion: false,
@@ -61,11 +111,11 @@ export function getMockVessels(timestamp: number = Date.now()): Vessel[] {
       lat: 0, lng: 0, heading: 0, course: 0,
       speed: 16.2,
       status: 'Under way using engine',
-      destination: 'ROTTERDAM, NETHERLANDS',
+      destination: 'SODEGAURA, JAPAN',
       origin: 'RAS LAFFAN, QATAR',
-      cargo: '液化天然ガス (約16万m3 - 推定)',
-      cargoConfidence: 'HIGH',
-      routeConfidence: 'HIGH',
+      cargo: '日本向け液化天然ガス (約16万m3 - 推定)',
+      cargoConfidence: 'MEDIUM',
+      routeConfidence: 'MEDIUM',
       stopReason: null,
       stopReasonConfidence: null,
       aisAnomalySuspicion: false,
@@ -247,6 +297,20 @@ export function getMockVessels(timestamp: number = Date.now()): Vessel[] {
   vessels[0].lng = p1.lng;
   vessels[0].heading = p1.heading;
   vessels[0].course = p1.heading;
+  vessels[0].isJapanBoundEnergyCarrier = true;
+  vessels[0].japanBoundConfidence = 'MEDIUM';
+  vessels[0].japanVoyage = createJapanVoyageProfile(vessels[0], timestamp, {
+    originCountry: 'Saudi Arabia',
+    loadingPort: 'Ras Tanura',
+    destinationCountry: 'Japan',
+    destinationPort: 'Chiba',
+    destinationRegion: '東京湾・京葉工業地帯',
+    cargoForJapan: '日本向け原油（推定 200万バレル）',
+    cargoCategory: 'CRUDE_OIL',
+    voyageConfidence: 'MEDIUM',
+    hormuzPassageStatus: t1 > 0.62 ? 'PASSED' : 'IN_TRANSIT',
+    estimatedHormuzPassedAt: new Date(timestamp - 1000 * 60 * 42).toISOString(),
+  });
 
   // QATAR APEX: outbound lane, offset by 0.35, period 140s
   const t2 = ((timeSec / 140) + 0.35) % 1.0;
@@ -255,6 +319,20 @@ export function getMockVessels(timestamp: number = Date.now()): Vessel[] {
   vessels[1].lng = p2.lng;
   vessels[1].heading = p2.heading;
   vessels[1].course = p2.heading;
+  vessels[1].isJapanBoundEnergyCarrier = true;
+  vessels[1].japanBoundConfidence = 'MEDIUM';
+  vessels[1].japanVoyage = createJapanVoyageProfile(vessels[1], timestamp, {
+    originCountry: 'Qatar',
+    loadingPort: 'Ras Laffan',
+    destinationCountry: 'Japan',
+    destinationPort: 'Sodegaura',
+    destinationRegion: '東京湾 LNG受入エリア',
+    cargoForJapan: '日本向け液化天然ガス（推定 16万m3）',
+    cargoCategory: 'LNG',
+    voyageConfidence: 'MEDIUM',
+    hormuzPassageStatus: t2 > 0.62 ? 'PASSED' : 'IN_TRANSIT',
+    estimatedHormuzPassedAt: new Date(timestamp - 1000 * 60 * 42).toISOString(),
+  });
 
   // EVER HORIZON: inbound lane, period 110s
   const t3 = (timeSec / 110) % 1.0;

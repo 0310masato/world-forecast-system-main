@@ -12,6 +12,7 @@ import {
   VesselType,
 } from '@/lib/maritime/types';
 import { HOTSPOTS, SHIPPING_LANES } from '@/lib/maritime/constants';
+import { isJapanBoundEnergyTanker } from '@/lib/maritime/japan-bound';
 
 // Helper to convert Lat/Lng to SVG coordinates (based on 800x600 coordinate system)
 const mapLng = (lng: number) => ((lng - 54.0) / (58.8 - 54.0)) * 800;
@@ -134,6 +135,8 @@ export default function HormuzSentinelView() {
     return vessels.find((v) => v.id === selectedVesselId) || null;
   }, [selectedVesselId, vessels]);
 
+  const japanBoundTankers = useMemo(() => vessels.filter(isJapanBoundEnergyTanker), [vessels]);
+
   // Generate dynamic Timeline events
   const timelineEvents = useMemo<IncidentTimelineEvent[]>(() => {
     const events: IncidentTimelineEvent[] = [];
@@ -153,6 +156,20 @@ export default function HormuzSentinelView() {
 
     // Add active vessel anomalies
     vessels.forEach((v) => {
+      if (isJapanBoundEnergyTanker(v) && v.japanVoyage) {
+        v.japanVoyage.hormuzPassageHistory.forEach((historyItem) => {
+          events.push({
+            id: `japan_${v.id}_${historyItem.timestamp}`,
+            timestamp: historyItem.timestamp,
+            type: 'JapanBoundPassage',
+            description: `${v.name}: 日本向けエネルギー船 ${historyItem.label}`,
+            severity: 'MEDIUM',
+            vesselId: v.id,
+            location: { lat: historyItem.lat, lng: historyItem.lng },
+          });
+        });
+      }
+
       if (v.aisAnomalySuspicion) {
         events.push({
           id: `anomaly_${v.id}`,
@@ -460,6 +477,7 @@ export default function HormuzSentinelView() {
               const x = mapLng(v.lng);
               const y = mapLat(v.lat);
               const isSelected = selectedVesselId === v.id;
+              const isJapanBound = isJapanBoundEnergyTanker(v);
               const color = getVesselColor(v.type);
 
               return (
@@ -483,6 +501,30 @@ export default function HormuzSentinelView() {
                       strokeWidth="1.5"
                       className={styles.pulseRing}
                     />
+                  )}
+
+                  {isJapanBound && (
+                    <g>
+                      <circle
+                        cx="0"
+                        cy="0"
+                        r="16"
+                        fill="none"
+                        stroke="#f43f5e"
+                        strokeWidth="1.5"
+                        strokeDasharray="3 3"
+                      />
+                      <text
+                        x="-7"
+                        y="-14"
+                        fill="#fecaca"
+                        fontSize="7"
+                        fontWeight="800"
+                        style={{ pointerEvents: 'none' }}
+                      >
+                        JP
+                      </text>
+                    </g>
                   )}
 
                   {/* Selected target brackets */}
@@ -589,6 +631,46 @@ export default function HormuzSentinelView() {
 
         <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', margin: '4px 0' }} />
 
+        {/* Japan-bound estimated energy carrier watch */}
+        <div>
+          <div className={styles.japanWatchHeader}>
+            <h4 className={styles.detailSectionTitle} style={{ margin: 0 }}>日本向けエネルギー船監視（推定）</h4>
+            <span className={styles.japanWatchCount}>{japanBoundTankers.length} 隻</span>
+          </div>
+          <div className={styles.japanWatchList}>
+            {japanBoundTankers.map((vessel) => {
+              const voyage = vessel.japanVoyage;
+              if (!voyage) return null;
+
+              return (
+                <div
+                  key={vessel.id}
+                  className={styles.japanWatchItem}
+                  onClick={() => {
+                    setSelectedVesselId(vessel.id);
+                    setFocusedHotspot({ lat: vessel.lat, lng: vessel.lng, name: vessel.name });
+                  }}
+                >
+                  <div className={styles.japanWatchTopLine}>
+                    <span>{vessel.name}</span>
+                    <span className={`${styles.newsTag} ${styles.levelELEVATED}`}>{voyage.sourceType} / ESTIMATED</span>
+                  </div>
+                  <div className={styles.japanWatchMeta}>
+                    <span>{voyage.hormuzPassageStatus}</span>
+                    <span>信頼度: {voyage.voyageConfidence}</span>
+                  </div>
+                  <div className={styles.japanWatchRoute}>
+                    {voyage.originCountry} / {voyage.loadingPort} → {voyage.destinationPort}
+                  </div>
+                  <div className={styles.japanWatchCargo}>{voyage.cargoForJapan}</div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', margin: '4px 0' }} />
+
         {/* Environmental Indicators */}
         <div>
           <h4 className={styles.detailSectionTitle} style={{ marginBottom: '12px' }}>海峡環境インジケータ</h4>
@@ -674,6 +756,42 @@ export default function HormuzSentinelView() {
                 </span>
               </div>
             </div>
+
+            {selectedVessel.japanVoyage?.isJapanBound && (
+              <div className={styles.japanVoyageCard}>
+                <div className={styles.vesselEstimatedTitle} style={{ color: '#fecaca' }}>
+                  <span>日本向け輸送記録（SIMULATED / ESTIMATED）</span>
+                  <span className={`${styles.newsTag} ${styles.levelELEVATED}`}>
+                    {selectedVessel.japanVoyage.hormuzPassageStatus}
+                  </span>
+                </div>
+                <div className={styles.japanVoyageGrid}>
+                  <span>データ種別</span>
+                  <strong>{selectedVessel.japanVoyage.sourceType} / ESTIMATED</strong>
+                  <span>信頼度</span>
+                  <strong>{selectedVessel.japanVoyage.voyageConfidence}</strong>
+                  <span>積地国</span>
+                  <strong>{selectedVessel.japanVoyage.originCountry}</strong>
+                  <span>積地港</span>
+                  <strong>{selectedVessel.japanVoyage.loadingPort}</strong>
+                  <span>貨物</span>
+                  <strong>{selectedVessel.japanVoyage.cargoForJapan}</strong>
+                  <span>日本側到着地</span>
+                  <strong>{selectedVessel.japanVoyage.destinationPort} ({selectedVessel.japanVoyage.destinationRegion})</strong>
+                </div>
+                <div className={styles.japanHistoryList}>
+                  {selectedVessel.japanVoyage.hormuzPassageHistory.map((item) => (
+                    <div key={`${item.timestamp}_${item.label}`} className={styles.japanHistoryItem}>
+                      <span>{new Date(item.timestamp).toLocaleTimeString()}</span>
+                      <span>{item.label}</span>
+                    </div>
+                  ))}
+                </div>
+                <p className={styles.japanVoyageNotice}>
+                  {selectedVessel.japanVoyage.cautionLabel}
+                </p>
+              </div>
+            )}
 
             {/* Estimated Cargo Box */}
             <div className={styles.vesselEstimatedCard}>
@@ -873,7 +991,7 @@ export default function HormuzSentinelView() {
             【免責事項】本画面の情報はシミュレーションおよびAISデータに基づく推定であり、その正確性や実在性を保証するものではありません。
           </p>
           <p className={styles.bottomDisclaimerText} style={{ marginTop: '2px', fontWeight: 'bold', color: '#ef4444' }}>
-            実際の航行判断、軍事防衛判断、および投資判断には絶対に使用しないでください。
+            実際の航行判断、実物流確認、軍事防衛判断、および投資判断には絶対に使用しないでください。
           </p>
         </div>
       </div>

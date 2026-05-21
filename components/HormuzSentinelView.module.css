@@ -252,6 +252,93 @@
   color: #fff;
 }
 
+/* Japan-bound tanker watch */
+.japanWatchHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.japanWatchHeader .detailSectionTitle {
+  flex: 1 1 auto;
+  min-width: 0;
+  line-height: 1.35;
+}
+
+.japanWatchCount {
+  flex: 0 0 auto;
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: #fecaca;
+  background: rgba(244, 63, 94, 0.08);
+  border: 1px solid rgba(244, 63, 94, 0.24);
+  border-radius: 4px;
+  padding: 3px 7px;
+}
+
+.japanWatchList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.japanWatchItem {
+  background: rgba(244, 63, 94, 0.05);
+  border: 1px solid rgba(244, 63, 94, 0.16);
+  border-radius: 8px;
+  padding: 10px;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.japanWatchItem:hover {
+  background: rgba(244, 63, 94, 0.09);
+  border-color: rgba(244, 63, 94, 0.34);
+}
+
+.japanWatchTopLine {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  color: #fff;
+  font-size: 0.76rem;
+  font-weight: 800;
+}
+
+.japanWatchTopLine > span:first-child {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.japanWatchMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+  margin-top: 5px;
+  color: #fca5a5;
+  font-size: 0.66rem;
+  font-weight: 700;
+}
+
+.japanWatchRoute {
+  margin-top: 6px;
+  color: #fecaca;
+  font-size: 0.7rem;
+  line-height: 1.35;
+}
+
+.japanWatchCargo {
+  margin-top: 3px;
+  color: #d1d5db;
+  font-size: 0.68rem;
+  line-height: 1.35;
+}
+
 /* News List */
 .newsList {
   display: flex;
@@ -387,6 +474,60 @@
   align-items: center;
   margin-bottom: 6px;
   font-size: 0.78rem;
+}
+
+.japanVoyageCard {
+  background: rgba(244, 63, 94, 0.06);
+  border: 1px solid rgba(244, 63, 94, 0.2);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 0.75rem;
+  margin-bottom: 12px;
+}
+
+.japanVoyageGrid {
+  display: grid;
+  grid-template-columns: 72px 1fr;
+  gap: 6px 10px;
+  line-height: 1.35;
+}
+
+.japanVoyageGrid span {
+  color: #9ca3af;
+}
+
+.japanVoyageGrid strong {
+  color: #fff;
+  font-weight: 700;
+}
+
+.japanHistoryList {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(244, 63, 94, 0.14);
+}
+
+.japanHistoryItem {
+  display: grid;
+  grid-template-columns: 70px 1fr;
+  gap: 8px;
+  color: #d1d5db;
+  line-height: 1.3;
+}
+
+.japanHistoryItem span:first-child {
+  color: #fecaca;
+  font-family: monospace;
+}
+
+.japanVoyageNotice {
+  margin-top: 8px;
+  color: #fca5a5;
+  font-size: 0.64rem;
+  line-height: 1.35;
 }
 
 /* Timeline */

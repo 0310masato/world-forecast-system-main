@@ -3,6 +3,10 @@ import { getMockVessels, getMockWeather } from '@/lib/maritime/mock';
 import { analyzeAllVessels } from '@/lib/maritime/analyzer';
 import { calculateTensionIndex } from '@/lib/maritime/risk-index';
 import { getMockNews } from '@/lib/maritime/news/mock-news';
+import { toJapanBoundTankerRecords } from '@/lib/maritime/japan-bound';
+import { saveJapanBoundTankerRecordsToNAS } from '@/lib/nas';
+
+export const runtime = 'nodejs';
 
 export async function GET() {
   try {
@@ -19,6 +23,8 @@ export async function GET() {
     // Get mock news to feed the tension index calculator
     const news = getMockNews(now);
     const tension = calculateTensionIndex(vessels, news, weather, now);
+    const japanBoundTankers = toJapanBoundTankerRecords(vessels, true);
+    const japanBoundTankerNasLog = await saveJapanBoundTankerRecordsToNAS(japanBoundTankers, now);
     
     return NextResponse.json({
       success: true,
@@ -26,6 +32,8 @@ export async function GET() {
       vessels,
       weather,
       tension,
+      japanBoundTankers,
+      japanBoundTankerNasLog,
       isMock: true,
     });
   } catch (error: unknown) {

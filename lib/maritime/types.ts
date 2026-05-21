@@ -29,6 +29,63 @@ export interface Vessel {
   aisAnomalyType: 'none' | 'position_jump' | 'signal_delay' | 'missing_data';
   aisAnomalyConfidence: 'LOW' | 'MEDIUM' | null;
   lastUpdated: string;
+  isJapanBoundEnergyCarrier?: boolean;
+  japanBoundConfidence?: 'LOW' | 'MEDIUM' | 'HIGH';
+  japanVoyage?: JapanVoyageProfile;
+}
+
+export interface HormuzPassageHistoryEvent {
+  timestamp: string;
+  label: string;
+  lat: number;
+  lng: number;
+  confidence: 'LOW' | 'MEDIUM' | 'HIGH';
+  source: 'MOCK_AIS_ESTIMATE' | 'AIS_ESTIMATE';
+}
+
+export interface JapanVoyageProfile {
+  isJapanBound: boolean;
+  originCountry: string;
+  loadingPort: string;
+  destinationCountry: 'Japan';
+  destinationPort: string;
+  destinationRegion: string;
+  cargoForJapan: string;
+  cargoCategory: 'CRUDE_OIL' | 'LNG' | 'REFINED_PRODUCT' | 'OTHER';
+  voyageConfidence: 'LOW' | 'MEDIUM' | 'HIGH';
+  hormuzPassageStatus: 'APPROACHING' | 'IN_TRANSIT' | 'PASSED' | 'UNKNOWN';
+  estimatedHormuzPassedAt: string | null;
+  hormuzPassageHistory: HormuzPassageHistoryEvent[];
+  sourceType: 'MOCK' | 'SIMULATED' | 'AIS_ESTIMATED';
+  recordId: string;
+  cautionLabel: string;
+  safetyLabel: string;
+}
+
+export interface JapanBoundTankerRecord {
+  recordId: string;
+  vesselId: string;
+  vesselName: string;
+  vesselType: VesselType;
+  currentLat: number;
+  currentLng: number;
+  speed: number;
+  heading: number;
+  originCountry: string;
+  loadingPort: string;
+  cargoForJapan: string;
+  cargoCategory: JapanVoyageProfile['cargoCategory'];
+  destinationPort: string;
+  destinationRegion: string;
+  hormuzPassageStatus: JapanVoyageProfile['hormuzPassageStatus'];
+  estimatedHormuzPassedAt: string | null;
+  hormuzPassageHistory: HormuzPassageHistoryEvent[];
+  voyageConfidence: JapanVoyageProfile['voyageConfidence'];
+  sourceType: JapanVoyageProfile['sourceType'];
+  lastUpdated: string;
+  cautionLabel: string;
+  safetyLabel: string;
+  isMock: boolean;
 }
 
 export interface WeatherCondition {
@@ -93,7 +150,7 @@ export interface ActorMatrixRow {
 export interface IncidentTimelineEvent {
   id: string;
   timestamp: string;
-  type: 'VesselAnomaly' | 'GeopoliticalNews' | 'WeatherIncident' | 'TensionChange';
+  type: 'VesselAnomaly' | 'GeopoliticalNews' | 'WeatherIncident' | 'TensionChange' | 'JapanBoundPassage';
   description: string;
   severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
   vesselId: string | null;
