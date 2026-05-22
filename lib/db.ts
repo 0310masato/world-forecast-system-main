@@ -38,6 +38,127 @@ try {
       summary_data TEXT NOT NULL,
       created_at INTEGER NOT NULL
     );
+
+    CREATE TABLE IF NOT EXISTS raw_events (
+      id TEXT PRIMARY KEY,
+      observed_at INTEGER NOT NULL,
+      ingested_at INTEGER NOT NULL,
+      source_kind TEXT NOT NULL,
+      source_name TEXT,
+      source_ref TEXT,
+      event_domain TEXT NOT NULL,
+      raw_payload_json TEXT,
+      summary TEXT,
+      confidence TEXT NOT NULL,
+      limitations TEXT,
+      labels_json TEXT,
+      is_mock INTEGER NOT NULL DEFAULT 0,
+      created_at INTEGER NOT NULL,
+      CHECK (
+        source_kind IN (
+          'real_api',
+          'real_rss',
+          'mock',
+          'simulated',
+          'estimated',
+          'manual',
+          'derived',
+          'fallback_template',
+          'local_cache'
+        )
+      ),
+      CHECK (confidence IN ('low', 'medium', 'high')),
+      CHECK (is_mock IN (0, 1)),
+      CHECK (
+        confidence <> 'high'
+        OR source_kind IN ('real_api', 'real_rss')
+      )
+    );
+
+    CREATE TABLE IF NOT EXISTS market_snapshots (
+      id TEXT PRIMARY KEY,
+      captured_at INTEGER NOT NULL,
+      asset_symbol TEXT NOT NULL,
+      asset_name TEXT,
+      asset_class TEXT,
+      price REAL NOT NULL,
+      currency TEXT,
+      source_kind TEXT NOT NULL,
+      source_name TEXT,
+      source_ref TEXT,
+      change_percent REAL,
+      raw_payload_json TEXT,
+      confidence TEXT NOT NULL,
+      limitations TEXT,
+      created_at INTEGER NOT NULL,
+      CHECK (
+        source_kind IN (
+          'real_api',
+          'real_rss',
+          'mock',
+          'simulated',
+          'estimated',
+          'manual',
+          'derived',
+          'fallback_template',
+          'local_cache'
+        )
+      ),
+      CHECK (confidence IN ('low', 'medium', 'high')),
+      CHECK (
+        confidence <> 'high'
+        OR source_kind IN ('real_api', 'real_rss')
+      )
+    );
+
+    CREATE TABLE IF NOT EXISTS signals (
+      id TEXT PRIMARY KEY,
+      detected_at INTEGER NOT NULL,
+      signal_type TEXT NOT NULL,
+      title TEXT NOT NULL,
+      summary TEXT,
+      severity TEXT NOT NULL,
+      direction TEXT,
+      strength REAL,
+      confidence TEXT NOT NULL,
+      source_kind TEXT NOT NULL,
+      related_raw_event_ids_json TEXT,
+      related_market_snapshot_ids_json TEXT,
+      labels_json TEXT,
+      limitations TEXT,
+      proposal_status TEXT NOT NULL DEFAULT 'proposal',
+      human_review_required INTEGER NOT NULL DEFAULT 1,
+      created_at INTEGER NOT NULL,
+      CHECK (
+        source_kind IN (
+          'real_api',
+          'real_rss',
+          'mock',
+          'simulated',
+          'estimated',
+          'manual',
+          'derived',
+          'fallback_template',
+          'local_cache'
+        )
+      ),
+      CHECK (confidence IN ('low', 'medium', 'high')),
+      CHECK (
+        proposal_status IN (
+          'proposal',
+          'needs_review',
+          'approved',
+          'rejected',
+          'needs_revision',
+          'archived'
+        )
+      ),
+      CHECK (human_review_required IN (0, 1)),
+      CHECK (
+        confidence <> 'high'
+        OR source_kind IN ('real_api', 'real_rss')
+      )
+    );
   `);
 
   // 初期シードデータ (ai_bias_feedback に初期値を入れておく)
