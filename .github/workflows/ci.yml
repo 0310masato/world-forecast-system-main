@@ -50,3 +50,6 @@ jobs:
 
       - name: Characterization smoke
         run: npm run test:characterization
+
+      - name: Memory helper smoke
+        run: npm run test:memory
