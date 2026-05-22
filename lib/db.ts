@@ -70,8 +70,8 @@ try {
       CHECK (confidence IN ('low', 'medium', 'high')),
       CHECK (is_mock IN (0, 1)),
       CHECK (
-        source_kind NOT IN ('mock', 'simulated', 'fallback_template')
-        OR confidence <> 'high'
+        confidence <> 'high'
+        OR source_kind IN ('real_api', 'real_rss')
       )
     );
 
@@ -106,8 +106,8 @@ try {
       ),
       CHECK (confidence IN ('low', 'medium', 'high')),
       CHECK (
-        source_kind NOT IN ('mock', 'simulated', 'fallback_template')
-        OR confidence <> 'high'
+        confidence <> 'high'
+        OR source_kind IN ('real_api', 'real_rss')
       )
     );
 
@@ -155,8 +155,8 @@ try {
       ),
       CHECK (human_review_required IN (0, 1)),
       CHECK (
-        source_kind NOT IN ('mock', 'simulated', 'fallback_template')
-        OR confidence <> 'high'
+        confidence <> 'high'
+        OR source_kind IN ('real_api', 'real_rss')
       )
     );
   `);
