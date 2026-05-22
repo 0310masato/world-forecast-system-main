@@ -53,3 +53,6 @@ jobs:
 
       - name: Memory helper smoke
         run: npm run test:memory
+
+      - name: Context pack builder smoke
+        run: npm run test:context-pack
