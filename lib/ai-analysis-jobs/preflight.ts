@@ -1,5 +1,4 @@
 import {
-  CONTEXT_PACK_SOURCE_TYPES,
   CONTEXT_PACK_VERSION,
   type ContextPack,
   type ContextPackIncludedRecord,
@@ -39,7 +38,15 @@ const QA_GATE_SUMMARIES: Record<AIAnalysisJobQAGateName, string> = {
   human_review: 'Human review remains mandatory before any downstream use.',
 };
 
-const CONTEXT_PACK_SOURCE_TYPE_SET = new Set<string>(CONTEXT_PACK_SOURCE_TYPES);
+const AI_ANALYSIS_JOB_EXCLUDABLE_SOURCE_TYPES = [
+  'signal',
+  'raw_event',
+  'market_snapshot',
+] as const;
+
+const AI_ANALYSIS_JOB_EXCLUDABLE_SOURCE_TYPE_SET = new Set<string>(
+  AI_ANALYSIS_JOB_EXCLUDABLE_SOURCE_TYPES,
+);
 
 function asRecord(value: unknown): UnknownRecord | null {
   if (value !== null && typeof value === 'object' && !Array.isArray(value)) {
@@ -282,6 +289,26 @@ function validateIncludedRecord(params: {
         record_id: id,
       });
     }
+
+    if (sourceRef.stale !== true && sourceRef.stale !== false) {
+      addIssue(params.issues, {
+        code: 'source_ref_stale_missing',
+        severity: 'blocking',
+        gate: 'record_scope',
+        message: 'source_refs entry must preserve the stale flag.',
+        path: 'source_refs',
+        record_id: id,
+      });
+    } else if ((stale === true || stale === false) && sourceRef.stale !== stale) {
+      addIssue(params.issues, {
+        code: 'source_ref_stale_mismatch',
+        severity: 'blocking',
+        gate: 'record_scope',
+        message: 'source_refs entry stale flag must match the included record stale flag.',
+        path: 'source_refs',
+        record_id: id,
+      });
+    }
   }
 
   if (stale === true) {
@@ -446,7 +473,10 @@ function validateExcludedRecords(
       });
     }
 
-    if (typeof sourceType !== 'string' || !CONTEXT_PACK_SOURCE_TYPE_SET.has(sourceType)) {
+    if (
+      typeof sourceType !== 'string'
+      || !AI_ANALYSIS_JOB_EXCLUDABLE_SOURCE_TYPE_SET.has(sourceType)
+    ) {
       addIssue(issues, {
         code: 'excluded_record_source_type_invalid',
         severity: 'blocking',

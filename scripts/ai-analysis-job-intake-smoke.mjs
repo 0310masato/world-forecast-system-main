@@ -74,6 +74,10 @@ function expectReviewIssue(label, preflightAIAnalysisJobIntake, pack, code) {
   log(`Recorded review issue for ${label}.`);
 }
 
+function findSignalSourceRef(pack) {
+  return pack.source_refs.find((sourceRef) => sourceRef.source_type === 'signal');
+}
+
 async function pathExists(filePath) {
   try {
     await fs.access(filePath);
@@ -364,6 +368,41 @@ async function main() {
     preflightAIAnalysisJobIntake,
     missingExcludedReason,
     'excluded_record_reason_missing',
+  );
+
+  const policyDocExcludedRecord = clonePack(validPack);
+  policyDocExcludedRecord.excluded_records.push({
+    source_type: 'policy_doc',
+    id: 'docs/AI_ANALYSIS_JOBS.md',
+    reason: 'Policy docs are references, not excludable memory records.',
+  });
+  expectBlocked(
+    'policy_doc excluded record pack',
+    preflightAIAnalysisJobIntake,
+    policyDocExcludedRecord,
+    'excluded_record_source_type_invalid',
+  );
+
+  const sourceRefStaleMismatch = clonePack(validPack);
+  const mismatchSignalSourceRef = findSignalSourceRef(sourceRefStaleMismatch);
+  assert(mismatchSignalSourceRef, 'Valid context pack must include a signal source_ref.');
+  mismatchSignalSourceRef.stale = !sourceRefStaleMismatch.included_records.signals[0].stale;
+  expectBlocked(
+    'source_ref stale mismatch pack',
+    preflightAIAnalysisJobIntake,
+    sourceRefStaleMismatch,
+    'source_ref_stale_mismatch',
+  );
+
+  const sourceRefStaleMissing = clonePack(validPack);
+  const missingSignalSourceRef = findSignalSourceRef(sourceRefStaleMissing);
+  assert(missingSignalSourceRef, 'Valid context pack must include a signal source_ref.');
+  delete missingSignalSourceRef.stale;
+  expectBlocked(
+    'source_ref stale missing pack',
+    preflightAIAnalysisJobIntake,
+    sourceRefStaleMissing,
+    'source_ref_stale_missing',
   );
 
   log('AI Analysis Job intake smoke checks passed.');
