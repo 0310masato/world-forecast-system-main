@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "test:characterization": "node scripts/characterization-smoke.mjs",
-    "test:memory": "node scripts/memory-layer-helper-smoke.mjs"
+    "test:memory": "node scripts/memory-layer-helper-smoke.mjs",
+    "test:context-pack": "node scripts/context-pack-builder-smoke.mjs"
   },
   "dependencies": {
     "better-sqlite3": "^12.10.0",
