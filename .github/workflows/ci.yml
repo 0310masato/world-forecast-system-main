@@ -56,3 +56,6 @@ jobs:
 
       - name: Context pack builder smoke
         run: npm run test:context-pack
+
+      - name: AI analysis job intake smoke
+        run: npm run test:ai-analysis-job

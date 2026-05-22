@@ -111,6 +111,32 @@ A human reviewer must decide whether a proposal is:
 Approval does not automatically apply the proposal. Any production change still
 requires a separate reviewed implementation path.
 
+## Intake Contract v0
+
+AI Analysis Job Intake Contract v0 is a preparation layer for future AI-sidecar
+jobs. It accepts the output of Context Pack Builder v0 and returns a structured
+preflight QA report before any AI analysis job could consume that context.
+
+The v0 preflight report checks:
+
+- `context_pack_version` remains `1`
+- `human_review_required` remains `true`
+- `proposal_only` remains `true`
+- `is_production_state` remains `false`
+- required safety labels and policy references are present
+- the requested `purpose.job_type` is an allowed AI analysis job kind
+- included records preserve `source_kind`, `confidence`, `limitations`, and
+  matching `source_refs`
+- stale records are visible as review issues
+- excluded records preserve reviewable reasons
+- restricted content is not present in the context pack
+
+Passing preflight only means the context pack is ready for human review. The
+allowed next step is `human_review_only`. The intake contract does not add a
+Codex App Server runtime, worker runtime, prompt execution, external API calls,
+database migrations, `/api` connections, or AI output promotion into production
+state.
+
 ## Audit Expectations
 
 When proposal storage is implemented, each job result should preserve:
