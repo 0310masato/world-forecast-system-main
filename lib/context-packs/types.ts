@@ -11,12 +11,15 @@ export const CONTEXT_PACK_SOURCE_TYPES = [
 
 export type ContextPackSourceType = (typeof CONTEXT_PACK_SOURCE_TYPES)[number];
 
-export type ContextPackJobType =
-  | 'forecast_review_notes'
-  | 'risk_label_review'
-  | 'miss_pattern_review'
-  | 'refactor_planning_notes'
-  | 'operator_review_context';
+export const CONTEXT_PACK_JOB_TYPES = [
+  'forecast_review_notes',
+  'risk_label_review',
+  'miss_pattern_review',
+  'refactor_planning_notes',
+  'operator_review_context',
+] as const;
+
+export type ContextPackJobType = (typeof CONTEXT_PACK_JOB_TYPES)[number];
 
 export interface ContextPackPurpose {
   job_type: ContextPackJobType;

@@ -407,6 +407,13 @@ async function main() {
       summary: '.env.local must not be accepted in context pack options.',
     },
   }, database));
+  expectRejected('invalid job_type', () => buildContextPackFromSignalId({
+    signalId: signal.id,
+    purpose: {
+      job_type: 'unsupported_context_pack_job',
+      summary: 'Invalid job type must not be accepted.',
+    },
+  }, database));
 
   log('Context Pack Builder smoke checks passed.');
 }

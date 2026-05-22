@@ -10,6 +10,7 @@ import type {
   ContextPackBuildOptions,
   ContextPackPurpose,
 } from './types';
+import { CONTEXT_PACK_JOB_TYPES } from './types';
 
 export class ContextPackValidationError extends Error {
   constructor(message: string) {
@@ -49,6 +50,8 @@ const DEFAULT_PURPOSE: ContextPackPurpose = {
   summary: 'Prepare review context for a proposal-only AI analysis job.',
 };
 
+const CONTEXT_PACK_JOB_TYPE_SET = new Set<string>(CONTEXT_PACK_JOB_TYPES);
+
 function asContextPackError(error: unknown, fallbackMessage: string): ContextPackValidationError {
   if (error instanceof ContextPackValidationError) {
     return error;
@@ -84,16 +87,22 @@ export function getContextPackRestrictionReason(
 export function normalizeContextPackPurpose(
   purpose: Partial<ContextPackPurpose> | undefined,
 ): ContextPackPurpose {
-  const jobType = normalizeRequiredText(
+  const normalizedJobType = normalizeRequiredText(
     purpose?.job_type ?? DEFAULT_PURPOSE.job_type,
     'purpose.job_type',
-  ) as ContextPackPurpose['job_type'];
+  );
   const summary = normalizeRequiredText(
     purpose?.summary ?? DEFAULT_PURPOSE.summary,
     'purpose.summary',
   );
 
-  return { job_type: jobType, summary };
+  if (!CONTEXT_PACK_JOB_TYPE_SET.has(normalizedJobType)) {
+    throw new ContextPackValidationError(
+      `purpose.job_type must be one of: ${CONTEXT_PACK_JOB_TYPES.join(', ')}.`,
+    );
+  }
+
+  return { job_type: normalizedJobType as ContextPackPurpose['job_type'], summary };
 }
 
 export function normalizeContextPackPolicyRefs(policyRefs?: string[]): string[] {
