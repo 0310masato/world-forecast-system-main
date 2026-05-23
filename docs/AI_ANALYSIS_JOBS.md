@@ -137,6 +137,35 @@ Codex App Server runtime, worker runtime, prompt execution, external API calls,
 database migrations, `/api` connections, or AI output promotion into production
 state.
 
+## Result Contract v0
+
+AI Analysis Job Result Contract v0 defines the shape of a future AI-sidecar
+result after intake preflight. It is a proposal-only result contract, not an AI
+job runner and not production state.
+
+The v0 result contract requires:
+
+- `result_version` to remain `1`
+- `proposal_status` to be one of `proposal`, `needs_review`, `rejected`,
+  `needs_revision`, or `archived`
+- `requires_human_approval` to remain `true`
+- `proposal_only` to remain `true`
+- `is_production_state` to remain `false`
+- `allowed_next_step` to remain `human_review_only`
+- production writes, `/api` updates, external publishing, automated trading,
+  navigation guidance, and military guidance to remain forbidden next steps
+
+The result is review material for a human operator. It may summarize evidence,
+limitations, safety labels, and a human-review-oriented recommendation such as
+`review`, `revise`, `reject`, or `archive`; it must not recommend automatic
+application, publishing, deployment, trading, navigation, military action,
+production writes, or `/api` updates.
+
+`approved`, `applied`, and production-write states are intentionally outside
+Result Contract v0. This contract also does not add a Codex App Server runtime,
+worker runtime, scheduler, external API call, database migration, `/api`
+connection, prompt execution, AI analysis job execution path, or storage path.
+
 ## Audit Expectations
 
 When proposal storage is implemented, each job result should preserve:

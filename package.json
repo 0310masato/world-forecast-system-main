@@ -10,7 +10,8 @@
     "test:characterization": "node scripts/characterization-smoke.mjs",
     "test:memory": "node scripts/memory-layer-helper-smoke.mjs",
     "test:context-pack": "node scripts/context-pack-builder-smoke.mjs",
-    "test:ai-analysis-job": "node scripts/ai-analysis-job-intake-smoke.mjs"
+    "test:ai-analysis-job": "node scripts/ai-analysis-job-intake-smoke.mjs",
+    "test:ai-analysis-job-result": "node scripts/ai-analysis-job-result-smoke.mjs"
   },
   "dependencies": {
     "better-sqlite3": "^12.10.0",
