@@ -166,6 +166,31 @@ Result Contract v0. This contract also does not add a Codex App Server runtime,
 worker runtime, scheduler, external API call, database migration, `/api`
 connection, prompt execution, AI analysis job execution path, or storage path.
 
+## Human Review Decision Contract v0
+
+Human Review Decision Contract v0 is the next contract after AI Analysis Job
+Result Contract v0. It records the human decision for a proposal-only AI result:
+approve it only for a later separate implementation path, reject it, request
+revision, or archive it as informational.
+
+Approval in this contract is not production application. The
+`approved_for_later_implementation` outcome only allows follow-up work to be
+considered in a separate PR or implementation path. It does not write
+production state, update `/api/forecast` or `/api/hormuz`, run a DB migration,
+deploy code, publish externally, or promote an AI result into a production
+forecast, price, evaluation, or saved prediction.
+
+The decision contract must keep these safety boundaries explicit:
+
+- `requires_separate_implementation` remains `true`
+- allowed next steps are limited to `human_review_only` or
+  `separate_implementation_pr_only`
+- production writes, API updates, external publishing, automated trading,
+  navigation guidance, military guidance, DB migrations, and direct deploys
+  remain forbidden
+- secrets, `.env` references, local paths, NAS paths, private network IPs, and
+  high-risk operation recommendations are rejected
+
 ## Audit Expectations
 
 When proposal storage is implemented, each job result should preserve:
