@@ -1,4 +1,5 @@
-import type { ContextPack } from '../context-packs/types';
+import type { ContextPack, ContextPackSourceType } from '../context-packs/types';
+import type { Confidence } from '../memory/types';
 
 export const AI_ANALYSIS_JOB_KINDS = [
   'forecast_review_notes',
@@ -92,4 +93,93 @@ export interface AIAnalysisJobPreflightResult extends AIAnalysisJobApprovalBound
   context_pack_version: number | null;
   issues: AIAnalysisJobPreflightIssue[];
   qa_gates: AIAnalysisJobQAGate[];
+}
+
+export const AI_ANALYSIS_JOB_RESULT_VERSION = 1 as const;
+
+export const AI_ANALYSIS_JOB_RESULT_STATUSES = [
+  'proposal',
+  'needs_review',
+  'rejected',
+  'needs_revision',
+  'archived',
+] as const;
+
+export type AIAnalysisJobResultStatus =
+  (typeof AI_ANALYSIS_JOB_RESULT_STATUSES)[number];
+
+export const AI_ANALYSIS_JOB_RESULT_RECOMMENDED_DECISIONS = [
+  'review',
+  'revise',
+  'reject',
+  'archive',
+] as const;
+
+export type AIAnalysisJobResultDecision =
+  (typeof AI_ANALYSIS_JOB_RESULT_RECOMMENDED_DECISIONS)[number];
+
+export type AIAnalysisJobResultSafetyLabel = string;
+
+export const AI_ANALYSIS_JOB_RESULT_REQUIRED_SAFETY_LABELS = [
+  'AI-generated proposal',
+  'AI analysis result',
+  'Proposal-only result',
+  'Not production state',
+  'Human approval required',
+  'Not investment advice',
+  'Not navigation guidance',
+  'Not military guidance',
+  'Not automated trading guidance',
+  'Not external publishing',
+] as const;
+
+export interface AIAnalysisJobResultEvidence {
+  source_type: ContextPackSourceType;
+  id: string;
+  summary: string;
+  confidence: Confidence;
+}
+
+export interface AIAnalysisJobResultLimitation {
+  id?: string;
+  summary: string;
+}
+
+export interface AIAnalysisJobResultBoundary {
+  requires_human_approval: true;
+  allowed_next_step: AIAnalysisJobAllowedNextStep;
+  forbidden_next_steps: AIAnalysisJobForbiddenNextStep[];
+  proposal_only: true;
+  is_production_state: false;
+}
+
+export interface AIAnalysisJobResult extends AIAnalysisJobResultBoundary {
+  result_id: string;
+  result_version: typeof AI_ANALYSIS_JOB_RESULT_VERSION;
+  job_kind: AIAnalysisJobKind;
+  context_pack_id: string;
+  context_pack_version: 1;
+  generated_at: number;
+  proposal_status: AIAnalysisJobResultStatus;
+  confidence: Confidence;
+  summary: string;
+  evidence: AIAnalysisJobResultEvidence[];
+  limitations: AIAnalysisJobResultLimitation[];
+  safety_labels: AIAnalysisJobResultSafetyLabel[];
+  recommended_decision: AIAnalysisJobResultDecision;
+  next_review_steps: string[];
+}
+
+export type AIAnalysisJobResultValidationIssueSeverity = 'blocking';
+
+export interface AIAnalysisJobResultValidationIssue {
+  code: string;
+  severity: AIAnalysisJobResultValidationIssueSeverity;
+  message: string;
+  path?: string;
+}
+
+export interface AIAnalysisJobResultValidationResult {
+  passed: boolean;
+  issues: AIAnalysisJobResultValidationIssue[];
 }
