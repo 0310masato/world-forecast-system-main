@@ -65,3 +65,6 @@ jobs:
 
       - name: Human review decision smoke
         run: npm run test:human-review-decision
+
+      - name: Implementation proposal smoke
+        run: npm run test:implementation-proposal

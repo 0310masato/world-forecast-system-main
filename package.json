@@ -12,7 +12,8 @@
     "test:context-pack": "node scripts/context-pack-builder-smoke.mjs",
     "test:ai-analysis-job": "node scripts/ai-analysis-job-intake-smoke.mjs",
     "test:ai-analysis-job-result": "node scripts/ai-analysis-job-result-smoke.mjs",
-    "test:human-review-decision": "node scripts/human-review-decision-smoke.mjs"
+    "test:human-review-decision": "node scripts/human-review-decision-smoke.mjs",
+    "test:implementation-proposal": "node scripts/implementation-proposal-smoke.mjs"
   },
   "dependencies": {
     "better-sqlite3": "^12.10.0",

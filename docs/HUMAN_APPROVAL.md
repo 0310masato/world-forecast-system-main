@@ -107,6 +107,24 @@ dedicated implementation path. The decision record must preserve the boundary
 that AI results are proposal-only and human-review-only until a later reviewed
 change explicitly implements something within scope.
 
+## Implementation Proposal Contract v0
+
+Implementation Proposal Contract v0 is the next proposal-only contract after a
+Human Review Decision Contract v0 record. It may be created only from a decision
+whose outcome is `approved_for_later_implementation`, and it only describes a
+plan that a future dedicated PR may draft or review.
+
+An implementation proposal is not implementation work. It does not approve,
+apply, merge, deploy, publish, write production state, update `/api/forecast` or
+`/api/hormuz`, run a database migration, add runtime code, add a scheduler, add
+worker behavior, add Codex App Server runtime behavior, or connect an external
+API.
+
+`approved_for_later_implementation` remains separate-PR-only. If a later change
+needs a database migration, API update, deployment, runtime addition, external
+API integration, or production write, that later change needs explicit human
+approval and its own dedicated implementation PR.
+
 ## Reviewer Responsibilities
 
 The human reviewer should check:

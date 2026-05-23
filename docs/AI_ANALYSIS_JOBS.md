@@ -191,6 +191,30 @@ The decision contract must keep these safety boundaries explicit:
 - secrets, `.env` references, local paths, NAS paths, private network IPs, and
   high-risk operation recommendations are rejected
 
+## Implementation Proposal Contract v0
+
+Implementation Proposal Contract v0 follows a Human Review Decision Contract v0
+record whose outcome is `approved_for_later_implementation`. It is a
+proposal-only planning contract for a later separate PR or review path; it is
+not the actual implementation and is not production apply.
+
+The v0 implementation proposal contract keeps these boundaries explicit:
+
+- `requires_human_approval` remains `true`
+- `requires_separate_pr` remains `true`
+- allowed next steps are limited to `implementation_pr_draft_only` or
+  `human_review_only`
+- `proposal_only` remains `true`
+- `is_production_state` remains `false`
+- API updates, DB writes, migrations, deployments, runtime additions, external
+  API integrations, external publishing, automated trading, navigation
+  guidance, and military guidance remain forbidden
+
+If a later implementation needs a DB migration, `/api` update, deploy, worker or
+Codex App Server runtime addition, scheduler, external API integration, or
+production write, it must go through explicit human approval and a dedicated PR
+for that implementation scope.
+
 ## Audit Expectations
 
 When proposal storage is implemented, each job result should preserve:
