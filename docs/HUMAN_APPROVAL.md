@@ -125,6 +125,23 @@ needs a database migration, API update, deployment, runtime addition, external
 API integration, or production write, that later change needs explicit human
 approval and its own dedicated implementation PR.
 
+## Task Board / Handoff Contract v0
+
+Task Board / Handoff Contract v0 is the next contract after an Implementation
+Proposal Contract v0 record. It exists to safely hand proposal-only planning to
+future human, AI, or Codex work without turning that planning into execution.
+
+A task card is a management unit for preparing draft PR instructions only. It is
+not an execution command, does not create a PR, does not merge, deploy, update
+APIs, run database migrations, connect external APIs, write production state, or
+publish externally. A handoff is an asynchronous record that preserves what was
+done, what remains open, blockers, risks, and the required next human-reviewed
+action; it is not a transient conversation.
+
+If future work needs actual execution, PR creation, merge, deployment, API
+updates, DB changes, runtime additions, external API integration, or production
+writes, it requires explicit human approval and a dedicated implementation PR.
+
 ## Reviewer Responsibilities
 
 The human reviewer should check:
