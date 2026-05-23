@@ -114,3 +114,16 @@ rollback plan.
 CodexApp work must start from a clean branch and clean worktree. Do not touch
 uncommitted changes from the original checkout, and do not stage unrelated
 files.
+
+## Agent Charter / Operations Runbook Boundary
+
+Agent Charter / Operations Runbook v0 is documentation-only operating guidance
+for CodexApp and AI worker requests. It does not add Codex App Server runtime,
+worker runtime, scheduler runtime, external API integration, DB migration,
+GitHub automation, file-writing automation, or production promotion.
+
+CodexApp instruction drafts must be written in Japanese while preserving
+contract field names, enum values, IDs, file names, and code identifiers in
+their defined form. Use `docs/AGENT_CHARTER_OPERATIONS_RUNBOOK.md` and
+`docs/templates/CODEXAPP_OPERATION_REQUEST_TEMPLATE.md` for proposal-only
+Japanese request drafting.

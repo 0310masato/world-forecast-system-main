@@ -146,6 +146,19 @@ If future work needs actual execution, PR creation, merge, deployment, API
 updates, DB changes, runtime additions, external API integration, or production
 writes, it requires explicit human approval and a dedicated implementation PR.
 
+## Agent Charter / Operations Runbook v0
+
+Agent Charter / Operations Runbook v0 defines how CodexApp or another AI worker
+may prepare Japanese proposal-only instructions for human review. It does not
+grant authority to execute work, create PRs, merge, deploy, update APIs, write
+databases, run migrations, add runtime behavior, connect external APIs, publish
+externally, or promote proposal data into production state.
+
+Human approval remains review permission only. If a CodexApp request exposes a
+protected path, restricted content, runtime requirement, missing source-chain
+context, or production-impacting operation, the worker must stop and return the
+request for human review instead of continuing.
+
 ## Reviewer Responsibilities
 
 The human reviewer should check:
