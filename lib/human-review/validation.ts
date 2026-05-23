@@ -11,6 +11,8 @@ import {
   HUMAN_REVIEW_DECISION_OUTCOMES,
   HUMAN_REVIEW_DECISION_REQUIRED_FORBIDDEN_NEXT_STEPS,
   HUMAN_REVIEW_DECISION_VERSION,
+  type HumanReviewDecisionAllowedNextStep,
+  type HumanReviewDecisionOutcome,
   type HumanReviewDecisionValidationIssue,
   type HumanReviewDecisionValidationResult,
 } from './types';
@@ -27,6 +29,16 @@ const HUMAN_REVIEW_DECISION_FORBIDDEN_OUTCOME_SET = new Set<string>(
 const HUMAN_REVIEW_DECISION_ALLOWED_NEXT_STEP_SET = new Set<string>(
   HUMAN_REVIEW_DECISION_ALLOWED_NEXT_STEPS,
 );
+
+const EXPECTED_ALLOWED_NEXT_STEP_BY_OUTCOME: Record<
+  HumanReviewDecisionOutcome,
+  HumanReviewDecisionAllowedNextStep
+> = {
+  approved_for_later_implementation: 'separate_implementation_pr_only',
+  rejected: 'human_review_only',
+  needs_revision: 'human_review_only',
+  archived_as_informational: 'human_review_only',
+};
 
 const HIGH_RISK_OPERATION_RECOMMENDATION_PATTERNS = [
   {
@@ -274,6 +286,31 @@ function validateForbiddenNextSteps(
   }
 }
 
+function validateOutcomeNextStepConsistency(
+  decision: UnknownRecord,
+  issues: HumanReviewDecisionValidationIssue[],
+): void {
+  if (
+    typeof decision.outcome !== 'string'
+    || !HUMAN_REVIEW_DECISION_OUTCOME_SET.has(decision.outcome)
+    || typeof decision.allowed_next_step !== 'string'
+    || !HUMAN_REVIEW_DECISION_ALLOWED_NEXT_STEP_SET.has(decision.allowed_next_step)
+  ) {
+    return;
+  }
+
+  const outcome = decision.outcome as HumanReviewDecisionOutcome;
+  const expectedAllowedNextStep = EXPECTED_ALLOWED_NEXT_STEP_BY_OUTCOME[outcome];
+
+  if (decision.allowed_next_step !== expectedAllowedNextStep) {
+    addIssue(issues, {
+      code: 'outcome_allowed_next_step_mismatch',
+      message: `outcome ${outcome} requires allowed_next_step ${expectedAllowedNextStep}, received ${decision.allowed_next_step}.`,
+      path: 'allowed_next_step',
+    });
+  }
+}
+
 function validateResultRelationship(
   decision: UnknownRecord,
   result: AIAnalysisJobResult | undefined,
@@ -506,6 +543,7 @@ export function validateHumanReviewDecision(
     });
   }
 
+  validateOutcomeNextStepConsistency(decisionRecord, issues);
   validateForbiddenNextSteps(decisionRecord, issues);
 
   if (decisionRecord.is_production_state !== false) {

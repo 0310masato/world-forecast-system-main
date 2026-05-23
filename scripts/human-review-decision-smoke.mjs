@@ -446,6 +446,50 @@ async function main() {
     'forbidden_next_step_missing',
   );
 
+  const rejectedWithSeparateImplementation = cloneValue(validDecision);
+  rejectedWithSeparateImplementation.outcome = 'rejected';
+  rejectedWithSeparateImplementation.allowed_next_step = 'separate_implementation_pr_only';
+  expectRejected(
+    'rejected separate implementation decision',
+    validateHumanReviewDecision,
+    rejectedWithSeparateImplementation,
+    validResult,
+    'outcome_allowed_next_step_mismatch',
+  );
+
+  const needsRevisionWithSeparateImplementation = cloneValue(validDecision);
+  needsRevisionWithSeparateImplementation.outcome = 'needs_revision';
+  needsRevisionWithSeparateImplementation.allowed_next_step = 'separate_implementation_pr_only';
+  expectRejected(
+    'needs_revision separate implementation decision',
+    validateHumanReviewDecision,
+    needsRevisionWithSeparateImplementation,
+    validResult,
+    'outcome_allowed_next_step_mismatch',
+  );
+
+  const archivedWithSeparateImplementation = cloneValue(validDecision);
+  archivedWithSeparateImplementation.outcome = 'archived_as_informational';
+  archivedWithSeparateImplementation.allowed_next_step = 'separate_implementation_pr_only';
+  expectRejected(
+    'archived_as_informational separate implementation decision',
+    validateHumanReviewDecision,
+    archivedWithSeparateImplementation,
+    validResult,
+    'outcome_allowed_next_step_mismatch',
+  );
+
+  const approvedWithHumanReviewOnly = cloneValue(validDecision);
+  approvedWithHumanReviewOnly.outcome = 'approved_for_later_implementation';
+  approvedWithHumanReviewOnly.allowed_next_step = 'human_review_only';
+  expectRejected(
+    'approved human_review_only decision',
+    validateHumanReviewDecision,
+    approvedWithHumanReviewOnly,
+    validResult,
+    'outcome_allowed_next_step_mismatch',
+  );
+
   const restrictedValues = [
     ['secret-like value decision', makeSecretLikeValue()],
     ['local path decision', makeLocalPathLikeValue()],
