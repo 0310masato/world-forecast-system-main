@@ -68,3 +68,6 @@ jobs:
 
       - name: Implementation proposal smoke
         run: npm run test:implementation-proposal
+
+      - name: Task board handoff smoke
+        run: npm run test:task-board-handoff

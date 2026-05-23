@@ -215,6 +215,20 @@ Codex App Server runtime addition, scheduler, external API integration, or
 production write, it must go through explicit human approval and a dedicated PR
 for that implementation scope.
 
+## Task Board / Handoff Contract v0
+
+Task Board / Handoff Contract v0 follows an Implementation Proposal Contract v0
+record and turns proposal-only planning into a safe task card plus durable
+handoff record. The task card is a management unit for draft PR instructions; it
+is not execution, PR creation, merge, deployment, API update, DB migration,
+worker runtime, scheduler runtime, Codex App Server runtime, external API
+integration, external publishing, or production-state promotion.
+
+The handoff record is an asynchronous artifact, not a conversation transcript.
+It preserves done work, findings, decisions, open questions, blockers, risks,
+inputs, outputs, and the required next human-reviewed action. Any future
+execution requires explicit human approval and a dedicated implementation PR.
+
 ## Audit Expectations
 
 When proposal storage is implemented, each job result should preserve:
