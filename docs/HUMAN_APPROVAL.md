@@ -131,6 +131,10 @@ Task Board / Handoff Contract v0 is the next contract after an Implementation
 Proposal Contract v0 record. It exists to safely hand proposal-only planning to
 future human, AI, or Codex work without turning that planning into execution.
 
+Operational rules, templates, allowed statuses, allowed autonomy levels,
+protected intended file paths, and reviewer checks are documented in
+`docs/TASK_BOARD_HANDOFF.md`.
+
 A task card is a management unit for preparing draft PR instructions only. It is
 not an execution command, does not create a PR, does not merge, deploy, update
 APIs, run database migrations, connect external APIs, write production state, or
