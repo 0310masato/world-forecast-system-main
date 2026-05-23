@@ -624,6 +624,55 @@ async function main() {
     'forbidden_next_step_missing',
   );
 
+  const intendedForbiddenOverlap = cloneValue(validProposal);
+  intendedForbiddenOverlap.intended_files.push('app/api/forecast/route.ts');
+  expectRejected(
+    'intended_files forbidden_files overlap proposal',
+    validateImplementationProposal,
+    intendedForbiddenOverlap,
+    validDecision,
+    'intended_file_forbidden',
+  );
+
+  const intendedForecastApi = cloneValue(validProposal);
+  intendedForecastApi.intended_files.push('app/api/forecast/route.ts');
+  intendedForecastApi.forbidden_files = intendedForecastApi.forbidden_files.filter(
+    (filePath) => filePath !== 'app/api/forecast/route.ts',
+  );
+  expectRejected(
+    'intended_files forecast API protected scope proposal',
+    validateImplementationProposal,
+    intendedForecastApi,
+    validDecision,
+    'intended_file_protected_scope',
+  );
+
+  const intendedDbHelper = cloneValue(validProposal);
+  intendedDbHelper.intended_files.push('lib/db.ts');
+  intendedDbHelper.forbidden_files = intendedDbHelper.forbidden_files.filter(
+    (filePath) => filePath !== 'lib/db.ts',
+  );
+  expectRejected(
+    'intended_files db helper protected scope proposal',
+    validateImplementationProposal,
+    intendedDbHelper,
+    validDecision,
+    'intended_file_protected_scope',
+  );
+
+  for (const proposalStatus of ['rejected', 'needs_revision', 'archived']) {
+    const statusNextStepMismatch = cloneValue(validProposal);
+    statusNextStepMismatch.proposal_status = proposalStatus;
+    statusNextStepMismatch.allowed_next_step = 'implementation_pr_draft_only';
+    expectRejected(
+      `${proposalStatus} implementation_pr_draft_only proposal`,
+      validateImplementationProposal,
+      statusNextStepMismatch,
+      validDecision,
+      'proposal_status_allowed_next_step_mismatch',
+    );
+  }
+
   const restrictedValues = [
     ['secret-like value proposal', makeSecretLikeValue()],
     ['local path proposal', makeLocalPathLikeValue()],

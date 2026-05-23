@@ -38,6 +38,59 @@ const IMPLEMENTATION_PROPOSAL_FORBIDDEN_CHANGE_TYPE_SET = new Set<string>(
 const IMPLEMENTATION_PROPOSAL_ALLOWED_NEXT_STEP_SET = new Set<string>(
   IMPLEMENTATION_PROPOSAL_ALLOWED_NEXT_STEPS,
 );
+const IMPLEMENTATION_PROPOSAL_HUMAN_REVIEW_ONLY_STATUSES = new Set<string>([
+  'needs_review',
+  'needs_revision',
+  'rejected',
+  'archived',
+]);
+
+const PROTECTED_INTENDED_FILE_PATH_PATTERNS = [
+  {
+    name: 'forecast API path',
+    pattern: /^(?:app|pages)\/api\/forecast(?:\/|$)/,
+  },
+  {
+    name: 'Hormuz API path',
+    pattern: /^(?:app|pages)\/api\/hormuz(?:\/|$)/,
+  },
+  {
+    name: 'database helper',
+    pattern: /^lib\/db\.ts$/,
+  },
+  {
+    name: 'database directory',
+    pattern: /^db(?:\/|$)/,
+  },
+  {
+    name: 'migration directory',
+    pattern: /^migrations(?:\/|$)/,
+  },
+  {
+    name: 'Prisma directory',
+    pattern: /^prisma(?:\/|$)/,
+  },
+  {
+    name: 'dependency lockfile',
+    pattern: /^(?:package-lock\.json|pnpm-lock\.yaml|yarn\.lock)$/,
+  },
+  {
+    name: 'worker runtime path',
+    pattern: /(?:^|\/)workers?(?:\/|$)|(?:^|\/)worker-runtime(?:\/|$)/,
+  },
+  {
+    name: 'scheduler runtime path',
+    pattern: /(?:^|\/)schedulers?(?:\/|$)|(?:^|\/)scheduler-runtime(?:\/|$)/,
+  },
+  {
+    name: 'Codex App Server runtime path',
+    pattern: /(?:^|\/)codex[-_ ]app[-_ ]server(?:\/|$)|(?:^|\/)codex[-_ ]app[-_ ]server[-_ ]runtime(?:\/|$)/,
+  },
+  {
+    name: 'external API integration runtime path',
+    pattern: /(?:^|\/)external[-_ ]api(?:\/|$)|(?:^|\/)external[-_ ]api[-_ ]integrations?(?:\/|$)|(?:^|\/)external[-_ ]api[-_ ]runtime(?:\/|$)/,
+  },
+] as const;
 
 const HIGH_RISK_OPERATION_RECOMMENDATION_PATTERNS = [
   {
@@ -164,6 +217,10 @@ function isNonEmptyString(value: unknown): value is string {
 
 function isUnixSeconds(value: unknown): value is number {
   return Number.isInteger(value) && Number(value) >= 0;
+}
+
+function normalizeProposalPath(value: string): string {
+  return value.trim().replace(/\\/g, '/').replace(/^\.\/+/, '').replace(/\/+/g, '/').toLowerCase();
 }
 
 function addIssue(
@@ -303,6 +360,73 @@ function validateForbiddenNextSteps(
         path: 'forbidden_next_steps',
       });
     }
+  }
+}
+
+function validateIntendedFileScope(
+  proposal: UnknownRecord,
+  issues: ImplementationProposalValidationIssue[],
+): void {
+  if (!Array.isArray(proposal.intended_files) || !Array.isArray(proposal.forbidden_files)) {
+    return;
+  }
+
+  const forbiddenFileSet = new Set(
+    proposal.forbidden_files
+      .filter((item): item is string => isNonEmptyString(item))
+      .map((item) => normalizeProposalPath(item)),
+  );
+
+  proposal.intended_files.forEach((item, index) => {
+    if (!isNonEmptyString(item)) {
+      return;
+    }
+
+    const normalizedPath = normalizeProposalPath(item);
+
+    if (forbiddenFileSet.has(normalizedPath)) {
+      addIssue(issues, {
+        code: 'intended_file_forbidden',
+        message: `intended_files contains a forbidden file path: ${item}.`,
+        path: `intended_files[${index}]`,
+      });
+    }
+
+    for (const { name, pattern } of PROTECTED_INTENDED_FILE_PATH_PATTERNS) {
+      if (pattern.test(normalizedPath)) {
+        addIssue(issues, {
+          code: 'intended_file_protected_scope',
+          message: `intended_files contains a protected ${name}: ${item}.`,
+          path: `intended_files[${index}]`,
+        });
+        break;
+      }
+    }
+  });
+}
+
+function validateProposalStatusNextStepConsistency(
+  proposal: UnknownRecord,
+  issues: ImplementationProposalValidationIssue[],
+): void {
+  if (
+    typeof proposal.proposal_status !== 'string'
+    || !IMPLEMENTATION_PROPOSAL_STATUS_SET.has(proposal.proposal_status)
+    || typeof proposal.allowed_next_step !== 'string'
+    || !IMPLEMENTATION_PROPOSAL_ALLOWED_NEXT_STEP_SET.has(proposal.allowed_next_step)
+  ) {
+    return;
+  }
+
+  if (
+    IMPLEMENTATION_PROPOSAL_HUMAN_REVIEW_ONLY_STATUSES.has(proposal.proposal_status)
+    && proposal.allowed_next_step !== 'human_review_only'
+  ) {
+    addIssue(issues, {
+      code: 'proposal_status_allowed_next_step_mismatch',
+      message: `proposal_status ${proposal.proposal_status} requires allowed_next_step human_review_only.`,
+      path: 'allowed_next_step',
+    });
   }
 }
 
@@ -598,6 +722,7 @@ export function validateImplementationProposal(
   validateStringArray({ proposal: proposalRecord, issues, key: 'test_plan' });
   validateStringArray({ proposal: proposalRecord, issues, key: 'rollback_plan' });
   validateStringArray({ proposal: proposalRecord, issues, key: 'residual_risks' });
+  validateIntendedFileScope(proposalRecord, issues);
 
   if (proposalRecord.requires_human_approval !== true) {
     addIssue(issues, {
@@ -626,6 +751,7 @@ export function validateImplementationProposal(
     });
   }
 
+  validateProposalStatusNextStepConsistency(proposalRecord, issues);
   validateForbiddenNextSteps(proposalRecord, issues);
 
   if (proposalRecord.proposal_only !== true) {
