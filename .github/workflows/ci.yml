@@ -62,3 +62,6 @@ jobs:
 
       - name: AI analysis job result smoke
         run: npm run test:ai-analysis-job-result
+
+      - name: Human review decision smoke
+        run: npm run test:human-review-decision

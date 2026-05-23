@@ -83,6 +83,30 @@ the proposal has been applied to production.
 `applied` should only be set after a separate implementation path has safely
 made the change.
 
+## Human Review Decision Contract v0
+
+Human Review Decision Contract v0 records how a human handled an AI Analysis Job
+Result Contract v0 proposal. It is an audit and review contract only. It does
+not apply AI output to production state, update an API, run a database
+migration, deploy code, publish externally, or create a saved prediction.
+
+The v0 decision outcomes are:
+
+- `approved_for_later_implementation`
+- `rejected`
+- `needs_revision`
+- `archived_as_informational`
+
+`approved_for_later_implementation` means a human reviewer allows a later,
+separate PR or implementation path to be considered. It does not mean automatic
+application, production write, API update, DB write, deployment, external
+publishing, trading action, navigation guidance, or military guidance.
+
+High-impact operations still require a separate human approval gate and a
+dedicated implementation path. The decision record must preserve the boundary
+that AI results are proposal-only and human-review-only until a later reviewed
+change explicitly implements something within scope.
+
 ## Reviewer Responsibilities
 
 The human reviewer should check:
