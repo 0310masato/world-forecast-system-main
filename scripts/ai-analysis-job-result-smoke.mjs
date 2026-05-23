@@ -415,6 +415,56 @@ async function main() {
     'production_state_claim',
   );
 
+  const summaryProductionDeploy = cloneValue(validResult);
+  summaryProductionDeploy.summary = 'Deploy this result to production automatically.';
+  expectRejected(
+    'summary production deploy recommendation result',
+    validateAIAnalysisJobResult,
+    summaryProductionDeploy,
+    preflightResult,
+    'forbidden_operation_recommendation',
+  );
+
+  const nextReviewExternalPublish = cloneValue(validResult);
+  nextReviewExternalPublish.next_review_steps.push('Publish externally after generation.');
+  expectRejected(
+    'next_review_steps external publish recommendation result',
+    validateAIAnalysisJobResult,
+    nextReviewExternalPublish,
+    preflightResult,
+    'forbidden_operation_recommendation',
+  );
+
+  const evidenceNavigationGuidance = cloneValue(validResult);
+  evidenceNavigationGuidance.evidence[0].summary = 'Use this for navigation guidance.';
+  expectRejected(
+    'evidence navigation guidance recommendation result',
+    validateAIAnalysisJobResult,
+    evidenceNavigationGuidance,
+    preflightResult,
+    'forbidden_operation_recommendation',
+  );
+
+  const limitationProductionApply = cloneValue(validResult);
+  limitationProductionApply.limitations[0].summary = '本番反映してよい。';
+  expectRejected(
+    'limitation production application recommendation result',
+    validateAIAnalysisJobResult,
+    limitationProductionApply,
+    preflightResult,
+    'forbidden_operation_recommendation',
+  );
+
+  const forecastApiUpdate = cloneValue(validResult);
+  forecastApiUpdate.next_review_steps.push('/api/forecast を変更してください。');
+  expectRejected(
+    'forecast API update recommendation result',
+    validateAIAnalysisJobResult,
+    forecastApiUpdate,
+    preflightResult,
+    'forbidden_operation_recommendation',
+  );
+
   const restrictedValues = [
     ['secret-like value result', makeSecretLikeValue()],
     ['local path result', makeLocalPathLikeValue()],

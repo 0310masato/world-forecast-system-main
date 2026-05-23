@@ -46,6 +46,77 @@ const PRODUCTION_STATE_CLAIM_PATTERNS = [
   },
 ] as const;
 
+const FORBIDDEN_OPERATION_RECOMMENDATION_PATTERNS = [
+  {
+    name: 'production deployment recommendation',
+    pattern: /\bdeploy\b[\w\s-]{0,80}\bto\s+production\b/i,
+  },
+  {
+    name: 'external publishing recommendation',
+    pattern: /\b(?:publish\b[\w\s-]{0,80}\bexternally|external(?:ly)?\s+publish(?:ing)?)\b/i,
+  },
+  {
+    name: 'automated trading recommendation',
+    pattern: /\b(?:start|begin|enable|trigger|run|use\s+(?:this|result|proposal)?\s*for)\s+automated\s+trading\b/i,
+  },
+  {
+    name: 'navigation guidance recommendation',
+    pattern: /\b(?:use\s+(?:this|result|proposal)?\s*(?:for|as)\s+navigation(?:\s+guidance)?|navigation\s+guidance)\b/i,
+  },
+  {
+    name: 'military action recommendation',
+    pattern: /\bmilitary\s+(?:action|decision|guidance)\b/i,
+  },
+  {
+    name: 'forecast API update recommendation',
+    pattern: /\b(?:update|modify|change|patch|write\s+to)\s+\/api\/forecast\b/i,
+  },
+  {
+    name: 'Hormuz API update recommendation',
+    pattern: /\b(?:update|modify|change|patch|write\s+to)\s+\/api\/hormuz\b/i,
+  },
+  {
+    name: 'production data write recommendation',
+    pattern: /\b(?:write|save|persist|update)\s+production\s+data\b/i,
+  },
+  {
+    name: 'automatic application recommendation',
+    pattern: /\b(?:apply\s+(?:it|this|result|proposal)?\s*automatically|automatically\s+apply)\b/i,
+  },
+  {
+    name: 'Japanese production application recommendation',
+    pattern: /本番(?:へ|に)?反映/,
+  },
+  {
+    name: 'Japanese external publishing recommendation',
+    pattern: /外部公開/,
+  },
+  {
+    name: 'Japanese automated trading recommendation',
+    pattern: /自動取引/,
+  },
+  {
+    name: 'Japanese navigation decision recommendation',
+    pattern: /航法判断/,
+  },
+  {
+    name: 'Japanese military decision recommendation',
+    pattern: /軍事判断/,
+  },
+  {
+    name: 'Japanese forecast API update recommendation',
+    pattern: /\/api\/forecast\s*を\s*(?:変更|更新)/,
+  },
+  {
+    name: 'Japanese Hormuz API update recommendation',
+    pattern: /\/api\/hormuz\s*を\s*(?:変更|更新)/,
+  },
+  {
+    name: 'Japanese automatic application recommendation',
+    pattern: /(?:自動適用|自動で適用)/,
+  },
+] as const;
+
 function asRecord(value: unknown): UnknownRecord | null {
   if (value !== null && typeof value === 'object' && !Array.isArray(value)) {
     return value as UnknownRecord;
@@ -134,6 +205,76 @@ function getProductionStateClaimIssue(value: unknown): string | null {
   }
 
   return visit(value, 'aiAnalysisJobResult');
+}
+
+function getForbiddenOperationRecommendationIssue(
+  value: unknown,
+  path: string,
+): { message: string; path: string } | null {
+  if (typeof value !== 'string') {
+    return null;
+  }
+
+  for (const { name, pattern } of FORBIDDEN_OPERATION_RECOMMENDATION_PATTERNS) {
+    if (pattern.test(value)) {
+      return {
+        message: `${path} contains a forbidden operation recommendation: ${name}.`,
+        path,
+      };
+    }
+  }
+
+  return null;
+}
+
+function validateNoForbiddenOperationRecommendations(
+  result: UnknownRecord,
+  issues: AIAnalysisJobResultValidationIssue[],
+): void {
+  const candidates: Array<{ value: unknown; path: string }> = [
+    { value: result.summary, path: 'summary' },
+  ];
+
+  if (Array.isArray(result.evidence)) {
+    result.evidence.forEach((item, index) => {
+      candidates.push({
+        value: asRecord(item)?.summary,
+        path: `evidence[${index}].summary`,
+      });
+    });
+  }
+
+  if (Array.isArray(result.limitations)) {
+    result.limitations.forEach((item, index) => {
+      candidates.push({
+        value: asRecord(item)?.summary,
+        path: `limitations[${index}].summary`,
+      });
+    });
+  }
+
+  if (Array.isArray(result.next_review_steps)) {
+    result.next_review_steps.forEach((step, index) => {
+      candidates.push({
+        value: step,
+        path: `next_review_steps[${index}]`,
+      });
+    });
+  }
+
+  for (const candidate of candidates) {
+    const recommendationIssue = getForbiddenOperationRecommendationIssue(
+      candidate.value,
+      candidate.path,
+    );
+    if (recommendationIssue) {
+      addIssue(issues, {
+        code: 'forbidden_operation_recommendation',
+        message: recommendationIssue.message,
+        path: recommendationIssue.path,
+      });
+    }
+  }
 }
 
 function validateEvidence(
@@ -457,6 +598,7 @@ export function validateAIAnalysisJobResult(
 
   validateEvidence(resultRecord, issues);
   validateLimitations(resultRecord, issues);
+  validateNoForbiddenOperationRecommendations(resultRecord, issues);
   validateSafetyLabels(resultRecord, issues);
 
   if (resultRecord.requires_human_approval !== true) {
