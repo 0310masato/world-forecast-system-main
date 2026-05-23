@@ -229,6 +229,9 @@ It preserves done work, findings, decisions, open questions, blockers, risks,
 inputs, outputs, and the required next human-reviewed action. Any future
 execution requires explicit human approval and a dedicated implementation PR.
 
+For operational use, see `docs/TASK_BOARD_HANDOFF.md` and the templates in
+`docs/templates/`.
+
 ## Audit Expectations
 
 When proposal storage is implemented, each job result should preserve:

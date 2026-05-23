@@ -87,3 +87,30 @@ are in place, Codex App Server work should remain documentation-first or limited
 to explicitly approved non-production scaffolding. Do not add runtime server
 code, worker code, external API calls, DB migrations, or package dependencies as
 part of policy documentation tasks.
+
+## Task Board And Handoff Operating Boundary
+
+Task Board / Handoff Contract v0 follows the PR #17 contract. TaskCards are
+proposal-only management records for draft PR instructions; they are not
+execution commands. Handoffs are durable asynchronous handoff artifacts; they
+are not conversation logs.
+
+AI workers and CodexApp must keep Task Board autonomy limited to:
+
+- `A0_advice_only`
+- `A1_draft_only`
+- `A2_prepare_for_approval`
+
+Do not use a TaskCard or Handoff to automatically create a PR, merge, deploy,
+change an API, run a database migration, write production state, add runtime
+code, add worker behavior, add scheduler behavior, add Codex App Server runtime
+behavior, connect an external API, publish externally, or promote proposal data
+into production state.
+
+If execution is needed, stop at human review. The execution must have explicit
+human approval and a dedicated implementation PR with its own scope, tests, and
+rollback plan.
+
+CodexApp work must start from a clean branch and clean worktree. Do not touch
+uncommitted changes from the original checkout, and do not stage unrelated
+files.
