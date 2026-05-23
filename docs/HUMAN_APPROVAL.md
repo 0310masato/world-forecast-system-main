@@ -159,6 +159,17 @@ protected path, restricted content, runtime requirement, missing source-chain
 context, or production-impacting operation, the worker must stop and return the
 request for human review instead of continuing.
 
+## Operations Routine Templates v0
+
+Operations Routine Templates v0 defines proposal-only record formats for
+Morning Standup, Weekly Review, Nightly QA Report, Blocker Escalation, and
+Silent Failure Audit. See `docs/OPERATIONS_ROUTINES.md`.
+
+Routine reports are human-review artifacts only. They do not run jobs, create
+PRs, merge, deploy, update APIs, write databases, run migrations, add runtime,
+connect external APIs, automate files, or promote proposal data into production
+state.
+
 ## Reviewer Responsibilities
 
 The human reviewer should check:
