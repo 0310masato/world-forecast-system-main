@@ -145,3 +145,15 @@ Before any implementation PR, confirm:
 - Secrets and local paths are excluded from outputs
 - Rollback or disable behavior is documented
 - Tests cover the proposal-only boundary
+
+## Agent Charter / Operations Runbook
+
+Before designing or introducing Codex App Server runtime, use
+`docs/AGENT_CHARTER_OPERATIONS_RUNBOOK.md` as the proposal-only operating
+charter for CodexApp instructions. CodexApp instructions must be written in
+Japanese, must preserve the existing contract chain, and must stop at human
+review or draft-instructions preparation.
+
+This runbook does not authorize runtime implementation. When Codex App Server
+runtime design becomes necessary, it must wait for user-provided materials and
+a separate scoped PR.

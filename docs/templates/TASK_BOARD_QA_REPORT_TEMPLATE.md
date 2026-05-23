@@ -68,6 +68,13 @@ Allowed `recommendation` values:
 - Notes: `<Is required_human_approval or human_approval_required true, and is
   approval described as review-only?>`
 
+### agent_charter_runbook_check
+
+- Result: `<pass | revise | block | not_applicable>`
+- Notes: `<If CodexApp instructions are being prepared, are they written in
+  Japanese, limited to proposal-only review support, and aligned with
+  docs/AGENT_CHARTER_OPERATIONS_RUNBOOK.md?>`
+
 ## Residual Risks
 
 - `<risk that remains after QA>`

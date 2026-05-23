@@ -15,6 +15,7 @@ Related policies:
 - `docs/HUMAN_APPROVAL.md`
 - `docs/CONTEXT_PACKS.md`
 - `docs/SELF_IMPROVEMENT_LOOP.md`
+- `docs/AGENT_CHARTER_OPERATIONS_RUNBOOK.md`
 
 ## Operating Principle
 
@@ -231,6 +232,20 @@ execution requires explicit human approval and a dedicated implementation PR.
 
 For operational use, see `docs/TASK_BOARD_HANDOFF.md` and the templates in
 `docs/templates/`.
+
+## Agent Charter / Operations Runbook v0
+
+Agent Charter / Operations Runbook v0 follows the Task Board / Handoff docs
+layer. It defines how a future CodexApp or AI worker may prepare Japanese
+proposal-only operating instructions, QA notes, and handoff summaries without
+adding runtime, worker, scheduler, Codex App Server runtime, external API
+integration, DB migration, `/api` connection, GitHub automation, file-writing
+automation, or production promotion.
+
+The runbook keeps CodexApp autonomy limited to A0, A1, or A2. It requires a
+clean branch and clean worktree, forbids touching uncommitted changes from the
+original checkout, and stops whenever protected paths, restricted content,
+runtime design, production impact, or missing source-chain context appear.
 
 ## Audit Expectations
 

@@ -214,6 +214,12 @@ When CodexApp or another AI worker handles TaskCards or Handoffs:
 - If a protected or high-risk change is required, stop and route it to human
   approval plus a dedicated implementation PR.
 
+For the broader CodexApp operating charter, Japanese instruction requirements,
+start gates, stop conditions, and review completion checks, see
+`docs/AGENT_CHARTER_OPERATIONS_RUNBOOK.md`. Use
+`docs/templates/CODEXAPP_OPERATION_REQUEST_TEMPLATE.md` when preparing a
+Japanese proposal-only CodexApp request.
+
 ## Human Review Checklist
 
 Before accepting a TaskCard or Handoff for later review, check:
