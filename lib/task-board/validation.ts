@@ -17,7 +17,9 @@ import {
   TASK_CARD_STATUSES,
   TASK_CARD_VERSION,
   TASK_HANDOFF_VERSION,
+  type TaskBoardAllowedNextStep,
   type TaskCard,
+  type TaskCardStatus,
   type TaskCardValidationIssue,
   type TaskCardValidationResult,
   type TaskHandoffValidationIssue,
@@ -38,6 +40,20 @@ const TASK_BOARD_ALLOWED_NEXT_STEP_SET = new Set<string>(TASK_BOARD_ALLOWED_NEXT
 const TASK_BOARD_FORBIDDEN_ALLOWED_NEXT_STEP_SET = new Set<string>(
   TASK_BOARD_FORBIDDEN_ALLOWED_NEXT_STEPS,
 );
+
+const ALLOWED_NEXT_STEPS_BY_TASK_STATUS: Record<
+  TaskCardStatus,
+  readonly TaskBoardAllowedNextStep[]
+> = {
+  new: ['human_review_only', 'revise_task_card_only'],
+  triaged: ['human_review_only', 'prepare_draft_pr_instructions_only'],
+  waiting_for_context: ['human_review_only'],
+  waiting_for_human_approval: ['human_review_only'],
+  ready_for_draft_pr: ['prepare_draft_pr_instructions_only'],
+  blocked: ['human_review_only'],
+  needs_revision: ['revise_task_card_only'],
+  archived: ['archive_only'],
+};
 
 const PROTECTED_INTENDED_FILE_PATH_PATTERNS = [
   {
@@ -504,6 +520,56 @@ function validateTaskHandoffHighRiskOperationRecommendations(
   }
 }
 
+function validateTaskCardStatusNextStepConsistency(
+  taskCard: UnknownRecord,
+  issues: TaskCardValidationIssue[],
+): void {
+  if (
+    typeof taskCard.status !== 'string'
+    || !TASK_CARD_STATUS_SET.has(taskCard.status)
+    || typeof taskCard.allowed_next_step !== 'string'
+    || !TASK_BOARD_ALLOWED_NEXT_STEP_SET.has(taskCard.allowed_next_step)
+  ) {
+    return;
+  }
+
+  const status = taskCard.status as TaskCardStatus;
+  const allowedNextSteps = ALLOWED_NEXT_STEPS_BY_TASK_STATUS[status];
+
+  if (!allowedNextSteps.includes(taskCard.allowed_next_step as TaskBoardAllowedNextStep)) {
+    addTaskCardIssue(issues, {
+      code: 'task_status_allowed_next_step_mismatch',
+      message: `status ${status} does not allow allowed_next_step ${taskCard.allowed_next_step}.`,
+      path: 'allowed_next_step',
+    });
+  }
+}
+
+function validateTaskHandoffStatusNextStepConsistency(
+  handoff: UnknownRecord,
+  issues: TaskHandoffValidationIssue[],
+): void {
+  if (
+    typeof handoff.current_status !== 'string'
+    || !TASK_CARD_STATUS_SET.has(handoff.current_status)
+    || typeof handoff.allowed_next_step !== 'string'
+    || !TASK_BOARD_ALLOWED_NEXT_STEP_SET.has(handoff.allowed_next_step)
+  ) {
+    return;
+  }
+
+  const status = handoff.current_status as TaskCardStatus;
+  const allowedNextSteps = ALLOWED_NEXT_STEPS_BY_TASK_STATUS[status];
+
+  if (!allowedNextSteps.includes(handoff.allowed_next_step as TaskBoardAllowedNextStep)) {
+    addTaskHandoffIssue(issues, {
+      code: 'handoff_status_allowed_next_step_mismatch',
+      message: `current_status ${status} does not allow allowed_next_step ${handoff.allowed_next_step}.`,
+      path: 'allowed_next_step',
+    });
+  }
+}
+
 function validateImplementationProposalRelationship(
   taskCard: UnknownRecord,
   implementationProposal: ImplementationProposal | undefined,
@@ -560,6 +626,46 @@ function validateImplementationProposalRelationship(
       code: 'implementation_proposal_non_production_state_required',
       message: 'Implementation proposal must not be production state.',
       path: 'implementationProposal.is_production_state',
+    });
+  }
+
+  if (proposal.does_not_modify_api !== true) {
+    addTaskCardIssue(issues, {
+      code: 'implementation_proposal_does_not_modify_api_required',
+      message: 'Implementation proposal must explicitly not modify APIs.',
+      path: 'implementationProposal.does_not_modify_api',
+    });
+  }
+
+  if (proposal.does_not_write_db !== true) {
+    addTaskCardIssue(issues, {
+      code: 'implementation_proposal_does_not_write_db_required',
+      message: 'Implementation proposal must explicitly not write to the database.',
+      path: 'implementationProposal.does_not_write_db',
+    });
+  }
+
+  if (proposal.does_not_run_migration !== true) {
+    addTaskCardIssue(issues, {
+      code: 'implementation_proposal_does_not_run_migration_required',
+      message: 'Implementation proposal must explicitly not run migrations.',
+      path: 'implementationProposal.does_not_run_migration',
+    });
+  }
+
+  if (proposal.does_not_deploy !== true) {
+    addTaskCardIssue(issues, {
+      code: 'implementation_proposal_does_not_deploy_required',
+      message: 'Implementation proposal must explicitly not deploy.',
+      path: 'implementationProposal.does_not_deploy',
+    });
+  }
+
+  if (proposal.does_not_publish_externally !== true) {
+    addTaskCardIssue(issues, {
+      code: 'implementation_proposal_does_not_publish_externally_required',
+      message: 'Implementation proposal must explicitly not publish externally.',
+      path: 'implementationProposal.does_not_publish_externally',
     });
   }
 
@@ -829,6 +935,7 @@ export function validateTaskCard(
     });
   }
 
+  validateTaskCardStatusNextStepConsistency(taskCardRecord, issues);
   validateTaskCardForbiddenNextSteps(taskCardRecord, issues);
 
   if (taskCardRecord.proposal_only !== true) {
@@ -1062,6 +1169,7 @@ export function validateTaskHandoff(
     });
   }
 
+  validateTaskHandoffStatusNextStepConsistency(handoffRecord, issues);
   validateTaskHandoffForbiddenNextSteps(handoffRecord, issues);
   validateTaskHandoffHighRiskOperationRecommendations(handoffRecord, issues);
 

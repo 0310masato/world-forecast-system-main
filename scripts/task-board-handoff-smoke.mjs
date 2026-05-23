@@ -456,7 +456,7 @@ function makeValidHandoff(taskCard, makeTaskHandoffContractBoundary) {
       'sanitized-context-pack-reference',
       'implementation-proposal-contract-v0',
     ],
-    ...makeTaskHandoffContractBoundary(),
+    ...makeTaskHandoffContractBoundary(taskCard.allowed_next_step),
   };
 }
 
@@ -621,6 +621,39 @@ async function main() {
     'allowed_next_step_forbidden',
   );
 
+  const archivedDraftPrInstructionsTask = cloneValue(validTaskCard);
+  archivedDraftPrInstructionsTask.status = 'archived';
+  archivedDraftPrInstructionsTask.allowed_next_step = 'prepare_draft_pr_instructions_only';
+  expectRejectedTask(
+    'archived draft PR instructions task',
+    validateTaskCard,
+    archivedDraftPrInstructionsTask,
+    validProposal,
+    'task_status_allowed_next_step_mismatch',
+  );
+
+  const needsRevisionDraftPrInstructionsTask = cloneValue(validTaskCard);
+  needsRevisionDraftPrInstructionsTask.status = 'needs_revision';
+  needsRevisionDraftPrInstructionsTask.allowed_next_step = 'prepare_draft_pr_instructions_only';
+  expectRejectedTask(
+    'needs_revision draft PR instructions task',
+    validateTaskCard,
+    needsRevisionDraftPrInstructionsTask,
+    validProposal,
+    'task_status_allowed_next_step_mismatch',
+  );
+
+  const waitingForHumanApprovalDraftPrInstructionsTask = cloneValue(validTaskCard);
+  waitingForHumanApprovalDraftPrInstructionsTask.status = 'waiting_for_human_approval';
+  waitingForHumanApprovalDraftPrInstructionsTask.allowed_next_step = 'prepare_draft_pr_instructions_only';
+  expectRejectedTask(
+    'waiting_for_human_approval draft PR instructions task',
+    validateTaskCard,
+    waitingForHumanApprovalDraftPrInstructionsTask,
+    validProposal,
+    'task_status_allowed_next_step_mismatch',
+  );
+
   const intendedForecastApi = cloneValue(validTaskCard);
   intendedForecastApi.intended_files.push('app/api/forecast/route.ts');
   intendedForecastApi.forbidden_files = intendedForecastApi.forbidden_files.filter(
@@ -733,6 +766,78 @@ async function main() {
     sourceProposalIdMismatch,
     validProposal,
     'source_proposal_id_mismatch',
+  );
+
+  const proposalModifiesApi = cloneValue(validProposal);
+  proposalModifiesApi.does_not_modify_api = false;
+  expectRejectedTask(
+    'implementation proposal does_not_modify_api false task relationship',
+    validateTaskCard,
+    validTaskCard,
+    proposalModifiesApi,
+    'implementation_proposal_does_not_modify_api_required',
+  );
+
+  const proposalWritesDb = cloneValue(validProposal);
+  proposalWritesDb.does_not_write_db = false;
+  expectRejectedTask(
+    'implementation proposal does_not_write_db false task relationship',
+    validateTaskCard,
+    validTaskCard,
+    proposalWritesDb,
+    'implementation_proposal_does_not_write_db_required',
+  );
+
+  const proposalRunsMigration = cloneValue(validProposal);
+  proposalRunsMigration.does_not_run_migration = false;
+  expectRejectedTask(
+    'implementation proposal does_not_run_migration false task relationship',
+    validateTaskCard,
+    validTaskCard,
+    proposalRunsMigration,
+    'implementation_proposal_does_not_run_migration_required',
+  );
+
+  const proposalDeploys = cloneValue(validProposal);
+  proposalDeploys.does_not_deploy = false;
+  expectRejectedTask(
+    'implementation proposal does_not_deploy false task relationship',
+    validateTaskCard,
+    validTaskCard,
+    proposalDeploys,
+    'implementation_proposal_does_not_deploy_required',
+  );
+
+  const proposalPublishesExternally = cloneValue(validProposal);
+  proposalPublishesExternally.does_not_publish_externally = false;
+  expectRejectedTask(
+    'implementation proposal does_not_publish_externally false task relationship',
+    validateTaskCard,
+    validTaskCard,
+    proposalPublishesExternally,
+    'implementation_proposal_does_not_publish_externally_required',
+  );
+
+  const archivedHumanReviewHandoff = cloneValue(validHandoff);
+  archivedHumanReviewHandoff.current_status = 'archived';
+  archivedHumanReviewHandoff.allowed_next_step = 'human_review_only';
+  expectRejectedHandoff(
+    'archived human_review_only handoff',
+    validateTaskHandoff,
+    archivedHumanReviewHandoff,
+    undefined,
+    'handoff_status_allowed_next_step_mismatch',
+  );
+
+  const needsRevisionDraftPrInstructionsHandoff = cloneValue(validHandoff);
+  needsRevisionDraftPrInstructionsHandoff.current_status = 'needs_revision';
+  needsRevisionDraftPrInstructionsHandoff.allowed_next_step = 'prepare_draft_pr_instructions_only';
+  expectRejectedHandoff(
+    'needs_revision draft PR instructions handoff',
+    validateTaskHandoff,
+    needsRevisionDraftPrInstructionsHandoff,
+    undefined,
+    'handoff_status_allowed_next_step_mismatch',
   );
 
   const handoffTaskIdMismatch = cloneValue(validHandoff);
