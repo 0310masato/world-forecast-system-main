@@ -220,6 +220,11 @@ start gates, stop conditions, and review completion checks, see
 `docs/templates/CODEXAPP_OPERATION_REQUEST_TEMPLATE.md` when preparing a
 Japanese proposal-only CodexApp request.
 
+For higher-level human-review routine reporting across TaskCards, Handoffs, QA
+reports, blockers, and silent-failure checks, see `docs/OPERATIONS_ROUTINES.md`
+and the routine templates in `docs/templates/`. These routine templates do not
+change TaskCard or Handoff status automatically and do not authorize execution.
+
 ## Human Review Checklist
 
 Before accepting a TaskCard or Handoff for later review, check:

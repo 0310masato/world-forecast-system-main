@@ -247,6 +247,18 @@ clean branch and clean worktree, forbids touching uncommitted changes from the
 original checkout, and stops whenever protected paths, restricted content,
 runtime design, production impact, or missing source-chain context appear.
 
+## Operations Routine Templates v0
+
+Operations Routine Templates v0 adds proposal-only reporting formats for daily,
+weekly, nightly-QA-shaped, blocker-escalation, and silent-failure-audit review.
+See `docs/OPERATIONS_ROUTINES.md` and the routine templates in
+`docs/templates/`.
+
+These templates are not AI analysis job execution paths. They do not add prompt
+execution, worker runtime, scheduler runtime, Codex App Server runtime,
+external API calls, database migrations, `/api` connections, GitHub automation,
+file-writing automation, or production-state promotion.
+
 ## Audit Expectations
 
 When proposal storage is implemented, each job result should preserve:

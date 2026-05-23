@@ -23,6 +23,7 @@ file-writing automation、production 昇格は追加しません。
 7. Task Board / Handoff Contract v0
 8. Task Board / Handoff Docs & Templates v0
 9. Agent Charter / Operations Runbook v0
+10. Operations Routine Templates v0
 
 この Runbook は既存契約を上書きしません。CodexApp や AI worker は、前段の
 契約に含まれる `proposal_only`、`required_human_approval`、
@@ -107,6 +108,24 @@ CodexApp や AI worker が作業を開始する前に、次を確認します。
      を短くまとめます。
    - 必要に応じて `docs/templates/CODEXAPP_OPERATION_REQUEST_TEMPLATE.md` を使い
      ます。
+
+## Operations Routine Templates v0
+
+Operations Routine Templates v0 は、Morning Standup、Weekly Review、Nightly
+QA Report、Blocker Escalation、Silent Failure Audit を人間レビュー用に記録す
+るための docs/templates layer です。詳細は
+`docs/OPERATIONS_ROUTINES.md` と `docs/templates/` の routine templates を参照
+します。
+
+CodexApp が routine template を使う場合も、proposal-only、
+human-review-only、A0-A2 の範囲を維持します。routine template は実行命令では
+なく、PR 作成、merge、deploy、API 更新、DB migration、runtime 追加、worker
+実行、scheduler 実行、Codex App Server runtime、external API integration、
+file-writing automation、production 昇格を許可しません。
+
+Nightly QA や Morning Standup は、この PR では自動実行されません。将来、
+実行が必要になった場合は human approval と dedicated implementation PR が必要
+です。
 
 ## 許可される出力
 

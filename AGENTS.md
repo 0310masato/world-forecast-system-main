@@ -127,3 +127,15 @@ contract field names, enum values, IDs, file names, and code identifiers in
 their defined form. Use `docs/AGENT_CHARTER_OPERATIONS_RUNBOOK.md` and
 `docs/templates/CODEXAPP_OPERATION_REQUEST_TEMPLATE.md` for proposal-only
 Japanese request drafting.
+
+## Operations Routine Templates Boundary
+
+Operations Routine Templates v0 is docs/templates only. Morning Standup,
+Weekly Review, Nightly QA, Blocker Escalation, and Silent Failure Audit
+templates are human-review record formats, not execution instructions.
+
+Do not add scheduler, worker, runtime, Codex App Server runtime, API, DB,
+external integration, GitHub automation, file-writing automation, package, or CI
+changes for routine template work. If execution becomes necessary later, stop
+for human approval and use a dedicated implementation PR with its own scope,
+checks, and rollback plan.
