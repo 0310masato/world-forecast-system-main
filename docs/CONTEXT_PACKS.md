@@ -134,6 +134,8 @@ and any proposal generated from it.
 
 A safe filled Context Pack example lives in
 `docs/examples/CONTEXT_PACK_EXAMPLE.md`.
+Use `docs/examples/README.md` as the entry point for the example category,
+source contract/type references, reading order, and safety boundary.
 
 The example is a docs-only writing sample, not an operations log, execution
 result, production forecast, price record, evaluation source, or saved

@@ -172,6 +172,8 @@ connection, prompt execution, AI analysis job execution path, or storage path.
 
 Safe filled examples for AI Analysis Job Intake Preflight v0 and AI Analysis
 Job Result Contract v0 live in `docs/examples/`.
+Use `docs/examples/README.md` as the entry point for their category, source
+contracts/type references, reading order, and safety boundary.
 
 - `docs/examples/AI_ANALYSIS_JOB_INTAKE_PREFLIGHT_EXAMPLE.md`
 - `docs/examples/AI_ANALYSIS_JOB_RESULT_EXAMPLE.md`

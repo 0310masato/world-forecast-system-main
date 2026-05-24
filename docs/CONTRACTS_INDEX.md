@@ -16,7 +16,7 @@ Issue/PR 自動化、file-writing automation、AI job 実行処理、production 
 
 ## 契約レイヤーの流れ
 
-PR #12 から PR #27 までで整備された proposal-only の契約レイヤー、docs index、
+PR #12 から PR #28 までで整備された proposal-only の契約レイヤー、docs index、
 template、example を順に読みます。Knowledge / Docs Stewardship v0 は
 docs/templates の品質管理レイヤーとして読みます。Docs Stewardship Example
 Reports v0 は、その品質管理レイヤーの記入例であり、Operations Routine Example
@@ -26,7 +26,9 @@ Example Records v0 は PR #17 / #18 の TaskCard、Handoff、Task Board QA Repor
 `docs/templates/CODEXAPP_OPERATION_REQUEST_TEMPLATE.md` と
 `docs/AGENT_CHARTER_OPERATIONS_RUNBOOK.md` に対応する日本語 request の記入例です。
 AI Analysis Contract Example Records v0 は PR #12 から PR #16 の AI analysis
-contract chain に対応する安全な記入例です。
+contract chain に対応する安全な記入例です。Examples Index / README v0 は
+`docs/examples/README.md` に置かれ、PR #23-#27 の examples を category、正本対応、
+読む順番、安全境界で案内します。
 これらはいずれも正本契約や実行許可ではありません。
 
 1. Memory Layer
@@ -81,6 +83,7 @@ forbidden operations、protected path boundary を維持して使います。
 | #25 | Task Board / Handoff Example Records v0 | TaskCard、Handoff、Task Board QA Report の安全な記入例 | いいえ。example records のみ | いいえ。runtime/API/DB/worker/scheduler/automation は未導入 | PR #17 / #18 の contract と templates を proposal-only / human-review-only の記入例として示す |
 | #26 | CodexApp Request Example Pack v0 | CodexApp への日本語 operation request の安全な記入例 | いいえ。example requests のみ | いいえ。runtime/API/DB/worker/scheduler/automation は未導入 | PR #19 の Agent Charter / Operations Runbook と CODEXAPP_OPERATION_REQUEST_TEMPLATE を proposal-only / human-review-only の記入例として示す |
 | #27 | AI Analysis Contract Example Records v0 | Context Pack、AI Analysis Job Intake Preflight、AI Analysis Job Result、Human Review Decision、Implementation Proposal の安全な記入例 | いいえ。example records のみ | いいえ。runtime/API/DB/worker/scheduler/Codex App Server runtime/automation は未導入 | PR #12-#16 の AI analysis contract chain を proposal-only / human-review-only / non-production の記入例として示す |
+| #28 | Examples Index / README v0 | `docs/examples/README.md` による example records / reports / requests の category、正本対応表、読む順番、安全境界 | いいえ。README のみ | いいえ。runtime/API/DB/worker/scheduler/Codex App Server runtime/automation は未導入 | PR #23-#27 の examples を案内する。正本契約ではなく実行許可でもない |
 
 ## Docs / Templates 用途表
 
@@ -96,6 +99,7 @@ forbidden operations、protected path boundary を維持して使います。
 | `docs/AGENT_CHARTER_OPERATIONS_RUNBOOK.md` | CodexApp Worker、AI worker、Human Owner | CodexApp への日本語 request や review support を作るとき | 日本語指示書ルール、A0-A2 autonomy、開始前 gate、停止条件 | CodexApp Server runtime、worker、scheduler、file-writing automation の導入許可として扱わない |
 | `docs/OPERATIONS_ROUTINES.md` | Human Owner、CodexApp Worker、QA Reviewer | morning/weekly/nightly/blocker/audit reports を使い分けるとき | routine template の用途、human approval line、forbidden operations | routine runner、scheduler、worker runtime、自動書き込みの仕様として扱わない |
 | `docs/KNOWLEDGE_DOCS_STEWARDSHIP.md` | Knowledge Steward、CodexApp Worker、QA Reviewer、Human Owner | docs/templates の正本性、鮮度、重複、リンク、runtime 境界を確認するとき | docs 分類、stale/conflict/duplicate/broken reference/runtime drift の定義、review checklist | docs 自動更新、PR 作成、merge、deploy、runtime/API/DB/automation の許可として扱わない |
+| `docs/examples/README.md` | Human Owner、CodexApp Worker、QA Reviewer、Risk / Safety Reviewer | `docs/examples/` の category、正本対応、role別の読む順番、安全境界を確認するとき | examples の入口と案内。正本契約ではなく、正本 docs/templates を読むための index | 実行許可、実運用ログ、production state、runtime/API/DB/automation、PR 作成、merge、deploy の根拠として扱わない |
 | `docs/templates/TASK_CARD_TEMPLATE.md` | CodexApp Worker、Human Owner | draft PR instructions 用 TaskCard を記録するとき | TaskCard fields、allowed values、safety checklist | 実行コマンド、PR 作成、production change request として使わない |
 | `docs/templates/HANDOFF_TEMPLATE.md` | CodexApp Worker、AI worker、Human Owner | 非同期引き継ぎ artifact を残すとき | handoff fields、durable facts、allowed next step、sanitized references | 会話ログ全文、秘密情報、raw local path、実行命令の保存に使わない |
 | `docs/templates/TASK_BOARD_QA_REPORT_TEMPLATE.md` | QA Reviewer、Risk / Safety Reviewer | TaskCard / Handoff を受け入れる前に QA するとき | scope/status/autonomy/protected path/restricted content checks | QA report の recommendation を自動実行結果として扱わない |
@@ -117,7 +121,8 @@ checklist を使います。`docs/CONTRACTS_INDEX.md` は正本地図、Knowledg
 Stewardship v0 は品質管理と鮮度確認です。どちらも実行許可ではありません。
 Docs Stewardship examples、Operations Routine examples、Task Board / Handoff
 examples、CodexApp request examples、AI Analysis Contract examples は記入例であり、正本契約や実行許可では
-ありません。CodexApp request examples の正本は
+ありません。これらの入口は `docs/examples/README.md` です。README も案内文書であり、
+正本契約や実行許可ではありません。CodexApp request examples の正本は
 `docs/templates/CODEXAPP_OPERATION_REQUEST_TEMPLATE.md` と
 `docs/AGENT_CHARTER_OPERATIONS_RUNBOOK.md` です。Task Board / Handoff examples の
 正本は `docs/TASK_BOARD_HANDOFF.md` と対応する templates です。AI Analysis

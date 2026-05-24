@@ -132,6 +132,8 @@ approval and its own dedicated implementation PR.
 
 Safe filled examples for Human Review Decision Contract v0 and Implementation
 Proposal Contract v0 live in `docs/examples/`.
+Use `docs/examples/README.md` as the entry point for their category, source
+contracts/type references, reading order, and safety boundary.
 
 - `docs/examples/HUMAN_REVIEW_DECISION_EXAMPLE.md`
 - `docs/examples/IMPLEMENTATION_PROPOSAL_EXAMPLE.md`
