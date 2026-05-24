@@ -168,6 +168,19 @@ Result Contract v0. This contract also does not add a Codex App Server runtime,
 worker runtime, scheduler, external API call, database migration, `/api`
 connection, prompt execution, AI analysis job execution path, or storage path.
 
+## Example Records
+
+Safe filled examples for AI Analysis Job Intake Preflight v0 and AI Analysis
+Job Result Contract v0 live in `docs/examples/`.
+
+- `docs/examples/AI_ANALYSIS_JOB_INTAKE_PREFLIGHT_EXAMPLE.md`
+- `docs/examples/AI_ANALYSIS_JOB_RESULT_EXAMPLE.md`
+
+These examples are docs-only writing samples. They are not prompt execution,
+worker runtime, AI job execution, storage behavior, production state, or
+runtime design. The result example remains proposal-only, human-review-only,
+and non-production.
+
 ## Human Review Decision Contract v0
 
 Human Review Decision Contract v0 is the next contract after AI Analysis Job

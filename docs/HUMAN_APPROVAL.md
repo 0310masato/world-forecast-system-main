@@ -128,6 +128,19 @@ needs a database migration, API update, deployment, runtime addition, external
 API integration, or production write, that later change needs explicit human
 approval and its own dedicated implementation PR.
 
+## Example Records
+
+Safe filled examples for Human Review Decision Contract v0 and Implementation
+Proposal Contract v0 live in `docs/examples/`.
+
+- `docs/examples/HUMAN_REVIEW_DECISION_EXAMPLE.md`
+- `docs/examples/IMPLEMENTATION_PROPOSAL_EXAMPLE.md`
+
+These examples are docs-only writing samples, not real approval logs and not
+execution results. `approved_for_later_implementation` is not production apply,
+and an implementation proposal is not the implementation itself. Both examples
+preserve human review, separate-scope review, and non-production boundaries.
+
 ## Task Board / Handoff Contract v0
 
 Task Board / Handoff Contract v0 is the next contract after an Implementation
