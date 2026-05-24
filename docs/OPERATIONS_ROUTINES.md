@@ -44,6 +44,9 @@ worker、scheduler、Codex App Server runtime、外部 API 連携、DB migration
 - `docs/templates/DOC_LINK_AND_REFERENCE_AUDIT_TEMPLATE.md`
   - docs/templates のリンク、名前、source chain、index 参照を確認する
     proposal-only audit 形式です。
+- `docs/examples/*.md`
+  - Docs Stewardship review / audit の書き方を確認するための安全な記入例です。
+  - 実運用ログではなく、自動実行や docs 自動更新の仕組みでもありません。
 
 ## TaskCard / Handoff / QA Report との関係
 
@@ -124,6 +127,12 @@ Docs review / staleness audit / link audit は
 `docs/KNOWLEDGE_DOCS_STEWARDSHIP.md` を使い、人間レビュー前提の提案として扱い
 ます。自動修正、file-writing automation、runtime/API/DB/automation の導入には
 進みません。
+
+Knowledge / Docs Stewardship review を routine の一部として扱う場合、
+`docs/examples/` の記入例を参考にできます。examples は人間レビュー用の書き方
+サンプルであり、自動実行、PR 作成、merge、deploy、API 更新、DB migration、
+runtime 追加、external API integration、file-writing automation、production
+昇格を許可しません。
 
 CodexApp は次の場合に停止し、人間レビューに戻します。
 
