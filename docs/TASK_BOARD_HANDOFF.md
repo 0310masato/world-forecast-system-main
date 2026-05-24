@@ -228,6 +228,24 @@ reports, blockers, and silent-failure checks, see `docs/OPERATIONS_ROUTINES.md`
 and the routine templates in `docs/templates/`. These routine templates do not
 change TaskCard or Handoff status automatically and do not authorize execution.
 
+## Example Records
+
+TaskCard, Handoff, and Task Board QA Report example records live in
+`docs/examples/`.
+
+- `docs/examples/TASK_CARD_EXAMPLE.md`
+- `docs/examples/HANDOFF_EXAMPLE.md`
+- `docs/examples/TASK_BOARD_QA_REPORT_EXAMPLE.md`
+
+These examples are safe filled samples, not real operations logs. They are not
+the source contracts; the source contracts are this document and the templates
+in `docs/templates/`.
+
+Examples do not authorize execution, PR creation, merge, deploy, API update,
+DB change, migration, runtime addition, worker or scheduler behavior, Codex App
+Server runtime, external API integration, external publishing, automation, or
+production promotion.
+
 ## Human Review Checklist
 
 Before accepting a TaskCard or Handoff for later review, check:
