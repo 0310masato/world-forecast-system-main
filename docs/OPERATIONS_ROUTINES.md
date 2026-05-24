@@ -45,8 +45,23 @@ worker、scheduler、Codex App Server runtime、外部 API 連携、DB migration
   - docs/templates のリンク、名前、source chain、index 参照を確認する
     proposal-only audit 形式です。
 - `docs/examples/*.md`
-  - Docs Stewardship review / audit の書き方を確認するための安全な記入例です。
+  - Docs Stewardship review / audit と Operations Routine report の書き方を
+    確認するための安全な記入例です。
   - 実運用ログではなく、自動実行や docs 自動更新の仕組みでもありません。
+
+## Routine Example Reports
+
+Routine example reports は `docs/examples/` に置きます。これらは実運用ログでは
+なく、安全な記入例です。Morning Standup、Weekly Review、Nightly QA Report、
+Blocker Escalation、Silent Failure Audit の各 template を、人間レビュー前提で
+どう記入するかを示すためだけに使います。
+
+Examples は自動実行、scheduler、worker、runtime、Codex App Server runtime、
+file-writing automation、API 接続、DB 変更、GitHub automation、production 昇格を
+許可しません。実際の routine report を残す場合も、secrets、`.env` 値、raw local
+path、NAS path、private network details、production logs、不要な private data を
+除外し、proposal-only、人間レビュー前提、`is_production_state: false` を維持し
+ます。
 
 ## TaskCard / Handoff / QA Report との関係
 
