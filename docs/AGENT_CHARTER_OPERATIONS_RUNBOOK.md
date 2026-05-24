@@ -129,6 +129,18 @@ Nightly QA や Morning Standup は、この PR では自動実行されません
 実行が必要になった場合は human approval と dedicated implementation PR が必要
 です。
 
+## Knowledge / Docs Stewardship v0
+
+Docs review、staleness audit、link/reference audit を行う場合は
+`docs/KNOWLEDGE_DOCS_STEWARDSHIP.md` と関連 templates を使います。これは
+docs/templates の正本性、鮮度、重複、リンク、runtime 境界を人間レビュー前提で
+確認するための proposal-only 手順です。
+
+Stewardship review は自動修正ではありません。CodexApp や AI worker は、docs
+修正案、古い前提の候補、リンク不整合、残リスクを整理できますが、PR 作成、
+merge、deploy、API 更新、DB migration、runtime 追加、external API integration、
+file-writing automation、production 昇格には進みません。
+
 ## 許可される出力
 
 CodexApp や AI worker は次の出力を作成できます。
@@ -136,6 +148,7 @@ CodexApp や AI worker は次の出力を作成できます。
 - 人間レビュー用の日本語 draft instructions
 - TaskCard または TaskHandoff の修正案
 - QA report の下書き
+- docs stewardship review、staleness audit、link/reference audit の下書き
 - proposal-only のリスク整理
 - 次の dedicated PR で検討する範囲の要約
 - archive または revision が必要な理由の説明

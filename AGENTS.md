@@ -12,6 +12,13 @@ For the repository-wide map of contract and operations docs, see
 `docs/CONTRACTS_INDEX.md`. CodexApp and AI workers must review the index and
 the target docs before starting work. The index is not execution permission.
 
+When updating docs or templates, also review
+`docs/KNOWLEDGE_DOCS_STEWARDSHIP.md`. CodexApp and AI workers must check docs
+for source-of-truth alignment, freshness, duplication, broken references, and
+runtime boundary drift. Docs stewardship is not execution permission and does
+not authorize package, API, DB, runtime, worker, scheduler, automation, or CI
+changes.
+
 ## Forecast Core Protection
 
 Do not change `/api/forecast`, `/api/hormuz`, `lib/db.ts`, package files, or
