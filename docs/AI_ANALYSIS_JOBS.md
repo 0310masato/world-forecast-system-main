@@ -11,6 +11,7 @@ database migrations, external API calls, or production forecast behavior.
 
 Related policies:
 
+- `docs/CONTRACTS_INDEX.md`
 - `docs/CODEX_APP_SERVER.md`
 - `docs/HUMAN_APPROVAL.md`
 - `docs/CONTEXT_PACKS.md`

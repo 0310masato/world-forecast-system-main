@@ -11,6 +11,9 @@ Server runtime code, external API connections, database migrations, API
 updates, GitHub automation, file-writing automation, production writes, merge
 automation, or deploy automation.
 
+For the repository-wide reading order of contract and operations docs, see
+`docs/CONTRACTS_INDEX.md`.
+
 ## TaskCard
 
 A TaskCard is a management unit for future draft PR instructions. It records the

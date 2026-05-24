@@ -5,6 +5,9 @@
 This document defines the human approval rules for AI analysis proposals in
 `world-forecast-system-main`.
 
+For the repository-wide reading order of contract and operations docs, see
+`docs/CONTRACTS_INDEX.md`.
+
 The system may use AI to assist analysis, but AI output must not become
 production behavior by default.
 
