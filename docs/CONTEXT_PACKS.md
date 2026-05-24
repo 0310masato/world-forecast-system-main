@@ -130,6 +130,18 @@ A human reviewer should be able to inspect:
 Rejected and needs-revision outcomes must remain valid for both the context pack
 and any proposal generated from it.
 
+## Example Record
+
+A safe filled Context Pack example lives in
+`docs/examples/CONTEXT_PACK_EXAMPLE.md`.
+
+The example is a docs-only writing sample, not an operations log, execution
+result, production forecast, price record, evaluation source, or saved
+prediction. It shows how sanitized sample IDs, source refs, included records,
+excluded records, limitations, policy refs, safety labels,
+`proposal_only: true`, human review, and `is_production_state: false` can stay
+visible for review.
+
 ## Non-Goals For PR #5
 
 This planning phase does not add:
