@@ -5,6 +5,8 @@
 Agent Charter / Operations Runbook v0 は、将来の CodexApp や AI worker が
 `world-forecast-system-main` の契約レイヤーを安全に扱うための運用憲章です。
 
+契約・運用 docs 全体の読み順と使い分けは `docs/CONTRACTS_INDEX.md` を参照します。
+
 この文書は運用指示とレビュー手順だけを定義します。runtime、worker、
 scheduler、Codex App Server runtime、外部 API 連携、DB migration、
 `/api/forecast` 接続、`/api/hormuz` 接続、GitHub Issue/PR 自動作成、

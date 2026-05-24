@@ -1,0 +1,222 @@
+# Contract / Docs Index v0
+
+## 目的
+
+この index は、`world-forecast-system-main` の AI 分析、人間承認、
+Task Board / Handoff、CodexApp 運用、routine report に関する契約・運用
+docs の全体地図です。
+
+CodexApp、AI worker、human reviewer は、作業前にこの index で読む順番と
+正本の所在を確認し、次に対象契約 docs と template を確認します。
+
+この index は実行許可ではありません。runtime、worker、scheduler、Codex App
+Server runtime、外部 API 連携、DB migration、`/api` 接続、GitHub
+Issue/PR 自動化、file-writing automation、AI job 実行処理、production 昇格を
+許可しません。
+
+## 契約レイヤーの流れ
+
+PR #12 から PR #20 までで整備された proposal-only の契約レイヤーは、次の順序で
+読みます。
+
+1. Memory Layer
+2. Context Pack Builder v0
+3. AI Analysis Job Intake Preflight v0
+4. AI Analysis Job Result Contract v0
+5. Human Review Decision Contract v0
+6. Implementation Proposal Contract v0
+7. Task Board / Handoff Contract v0
+8. Task Board / Handoff Docs & Templates v0
+9. Agent Charter / Operations Runbook v0
+10. Operations Routine Templates v0
+
+矢印で表すと、次の流れです。
+
+```text
+Memory Layer
+-> Context Pack Builder v0
+-> AI Analysis Job Intake Preflight v0
+-> AI Analysis Job Result Contract v0
+-> Human Review Decision Contract v0
+-> Implementation Proposal Contract v0
+-> Task Board / Handoff Contract v0
+-> Task Board / Handoff Docs & Templates v0
+-> Agent Charter / Operations Runbook v0
+-> Operations Routine Templates v0
+```
+
+各レイヤーは前段を上書きしません。後段の docs や template は、
+`proposal_only`、`required_human_approval`、`is_production_state: false`、
+forbidden operations、protected path boundary を維持して使います。
+
+## PR 履歴と安全境界
+
+| PR | タイトル | 主な追加物 | 実行 runtime を追加したか | DB/API/worker/scheduler/Codex App Server runtime を追加したか | 次レイヤーとの関係 |
+| --- | --- | --- | --- | --- | --- |
+| #12 | Context Pack Builder v0 | AI 分析へ渡す sanitized context pack の builder contract と smoke test | いいえ。契約と検証のみ | いいえ。DB/API/worker/scheduler/runtime は未導入 | AI Analysis Job Intake Preflight v0 の入力を作る |
+| #13 | AI Analysis Job Intake Preflight v0 | Context Pack を AI job に渡す前の preflight contract | いいえ。preflight contract のみ | いいえ。AI job 実行、DB/API、worker は未導入 | AI Analysis Job Result Contract v0 の前段 QA になる |
+| #14 | AI Analysis Job Result Contract v0 | AI-sidecar result の proposal-only 出力 contract | いいえ。AI job runner は未導入 | いいえ。prompt execution、storage、DB/API は未導入 | Human Review Decision Contract v0 の review 対象になる |
+| #15 | Human Review Decision Contract v0 | human decision outcome と approval boundary | いいえ。review contract のみ | いいえ。production apply、DB/API、deploy は未導入 | approved result を later implementation 検討へ渡す |
+| #16 | Implementation Proposal Contract v0 | separate PR 前提の implementation proposal contract | いいえ。実装そのものは未導入 | いいえ。runtime、DB/API、migration、deploy は未導入 | Task Board / Handoff Contract v0 の source proposal になる |
+| #17 | Task Board / Handoff Contract v0 | TaskCard と TaskHandoff の proposal-only contract | いいえ。task runner は未導入 | いいえ。GitHub automation、worker、scheduler は未導入 | docs/templates で人間レビューしやすい record にする |
+| #18 | Task Board / Handoff Docs & Templates v0 | TaskCard、Handoff、Task Board QA Report templates | いいえ。template のみ | いいえ。file-writing automation、PR automation は未導入 | CodexApp 運用 runbook の入力形式になる |
+| #19 | Agent Charter / Operations Runbook v0 | CodexApp / AI worker の日本語運用憲章と停止条件 | いいえ。runbook のみ | いいえ。Codex App Server runtime、worker、scheduler は未導入 | routine templates の運用境界を定義する |
+| #20 | Operations Routine Templates v0 | Morning Standup、Weekly Review、Nightly QA、Blocker Escalation、Silent Failure Audit templates | いいえ。routine runner は未導入 | いいえ。scheduler、worker、runtime、file-writing automation は未導入 | 日次・週次・QA review を proposal-only に整える |
+
+## Docs / Templates 用途表
+
+| ドキュメント名 | 主な読者 | 使う場面 | 正本として扱う内容 | 使ってはいけない用途 |
+| --- | --- | --- | --- | --- |
+| `AGENTS.md` | CodexApp Worker、AI worker、human reviewer | リポジトリ内で作業を始める前 | protected core、human approval、Codex App Server policy、Task Board / Handoff boundary、routine boundary | runtime/API/DB/automation の実装許可として扱わない |
+| `docs/CONTRACTS_INDEX.md` | 全読者 | 契約・運用 docs の入口を確認するとき | PR #12-#20 の地図、読む順番、用途、未導入領域、停止条件 | 実行、PR 作成、file-writing automation、production apply の許可として扱わない |
+| `docs/CONTEXT_PACKS.md` | AI Analysis Reviewer、CodexApp Worker | AI 分析に渡す context pack の入力境界を確認するとき | context pack の定義、allowed/excluded inputs、sanitization、versioning | secrets、raw local path、production write instruction、live source of record を入れる根拠にしない |
+| `docs/AI_ANALYSIS_JOBS.md` | AI Analysis Reviewer、CodexApp Worker | AI job の allowed/forbidden scope、intake、result contract を確認するとき | AI job の proposal-only 入出力、preflight、result contract、人間レビュー前提 | AI job 実行処理、prompt execution、worker runtime、storage path の仕様として扱わない |
+| `docs/HUMAN_APPROVAL.md` | Human Owner、AI Analysis Reviewer、Risk / Safety Reviewer | AI output を承認、却下、revision、archive する境界を確認するとき | approval principle、decision outcome、implementation proposal への接続 | approval を production apply、deploy、DB write、API update の自動許可にしない |
+| `docs/CODEX_APP_SERVER.md` | Future Runtime Designer、Risk / Safety Reviewer | Codex App Server の sidecar boundary を確認するとき | future Codex App Server の allowed/forbidden responsibilities と prerequisite | runtime 実装設計の十分条件として扱わない |
+| `docs/TASK_BOARD_HANDOFF.md` | CodexApp Worker、QA Reviewer、Human Owner | TaskCard / Handoff を作る、読む、QA するとき | status、autonomy、allowed next step、forbidden next steps、protected intended files | TaskCard を実行命令、PR 作成命令、merge/deploy 許可として扱わない |
+| `docs/AGENT_CHARTER_OPERATIONS_RUNBOOK.md` | CodexApp Worker、AI worker、Human Owner | CodexApp への日本語 request や review support を作るとき | 日本語指示書ルール、A0-A2 autonomy、開始前 gate、停止条件 | CodexApp Server runtime、worker、scheduler、file-writing automation の導入許可として扱わない |
+| `docs/OPERATIONS_ROUTINES.md` | Human Owner、CodexApp Worker、QA Reviewer | morning/weekly/nightly/blocker/audit reports を使い分けるとき | routine template の用途、human approval line、forbidden operations | routine runner、scheduler、worker runtime、自動書き込みの仕様として扱わない |
+| `docs/templates/TASK_CARD_TEMPLATE.md` | CodexApp Worker、Human Owner | draft PR instructions 用 TaskCard を記録するとき | TaskCard fields、allowed values、safety checklist | 実行コマンド、PR 作成、production change request として使わない |
+| `docs/templates/HANDOFF_TEMPLATE.md` | CodexApp Worker、AI worker、Human Owner | 非同期引き継ぎ artifact を残すとき | handoff fields、durable facts、allowed next step、sanitized references | 会話ログ全文、秘密情報、raw local path、実行命令の保存に使わない |
+| `docs/templates/TASK_BOARD_QA_REPORT_TEMPLATE.md` | QA Reviewer、Risk / Safety Reviewer | TaskCard / Handoff を受け入れる前に QA するとき | scope/status/autonomy/protected path/restricted content checks | QA report の recommendation を自動実行結果として扱わない |
+| `docs/templates/CODEXAPP_OPERATION_REQUEST_TEMPLATE.md` | Human Owner、CodexApp Worker | CodexApp へ proposal-only review support を頼むとき | 日本語 request fields、forbidden operations、required output | PR 作成、GitHub Issue 自動作成、runtime 追加、file-writing automation の依頼に使わない |
+| `docs/templates/MORNING_STANDUP_TEMPLATE.md` | Human Owner、CodexApp Worker | 朝の状況整理を proposal-only に記録するとき | completed/blocked/waiting/priority/open questions の report fields | 定期実行 runtime や status 自動更新として扱わない |
+| `docs/templates/WEEKLY_REVIEW_TEMPLATE.md` | Human Owner、QA Reviewer | 週次で契約、Task Board、Handoff、品質を振り返るとき | repeated blockers、quality findings、docs update proposals | docs update や routine change を人間レビューなしに適用しない |
+| `docs/templates/NIGHTLY_QA_REPORT_TEMPLATE.md` | QA Reviewer、Risk / Safety Reviewer | 夜間 QA 報告の型を使って review 結果を残すとき | checked contracts、findings、regressions、restricted/protected findings | nightly runtime、scheduler、worker 実行の仕様として扱わない |
+| `docs/templates/BLOCKER_ESCALATION_TEMPLATE.md` | CodexApp Worker、Human Owner | blocked / waiting 状態を人間へ戻すとき | blocker type、why AI must stop、safe next options | blocker 解消を自動実行したり forbidden next step を省略したりしない |
+| `docs/templates/SILENT_FAILURE_AUDIT_TEMPLATE.md` | Risk / Safety Reviewer、QA Reviewer | エラーなしで間違い続ける failure pattern を監査するとき | expected/observed mismatch、missing review、missing forbidden steps | `block_automation` を runtime 変更として直接適用しない |
+
+## Persona / Role 別の読み順
+
+### Human Owner
+
+1. `AGENTS.md`
+2. `docs/CONTRACTS_INDEX.md`
+3. `docs/HUMAN_APPROVAL.md`
+4. `docs/TASK_BOARD_HANDOFF.md`
+5. 必要な `docs/templates/*.md`
+6. `docs/OPERATIONS_ROUTINES.md`
+
+Human Owner は、proposal を承認、却下、revision、archive のどれにするかを判断
+します。承認は production apply ではなく、必要なら separate implementation PR を
+検討するための review permission です。
+
+### CodexApp Worker
+
+1. `AGENTS.md`
+2. `docs/CONTRACTS_INDEX.md`
+3. 対象作業に対応する source contract
+4. `docs/AGENT_CHARTER_OPERATIONS_RUNBOOK.md`
+5. `docs/templates/CODEXAPP_OPERATION_REQUEST_TEMPLATE.md`
+6. 必要な TaskCard、Handoff、QA、routine template
+
+CodexApp Worker は、日本語の proposal-only draft instructions、QA notes、
+handoff summary を作るために読みます。実行、PR 作成、merge、deploy、API 更新、
+DB 変更、runtime 追加、外部連携、file-writing automation はしません。
+
+### AI Analysis Reviewer
+
+1. `docs/CONTRACTS_INDEX.md`
+2. `docs/CONTEXT_PACKS.md`
+3. `docs/AI_ANALYSIS_JOBS.md`
+4. `docs/HUMAN_APPROVAL.md`
+5. `docs/TASK_BOARD_HANDOFF.md`
+
+AI Analysis Reviewer は、context pack、preflight、result、human decision の
+source chain が proposal-only のまま保たれているかを確認します。AI result を
+production state として扱いません。
+
+### QA Reviewer
+
+1. `docs/CONTRACTS_INDEX.md`
+2. `docs/TASK_BOARD_HANDOFF.md`
+3. `docs/templates/TASK_BOARD_QA_REPORT_TEMPLATE.md`
+4. `docs/OPERATIONS_ROUTINES.md`
+5. `docs/templates/NIGHTLY_QA_REPORT_TEMPLATE.md`
+6. 必要に応じて `docs/templates/SILENT_FAILURE_AUDIT_TEMPLATE.md`
+
+QA Reviewer は、status と allowed next step の整合、A0-A2 autonomy、protected
+path、restricted content、forbidden next steps の欠落を確認します。
+
+### Risk / Safety Reviewer
+
+1. `AGENTS.md`
+2. `docs/CONTRACTS_INDEX.md`
+3. `docs/CODEX_APP_SERVER.md`
+4. `docs/HUMAN_APPROVAL.md`
+5. `docs/AI_ANALYSIS_JOBS.md`
+6. `docs/AGENT_CHARTER_OPERATIONS_RUNBOOK.md`
+7. `docs/templates/SILENT_FAILURE_AUDIT_TEMPLATE.md`
+
+Risk / Safety Reviewer は、AI output が投資助言、航行判断、軍事判断、自動売買、
+外部公開、production write、API update、DB migration、runtime addition に流れ
+ていないかを確認します。
+
+### Future Runtime Designer
+
+1. `AGENTS.md`
+2. `docs/CONTRACTS_INDEX.md`
+3. `docs/CODEX_APP_SERVER.md`
+4. `docs/CONTEXT_PACKS.md`
+5. `docs/AI_ANALYSIS_JOBS.md`
+6. `docs/HUMAN_APPROVAL.md`
+7. `docs/AGENT_CHARTER_OPERATIONS_RUNBOOK.md`
+8. ユーザー提供資料
+
+Codex App Server runtime 設計に進む場合は、ユーザー提供資料を受け取ってから
+別 PR で扱います。この index は runtime 実装許可ではありません。
+
+Future Runtime Designer は、既存 docs を設計前提の safety boundary として読む
+だけです。runtime、worker、scheduler、DB migration、external API integration、
+`/api/forecast` 接続、`/api/hormuz` 接続、production 昇格は、それぞれ明示承認
+された scope、検証計画、rollback plan を持つ dedicated PR が必要です。
+
+## 次の PR を作るときの参照順
+
+次の docs-only PR、contract PR、template PR、または future implementation PR を
+検討するときは、次の順に確認します。
+
+1. `AGENTS.md` で protected core と作業禁止範囲を確認する。
+2. `docs/CONTRACTS_INDEX.md` で対象レイヤーと前後関係を確認する。
+3. 変更対象の正本 docs を読む。
+4. 関連 template があれば、allowed values と forbidden operations を確認する。
+5. `docs/HUMAN_APPROVAL.md` で approval が review permission に留まることを確認する。
+6. protected path、DB/API、runtime、worker、scheduler、dependency、CI、
+   external integration、automation に触れる場合は停止する。
+7. 実装が必要な場合は、docs-only PR から切り離し、人間承認つきの dedicated
+   implementation PR として scope、tests、rollback plan を定義する。
+
+## Codex App Server runtime に進む前の停止条件
+
+次のいずれかに当てはまる場合、この index では先に進みません。
+
+- Codex App Server runtime 設計のためのユーザー提供資料がない。
+- runtime、worker、scheduler、DB migration、external API integration、
+  `/api/forecast` 接続、`/api/hormuz` 接続、production 昇格の scope が曖昧。
+- human approval gate、rollback plan、test plan が未定義。
+- proposal-only と production state の分離が曖昧。
+- protected path または restricted content を扱う必要がある。
+- CodexApp に PR 作成、merge、deploy、file-writing automation、GitHub
+  Issue/PR 自動作成、AI job 実行処理を求めている。
+
+Codex App Server runtime 設計に進む場合は、ユーザー提供資料を受け取ってから
+別 PR で扱います。
+
+## 未導入領域
+
+この index v0 では、次を導入していません。
+
+- Codex App Server runtime
+- worker runtime
+- scheduler
+- external API integration
+- DB migration / schema change
+- `/api/forecast` 接続
+- `/api/hormuz` 接続
+- GitHub Issue / PR 自動作成
+- file-writing automation
+- AI job 実行処理
+- production 昇格
+
+これらが必要になった場合でも、この index は実装許可ではありません。人間の明示
+承認、dedicated PR、scope、検証方法、rollback plan を別途定義します。

@@ -6,6 +6,12 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 # Repository Safety Rules
 
+## Contract / Docs Index
+
+For the repository-wide map of contract and operations docs, see
+`docs/CONTRACTS_INDEX.md`. CodexApp and AI workers must review the index and
+the target docs before starting work. The index is not execution permission.
+
 ## Forecast Core Protection
 
 Do not change `/api/forecast`, `/api/hormuz`, `lib/db.ts`, package files, or
