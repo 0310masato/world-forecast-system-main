@@ -238,6 +238,8 @@ change TaskCard or Handoff status automatically and do not authorize execution.
 
 TaskCard, Handoff, and Task Board QA Report example records live in
 `docs/examples/`.
+Use `docs/examples/README.md` as the entry point for their category, source
+contracts/templates, reading order, and safety boundary.
 
 - `docs/examples/TASK_CARD_EXAMPLE.md`
 - `docs/examples/HANDOFF_EXAMPLE.md`

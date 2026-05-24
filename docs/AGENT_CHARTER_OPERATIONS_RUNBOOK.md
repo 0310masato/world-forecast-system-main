@@ -115,6 +115,7 @@ CodexApp や AI worker が作業を開始する前に、次を確認します。
 
 CodexApp Operation Request examples は `docs/examples/` に置きます。これらは
 CodexApp に渡す日本語 request の書き方サンプルであり、実行命令ではありません。
+category、正本 template、読む順番は `docs/examples/README.md` を入口として確認します。
 
 CodexApp request を作る前に、`docs/CONTRACTS_INDEX.md` と対象 contract docs を
 読み、正本の field、enum、forbidden operations、protected path boundary を確認

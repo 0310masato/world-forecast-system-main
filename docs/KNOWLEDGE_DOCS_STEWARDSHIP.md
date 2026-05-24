@@ -35,7 +35,7 @@ Server runtime、外部 API 連携、DB migration、`/api` 接続、GitHub Issue
 | Contract Docs | `docs/CONTEXT_PACKS.md`, `docs/AI_ANALYSIS_JOBS.md`, `docs/HUMAN_APPROVAL.md`, `docs/TASK_BOARD_HANDOFF.md`, `docs/CONTRACTS_INDEX.md` | proposal-only、human approval、allowed values、forbidden operations、source chain |
 | Operations Docs | `docs/AGENT_CHARTER_OPERATIONS_RUNBOOK.md`, `docs/OPERATIONS_ROUTINES.md` | CodexApp / AI worker の運用境界、A0-A2 autonomy、日本語指示書、停止条件 |
 | Template Docs | `docs/templates/*.md` | field names、allowed recommendation values、required human review、template alignment |
-| Example Docs | `docs/examples/*.md` | review / routine / task board / CodexApp request / AI analysis contract の書き方サンプル、proposal-only / human-review-only / non-production の維持、実運用ログとの分離 |
+| Example Docs | `docs/examples/README.md`, `docs/examples/*.md` | examples の入口、review / routine / task board / CodexApp request / AI analysis contract の書き方サンプル、proposal-only / human-review-only / non-production の維持、実運用ログとの分離 |
 | Runtime Boundary Docs | `docs/CODEX_APP_SERVER.md`, `AGENTS.md` | runtime 未導入、protected core、Codex App Server sidecar boundary、禁止操作 |
 | Legacy / Planning Docs | `docs/SELF_IMPROVEMENT_LOOP.md`, `docs/FORECAST_REFACTOR_PLAN.md`, `docs/context-pack-builder-v0-plan.md`, `docs/agent-architecture-v0.1.md`, `docs/current-system.md`, `docs/data-model-v0.1.md`, `docs/memory-layer-v0.1-db-design.md`, `docs/memory-layer-v0.1-migration-plan.md`, `docs/roadmap-world-pattern-memory.md`, `docs/safety-policy.md` | 旧計画、古い前提、契約 docs との競合、runtime boundary drift |
 
@@ -154,6 +154,7 @@ AI Analysis Contract の
 記入例は
 `docs/examples/` に置きます。
 
+- `docs/examples/README.md`
 - `docs/examples/DOC_STEWARDSHIP_REVIEW_EXAMPLE.md`
 - `docs/examples/DOC_STALENESS_AUDIT_EXAMPLE.md`
 - `docs/examples/DOC_LINK_AND_REFERENCE_AUDIT_EXAMPLE.md`
@@ -173,6 +174,11 @@ AI Analysis Contract の
 - `docs/examples/AI_ANALYSIS_JOB_RESULT_EXAMPLE.md`
 - `docs/examples/HUMAN_REVIEW_DECISION_EXAMPLE.md`
 - `docs/examples/IMPLEMENTATION_PROPOSAL_EXAMPLE.md`
+
+`docs/examples/README.md` は examples の入口です。examples review、staleness
+audit、link/reference audit では、README の category、正本対応表、読む順番、
+安全境界が対応する正本 docs/templates と整合しているかを確認します。README は
+案内文書であり、実行許可ではありません。
 
 これらは review / routine / task board / CodexApp request / AI analysis contract の書き方サンプルで
 あり、実運用ログでも実行命令でもありません。example reports / records /
