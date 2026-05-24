@@ -157,3 +157,17 @@ review or draft-instructions preparation.
 This runbook does not authorize runtime implementation. When Codex App Server
 runtime design becomes necessary, it must wait for user-provided materials and
 a separate scoped PR.
+
+## Runtime Intake Gate
+
+Before preparing a Codex App Server runtime design PR, use
+`docs/CODEX_APP_SERVER_RUNTIME_INTAKE.md` and
+`docs/templates/CODEX_APP_SERVER_RUNTIME_INTAKE_TEMPLATE.md` to check whether
+the user-provided materials, scope, human approval, test plan inputs, and
+rollback or disable plan inputs are sufficient for human review.
+
+The intake gate is proposal-only, template-only, human-review-only, and
+non-production. It does not authorize Codex App Server runtime code, worker
+runtime, scheduler runtime, external API integration, DB migration, `/api`
+connections, package or CI changes, GitHub automation, file-writing automation,
+AI job execution, deploy, merge, or production promotion.

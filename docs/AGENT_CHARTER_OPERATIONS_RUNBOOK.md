@@ -26,6 +26,8 @@ file-writing automation、production 昇格は追加しません。
 8. Task Board / Handoff Docs & Templates v0
 9. Agent Charter / Operations Runbook v0
 10. Operations Routine Templates v0
+11. Knowledge / Docs Stewardship v0
+12. Codex App Server Runtime Intake Gate v0
 
 この Runbook は既存契約を上書きしません。CodexApp や AI worker は、前段の
 契約に含まれる `proposal_only`、`required_human_approval`、
@@ -210,6 +212,8 @@ CodexApp や AI worker は次を実行、要求、または推奨してはいけ
 - 生成物が production state と誤読される可能性がある。
 - 秘密情報、local path、NAS path、private network details が含まれている。
 - Codex App Server runtime を設計するためのユーザー提供資料がまだない。
+- Codex App Server runtime design PR に進む前の intake record がなく、scope、
+  human approval、test plan、rollback / disable plan が確認できない。
 
 ## レビュー完了条件
 
@@ -230,7 +234,9 @@ Runbook に沿った作業は、次の条件を満たすとレビュー可能で
 ## Codex App Server runtime 設計に進む条件
 
 Codex App Server runtime を設計する段階では、この Runbook だけでは進めません。
-ユーザーから資料を受け取ってから、別 PR で設計します。
+ユーザーから資料を受け取り、`docs/CODEX_APP_SERVER_RUNTIME_INTAKE.md` の
+intake gate で scope、human approval、test plan、rollback / disable plan を
+確認してから、別 PR で設計します。
 
 その別 PR でも、runtime、worker、scheduler、DB migration、external API
 integration、`/api/forecast` 接続、`/api/hormuz` 接続、production 昇格は、それ
