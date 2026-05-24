@@ -223,6 +223,12 @@ start gates, stop conditions, and review completion checks, see
 `docs/templates/CODEXAPP_OPERATION_REQUEST_TEMPLATE.md` when preparing a
 Japanese proposal-only CodexApp request.
 
+When creating a CodexApp request from a TaskCard or Handoff, the CodexApp
+request examples in `docs/examples/` can be used as writing samples. These
+examples do not update TaskCard or Handoff state, do not execute work, and do
+not authorize PR creation, merge, deploy, API update, DB change, runtime
+addition, external integration, automation, or production promotion.
+
 For higher-level human-review routine reporting across TaskCards, Handoffs, QA
 reports, blockers, and silent-failure checks, see `docs/OPERATIONS_ROUTINES.md`
 and the routine templates in `docs/templates/`. These routine templates do not

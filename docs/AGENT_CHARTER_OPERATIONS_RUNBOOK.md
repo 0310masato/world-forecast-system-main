@@ -111,6 +111,20 @@ CodexApp や AI worker が作業を開始する前に、次を確認します。
    - 必要に応じて `docs/templates/CODEXAPP_OPERATION_REQUEST_TEMPLATE.md` を使い
      ます。
 
+## CodexApp Operation Request Examples v0
+
+CodexApp Operation Request examples は `docs/examples/` に置きます。これらは
+CodexApp に渡す日本語 request の書き方サンプルであり、実行命令ではありません。
+
+CodexApp request を作る前に、`docs/CONTRACTS_INDEX.md` と対象 contract docs を
+読み、正本の field、enum、forbidden operations、protected path boundary を確認
+します。正本は
+`docs/templates/CODEXAPP_OPERATION_REQUEST_TEMPLATE.md` とこの Runbook です。
+
+Examples は Codex App Server runtime、worker、scheduler、API、DB、external
+integration、GitHub automation、file-writing automation、PR 作成、merge、deploy、
+production 昇格を許可しません。
+
 ## Operations Routine Templates v0
 
 Operations Routine Templates v0 は、Morning Standup、Weekly Review、Nightly

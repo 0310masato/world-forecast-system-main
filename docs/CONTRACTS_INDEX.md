@@ -16,13 +16,16 @@ Issue/PR 自動化、file-writing automation、AI job 実行処理、production 
 
 ## 契約レイヤーの流れ
 
-PR #12 から PR #21 までで整備された proposal-only の契約レイヤーと docs index
-に続き、Knowledge / Docs Stewardship v0 は docs/templates の品質管理レイヤーと
-して読みます。Docs Stewardship Example Reports v0 は、その品質管理レイヤーの
-記入例であり、Operations Routine Example Reports v0 は PR #20 の routine
-templates の記入例です。Task Board / Handoff Example Records v0 は PR #17 / #18
-の TaskCard、Handoff、Task Board QA Report の安全な記入例です。これらはいずれ
-も正本契約や実行許可ではありません。
+PR #12 から PR #26 までで整備された proposal-only の契約レイヤー、docs index、
+template、example を順に読みます。Knowledge / Docs Stewardship v0 は
+docs/templates の品質管理レイヤーとして読みます。Docs Stewardship Example
+Reports v0 は、その品質管理レイヤーの記入例であり、Operations Routine Example
+Reports v0 は PR #20 の routine templates の記入例です。Task Board / Handoff
+Example Records v0 は PR #17 / #18 の TaskCard、Handoff、Task Board QA Report の
+安全な記入例です。CodexApp Request Example Pack v0 は PR #19 の
+`docs/templates/CODEXAPP_OPERATION_REQUEST_TEMPLATE.md` と
+`docs/AGENT_CHARTER_OPERATIONS_RUNBOOK.md` に対応する日本語 request の記入例です。
+これらはいずれも正本契約や実行許可ではありません。
 
 1. Memory Layer
 2. Context Pack Builder v0
@@ -74,13 +77,14 @@ forbidden operations、protected path boundary を維持して使います。
 | #23 | Docs Stewardship Example Reports v0 | stewardship review、staleness audit、link/reference audit の安全な記入例 | いいえ。example reports のみ | いいえ。runtime/API/DB/worker/scheduler/automation は未導入 | PR #22 の templates を human-review-only の記入例として示す |
 | #24 | Operations Routine Example Reports v0 | Morning Standup、Weekly Review、Nightly QA、Blocker Escalation、Silent Failure Audit の安全な記入例 | いいえ。example reports のみ | いいえ。runtime/API/DB/worker/scheduler/automation は未導入 | PR #20 の routine templates を proposal-only / human-review-only の記入例として示す |
 | #25 | Task Board / Handoff Example Records v0 | TaskCard、Handoff、Task Board QA Report の安全な記入例 | いいえ。example records のみ | いいえ。runtime/API/DB/worker/scheduler/automation は未導入 | PR #17 / #18 の contract と templates を proposal-only / human-review-only の記入例として示す |
+| #26 | CodexApp Request Example Pack v0 | CodexApp への日本語 operation request の安全な記入例 | いいえ。example requests のみ | いいえ。runtime/API/DB/worker/scheduler/automation は未導入 | PR #19 の Agent Charter / Operations Runbook と CODEXAPP_OPERATION_REQUEST_TEMPLATE を proposal-only / human-review-only の記入例として示す |
 
 ## Docs / Templates 用途表
 
 | ドキュメント名 | 主な読者 | 使う場面 | 正本として扱う内容 | 使ってはいけない用途 |
 | --- | --- | --- | --- | --- |
 | `AGENTS.md` | CodexApp Worker、AI worker、human reviewer | リポジトリ内で作業を始める前 | protected core、human approval、Codex App Server policy、Task Board / Handoff boundary、routine boundary | runtime/API/DB/automation の実装許可として扱わない |
-| `docs/CONTRACTS_INDEX.md` | 全読者 | 契約・運用 docs の入口を確認するとき | PR #12-#25 の地図、読む順番、用途、未導入領域、停止条件 | 実行、PR 作成、file-writing automation、production apply の許可として扱わない |
+| `docs/CONTRACTS_INDEX.md` | 全読者 | 契約・運用 docs の入口を確認するとき | PR #12-#26 の地図、読む順番、用途、未導入領域、停止条件 | 実行、PR 作成、file-writing automation、production apply の許可として扱わない |
 | `docs/CONTEXT_PACKS.md` | AI Analysis Reviewer、CodexApp Worker | AI 分析に渡す context pack の入力境界を確認するとき | context pack の定義、allowed/excluded inputs、sanitization、versioning | secrets、raw local path、production write instruction、live source of record を入れる根拠にしない |
 | `docs/AI_ANALYSIS_JOBS.md` | AI Analysis Reviewer、CodexApp Worker | AI job の allowed/forbidden scope、intake、result contract を確認するとき | AI job の proposal-only 入出力、preflight、result contract、人間レビュー前提 | AI job 実行処理、prompt execution、worker runtime、storage path の仕様として扱わない |
 | `docs/HUMAN_APPROVAL.md` | Human Owner、AI Analysis Reviewer、Risk / Safety Reviewer | AI output を承認、却下、revision、archive する境界を確認するとき | approval principle、decision outcome、implementation proposal への接続 | approval を production apply、deploy、DB write、API update の自動許可にしない |
@@ -93,6 +97,7 @@ forbidden operations、protected path boundary を維持して使います。
 | `docs/templates/HANDOFF_TEMPLATE.md` | CodexApp Worker、AI worker、Human Owner | 非同期引き継ぎ artifact を残すとき | handoff fields、durable facts、allowed next step、sanitized references | 会話ログ全文、秘密情報、raw local path、実行命令の保存に使わない |
 | `docs/templates/TASK_BOARD_QA_REPORT_TEMPLATE.md` | QA Reviewer、Risk / Safety Reviewer | TaskCard / Handoff を受け入れる前に QA するとき | scope/status/autonomy/protected path/restricted content checks | QA report の recommendation を自動実行結果として扱わない |
 | `docs/templates/CODEXAPP_OPERATION_REQUEST_TEMPLATE.md` | Human Owner、CodexApp Worker | CodexApp へ proposal-only review support を頼むとき | 日本語 request fields、forbidden operations、required output | PR 作成、GitHub Issue 自動作成、runtime 追加、file-writing automation の依頼に使わない |
+| `docs/examples/CODEXAPP_OPERATION_REQUEST_*_EXAMPLE.md` | Human Owner、CodexApp Worker、QA Reviewer、Risk / Safety Reviewer | CodexApp への日本語 operation request の書き方を確認するとき | draft instructions、QA review notes、handoff summary の proposal-only / human-review-only / non-production 記入例。examples は正本契約ではなく記入例 | 正本契約、実運用ログ、実行許可、PR 作成、merge、deploy、API 更新、DB 変更、runtime 追加、automation の根拠として扱わない |
 | `docs/templates/MORNING_STANDUP_TEMPLATE.md` | Human Owner、CodexApp Worker | 朝の状況整理を proposal-only に記録するとき | completed/blocked/waiting/priority/open questions の report fields | 定期実行 runtime や status 自動更新として扱わない |
 | `docs/templates/WEEKLY_REVIEW_TEMPLATE.md` | Human Owner、QA Reviewer | 週次で契約、Task Board、Handoff、品質を振り返るとき | repeated blockers、quality findings、docs update proposals | docs update や routine change を人間レビューなしに適用しない |
 | `docs/templates/NIGHTLY_QA_REPORT_TEMPLATE.md` | QA Reviewer、Risk / Safety Reviewer | 夜間 QA 報告の型を使って review 結果を残すとき | checked contracts、findings、regressions、restricted/protected findings | nightly runtime、scheduler、worker 実行の仕様として扱わない |
@@ -101,14 +106,17 @@ forbidden operations、protected path boundary を維持して使います。
 | `docs/templates/DOC_STEWARDSHIP_REVIEW_TEMPLATE.md` | Knowledge Steward、CodexApp Worker、Human Owner | 単一 doc/template の stewardship review を記録するとき | source of truth、freshness、duplication、conflict、runtime boundary、restricted content、link checks | recommendation を docs 自動更新や実行許可として扱わない |
 | `docs/templates/DOC_STALENESS_AUDIT_TEMPLATE.md` | Knowledge Steward、QA Reviewer、Human Owner | 複数 docs/templates の古い前提や review due 候補を確認するとき | stale candidates、outdated references、stale assumptions、recommended updates | audit recommendation を自動修正や runtime 変更として扱わない |
 | `docs/templates/DOC_LINK_AND_REFERENCE_AUDIT_TEMPLATE.md` | Knowledge Steward、QA Reviewer、Human Owner | docs/templates のリンク、名前、source chain、index 参照を確認するとき | missing links、broken references、inconsistent names、source-chain gaps | link audit を file-writing automation や PR automation として扱わない |
-| `docs/examples/*.md` | Knowledge Steward、CodexApp Worker、Human Reviewer、QA Reviewer、Risk / Safety Reviewer | Docs Stewardship templates、Operations Routine templates、Task Board / Handoff templates の書き方を確認するとき | proposal-only、human-review-only、non-production の安全な記入例。examples は正本契約ではなく記入例 | 正本契約、実運用ログ、実行許可、docs 自動更新、PR 作成、merge、deploy、runtime/API/DB/automation の根拠として扱わない |
+| `docs/examples/*.md` | Knowledge Steward、CodexApp Worker、Human Reviewer、QA Reviewer、Risk / Safety Reviewer | Docs Stewardship templates、Operations Routine templates、Task Board / Handoff templates、CodexApp request examples の書き方を確認するとき | proposal-only、human-review-only、non-production の安全な記入例。examples は正本契約ではなく記入例 | 正本契約、実運用ログ、実行許可、docs 自動更新、PR 作成、merge、deploy、runtime/API/DB/automation の根拠として扱わない |
 
 Docs や templates が増えたときは、`docs/KNOWLEDGE_DOCS_STEWARDSHIP.md` の
 checklist を使います。`docs/CONTRACTS_INDEX.md` は正本地図、Knowledge / Docs
 Stewardship v0 は品質管理と鮮度確認です。どちらも実行許可ではありません。
-Docs Stewardship examples と Operations Routine examples は記入例であり、正本契約
-や実行許可ではありません。Task Board / Handoff examples も記入例であり、正本は
-`docs/TASK_BOARD_HANDOFF.md` と対応する templates です。
+Docs Stewardship examples、Operations Routine examples、Task Board / Handoff
+examples、CodexApp request examples は記入例であり、正本契約や実行許可では
+ありません。CodexApp request examples の正本は
+`docs/templates/CODEXAPP_OPERATION_REQUEST_TEMPLATE.md` と
+`docs/AGENT_CHARTER_OPERATIONS_RUNBOOK.md` です。Task Board / Handoff examples の
+正本は `docs/TASK_BOARD_HANDOFF.md` と対応する templates です。
 
 ## Persona / Role 別の読み順
 

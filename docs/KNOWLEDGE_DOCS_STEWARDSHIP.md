@@ -35,7 +35,7 @@ Server runtime、外部 API 連携、DB migration、`/api` 接続、GitHub Issue
 | Contract Docs | `docs/CONTEXT_PACKS.md`, `docs/AI_ANALYSIS_JOBS.md`, `docs/HUMAN_APPROVAL.md`, `docs/TASK_BOARD_HANDOFF.md`, `docs/CONTRACTS_INDEX.md` | proposal-only、human approval、allowed values、forbidden operations、source chain |
 | Operations Docs | `docs/AGENT_CHARTER_OPERATIONS_RUNBOOK.md`, `docs/OPERATIONS_ROUTINES.md` | CodexApp / AI worker の運用境界、A0-A2 autonomy、日本語指示書、停止条件 |
 | Template Docs | `docs/templates/*.md` | field names、allowed recommendation values、required human review、template alignment |
-| Example Docs | `docs/examples/*.md` | review / routine / task board の書き方サンプル、proposal-only / human-review-only / non-production の維持、実運用ログとの分離 |
+| Example Docs | `docs/examples/*.md` | review / routine / task board / CodexApp request の書き方サンプル、proposal-only / human-review-only / non-production の維持、実運用ログとの分離 |
 | Runtime Boundary Docs | `docs/CODEX_APP_SERVER.md`, `AGENTS.md` | runtime 未導入、protected core、Codex App Server sidecar boundary、禁止操作 |
 | Legacy / Planning Docs | `docs/SELF_IMPROVEMENT_LOOP.md`, `docs/FORECAST_REFACTOR_PLAN.md`, `docs/context-pack-builder-v0-plan.md`, `docs/agent-architecture-v0.1.md`, `docs/current-system.md`, `docs/data-model-v0.1.md`, `docs/memory-layer-v0.1-db-design.md`, `docs/memory-layer-v0.1-migration-plan.md`, `docs/roadmap-world-pattern-memory.md`, `docs/safety-policy.md` | 旧計画、古い前提、契約 docs との競合、runtime boundary drift |
 
@@ -149,7 +149,8 @@ automation and do not authorize runtime work.
 
 ## 記入例
 
-Docs Stewardship、Operations Routine、Task Board / Handoff の記入例は
+Docs Stewardship、Operations Routine、Task Board / Handoff、CodexApp request の
+記入例は
 `docs/examples/` に置きます。
 
 - `docs/examples/DOC_STEWARDSHIP_REVIEW_EXAMPLE.md`
@@ -163,13 +164,17 @@ Docs Stewardship、Operations Routine、Task Board / Handoff の記入例は
 - `docs/examples/TASK_CARD_EXAMPLE.md`
 - `docs/examples/HANDOFF_EXAMPLE.md`
 - `docs/examples/TASK_BOARD_QA_REPORT_EXAMPLE.md`
+- `docs/examples/CODEXAPP_OPERATION_REQUEST_DRAFT_INSTRUCTIONS_EXAMPLE.md`
+- `docs/examples/CODEXAPP_OPERATION_REQUEST_QA_REVIEW_EXAMPLE.md`
+- `docs/examples/CODEXAPP_OPERATION_REQUEST_HANDOFF_SUMMARY_EXAMPLE.md`
 
-これらは review / routine / task board の書き方サンプルであり、実運用ログでは
-ありません。example reports / records は正本契約ではなく、正本は各 template と
-contract docs です。example reports / records は docs 自動更新、file-writing
-automation、runtime、worker、scheduler、Codex App Server runtime、API、DB、
-external integration、GitHub automation、PR 作成、merge、deploy、production
-apply を許可しません。
+これらは review / routine / task board / CodexApp request の書き方サンプルで
+あり、実運用ログでも実行命令でもありません。example reports / records /
+requests は正本契約ではなく、正本は各 template と contract docs です。example
+reports / records / requests は docs 自動更新、file-writing automation、
+runtime、worker、scheduler、Codex App Server runtime、API、DB、external
+integration、GitHub automation、PR 作成、merge、deploy、production apply を
+許可しません。
 
 実際の review 結果を残す場合も、secrets、`.env` 値、raw local path、NAS path、
 private network details、production log、不要な private data を除外します。実際の
