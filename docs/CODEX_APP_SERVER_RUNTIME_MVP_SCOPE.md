@@ -14,6 +14,11 @@ production promotion.
 The next implementation PR must still be separate, human-reviewed, and limited
 to the allowed surface below.
 
+Implementation note: the first scaffold implementation remains limited to the
+allowed surface in this document. It may add isolated TypeScript metadata,
+validation, a disabled local scaffold helper, and a local smoke test, but it
+must not enable runtime behavior or connect to production surfaces.
+
 ## MVP Goal
 
 The MVP goal is to add the smallest Codex App Server runtime scaffold needed to
@@ -340,7 +345,8 @@ Stop before implementation if:
 
 ## Review Checklist
 
-- [ ] The PR is docs-only.
+- [ ] The scope PR was docs-only; the implementation PR remains inside the
+      allowed surface in this document.
 - [ ] This document is not a template or example.
 - [ ] The next PR allowed surface is explicit and repository-relative.
 - [ ] The next PR forbidden surface includes production forecast, API, DB,
