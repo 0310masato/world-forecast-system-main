@@ -159,6 +159,12 @@ runtime implementation, worker runtime, scheduler runtime, API connection, DB
 connection, package change, CI change, GitHub automation, file-writing
 automation, AI job execution, or production promotion.
 
+Use
+`docs/examples/CODEX_APP_SERVER_RUNTIME_DESIGN_PR_READINESS_REVIEW_EXAMPLE.md`
+only as a filled writing sample for that instruction-drafting readiness review.
+The example is not implementation readiness, execution permission, a runtime
+design PR, or runtime design PR instructions.
+
 ## Agent Charter / Operations Runbook
 
 Before designing or introducing Codex App Server runtime, use
@@ -189,3 +195,8 @@ If the intake outcome is `ready_for_runtime_design_pr`, run the separate
 readiness review template before any instruction draft is prepared. Readiness
 means instruction-drafting readiness only, not implementation readiness or
 execution permission.
+
+The sanitized filled example at
+`docs/examples/CODEX_APP_SERVER_RUNTIME_DESIGN_PR_READINESS_REVIEW_EXAMPLE.md`
+shows the review record shape only. It does not permit PR creation, merge,
+deploy, implementation, automation, AI job execution, or production promotion.

@@ -72,6 +72,10 @@ private network details、production logs、実運用データ、不要な priva
 - `RUNTIME_INTAKE_HANDOFF_EXAMPLE.md`
 - `RUNTIME_INTAKE_TASK_BOARD_QA_REPORT_EXAMPLE.md`
 
+### H. Runtime Design PR Readiness Review Examples
+
+- `CODEX_APP_SERVER_RUNTIME_DESIGN_PR_READINESS_REVIEW_EXAMPLE.md`
+
 ## Source Mapping
 
 | Example file | Category | Source contract / source template | Primary reader | Use when | Must not be used for |
@@ -99,6 +103,7 @@ private network details、production logs、実運用データ、不要な priva
 | `RUNTIME_INTAKE_TASK_CARD_EXAMPLE.md` | Runtime Intake Task Board / Handoff Examples | `docs/CODEX_APP_SERVER_RUNTIME_INTAKE.md`, `docs/TASK_BOARD_HANDOFF.md`, `docs/templates/TASK_CARD_TEMPLATE.md` | Future Runtime Designer, Human Owner, QA Reviewer | Runtime Intake outcome を TaskCard として human review に渡す記入例を確認するとき | runtime implementation、worker/scheduler/API/DB/package/CI changes、GitHub automation、PR 作成、merge、deploy、production promotion |
 | `RUNTIME_INTAKE_HANDOFF_EXAMPLE.md` | Runtime Intake Task Board / Handoff Examples | `docs/CODEX_APP_SERVER_RUNTIME_INTAKE.md`, `docs/TASK_BOARD_HANDOFF.md`, `docs/templates/HANDOFF_TEMPLATE.md` | Future Runtime Designer, Human Owner, QA Reviewer | Runtime Intake から future design instructions 前の durable handoff を確認するとき | 会話ログ全文、secret/local path/NAS path 保存、runtime implementation、PR 作成、merge、deploy、production promotion |
 | `RUNTIME_INTAKE_TASK_BOARD_QA_REPORT_EXAMPLE.md` | Runtime Intake Task Board / Handoff Examples | `docs/CODEX_APP_SERVER_RUNTIME_INTAKE.md`, `docs/TASK_BOARD_HANDOFF.md`, `docs/templates/TASK_BOARD_QA_REPORT_TEMPLATE.md` | Future Runtime Designer, Human Owner, QA Reviewer, Risk / Safety Reviewer | Runtime Intake TaskCard / Handoff bridge records を human review 前に QA する記入例を確認するとき | runtime implementation、worker/scheduler/API/DB/package/CI changes、GitHub automation、PR creation、merge、deploy、file-writing automation、production promotion |
+| `CODEX_APP_SERVER_RUNTIME_DESIGN_PR_READINESS_REVIEW_EXAMPLE.md` | Runtime Design PR Readiness Review Examples | `docs/CODEX_APP_SERVER_RUNTIME_INTAKE.md`, `docs/CODEX_APP_SERVER.md`, `docs/templates/CODEX_APP_SERVER_RUNTIME_DESIGN_PR_READINESS_REVIEW_TEMPLATE.md` | Future Runtime Designer, Human Owner, QA Reviewer, Risk / Safety Reviewer | Runtime Design PR Readiness Review Template の sanitized filled example を確認するとき | runtime implementation、worker/scheduler/API/DB/package/CI changes、GitHub automation、PR creation、merge、deploy、file-writing automation、AI job execution、production promotion |
 
 ## Role別の読む順番
 
@@ -142,8 +147,10 @@ private network details、production logs、実運用データ、不要な priva
 4. `docs/examples/README.md`
 5. `docs/CODEX_APP_SERVER_RUNTIME_INTAKE.md`
 6. `docs/templates/CODEX_APP_SERVER_RUNTIME_INTAKE_TEMPLATE.md`
-7. 対象 example
-8. ユーザー提供資料
+7. `docs/templates/CODEX_APP_SERVER_RUNTIME_DESIGN_PR_READINESS_REVIEW_TEMPLATE.md`
+8. `docs/examples/CODEX_APP_SERVER_RUNTIME_DESIGN_PR_READINESS_REVIEW_EXAMPLE.md`
+9. 対象 example
+10. ユーザー提供資料
 
 Future Runtime Designer は、examples を runtime 設計許可として扱いません。
 Codex App Server runtime 設計に進む場合は、ユーザー提供資料を受け取ってから
@@ -155,6 +162,12 @@ Runtime Intake から Task Board / Handoff へつなぐ場合は、
 `RUNTIME_INTAKE_TASK_BOARD_QA_REPORT_EXAMPLE.md` を writing sample としてだけ
 参照します。これらは runtime 実装、worker/scheduler/API/DB/package/CI 変更、
 GitHub automation、PR 作成、merge、deploy、production promotion を許可しません。
+
+Runtime Design PR Readiness Review Template を記入する場合は、
+`CODEX_APP_SERVER_RUNTIME_DESIGN_PR_READINESS_REVIEW_EXAMPLE.md` を writing sample
+としてだけ参照します。この example は instruction-drafting readiness の記入例であり、
+runtime design PR、PR creation、merge、deploy、implementation permission、
+file-writing automation、AI job execution、production promotion を許可しません。
 
 ## Safety Boundary
 
@@ -171,10 +184,14 @@ Examples must not authorize:
 - `scheduler_runtime`
 - `codex_app_server_runtime`
 - `external_api_integration`
+- `package_change`
+- `ci_change`
+- `github_automation`
 - `create_github_issue`
 - `create_pr`
 - `merge_pr`
 - `file_writing_automation`
+- `ai_job_execution`
 - `external_publish`
 - `automated_trading`
 - `investment_advice`

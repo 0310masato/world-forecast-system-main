@@ -261,6 +261,11 @@ before drafting future runtime design PR instructions. That template checks
 instruction-drafting readiness only and does not create a PR, merge, deploy,
 or implement runtime behavior.
 
+For a sanitized filled example of that readiness review, see
+`docs/examples/CODEX_APP_SERVER_RUNTIME_DESIGN_PR_READINESS_REVIEW_EXAMPLE.md`.
+The example is a writing sample only. It is not a runtime design PR, not a PR
+request, not execution permission, and not implementation permission.
+
 ## Relationship To Existing Docs
 
 - `AGENTS.md` remains the repository safety boundary for protected core,
@@ -289,6 +294,10 @@ or implement runtime behavior.
   remains a human-review-only readiness checklist for deciding whether future
   runtime design PR instructions may be drafted. It is not a source contract,
   runtime design PR, PR request, or execution permission.
+- `docs/examples/CODEX_APP_SERVER_RUNTIME_DESIGN_PR_READINESS_REVIEW_EXAMPLE.md`
+  remains a sanitized readiness review writing sample. It is not a source
+  contract, runtime design PR, PR request, execution permission, or
+  implementation permission.
 
 ## What This Document Does Not Authorize
 
