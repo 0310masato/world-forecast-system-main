@@ -283,6 +283,13 @@ Before a later MVP scaffold implementation PR, use
 forbidden files, test plan, rollback or disable plan, stop conditions, and
 review checklist. That scope document does not implement runtime behavior.
 
+If an MVP scaffold implementation exists, it remains inside the scope document
+boundary: disabled-by-default, local-only, proposal-only, non-production, and
+human-approval-required. The scaffold is not runtime enablement, not API or DB
+connection permission, not worker or scheduler execution, not external
+integration, not package or CI permission, not automation, not AI job execution,
+and not production promotion.
+
 ## Relationship To Existing Docs
 
 - `AGENTS.md` remains the repository safety boundary for protected core,

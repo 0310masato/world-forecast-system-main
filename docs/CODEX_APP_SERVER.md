@@ -223,3 +223,16 @@ production forecast core changes, `/api/forecast`, `/api/hormuz`,
 lockfile changes, CI changes, external API integration, scheduler runtime,
 worker runtime, GitHub automation, file-writing automation, AI job execution,
 external publishing, or production promotion.
+
+## Runtime MVP Scaffold
+
+The initial Codex App Server Runtime MVP scaffold may exist only as isolated
+local TypeScript metadata and validation under `lib/codex-app-server-runtime/`.
+
+That scaffold must remain disabled-by-default, local-only, proposal-only,
+non-production, and human-approval-required. It is not an enabled runtime, does
+not connect to the production forecast core, does not add API or DB
+connections, does not start a worker or scheduler, does not add external
+integration, does not change package or CI configuration, does not automate
+file writes or GitHub actions, does not execute AI jobs, and does not promote
+anything to production.
