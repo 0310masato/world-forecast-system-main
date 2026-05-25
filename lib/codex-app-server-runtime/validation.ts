@@ -102,7 +102,7 @@ const HIGH_RISK_OPERATION_RECOMMENDATION_PATTERNS = [
   },
   {
     name: 'production promotion recommendation',
-    pattern: /\b(?:promote|apply|use)\b[\w\s-]{0,80}\bproduction\b/i,
+    pattern: /\b(?:promote|apply|use)\s+(?:(?:this|the)\s+)?(?:scaffold|runtime\s+scaffold|proposal|record|metadata|it)\b[\w\s-]{0,80}\b(?:in|to)\s+production\b/i,
   },
   {
     name: 'Japanese production application recommendation',
