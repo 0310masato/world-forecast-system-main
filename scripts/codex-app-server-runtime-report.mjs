@@ -36,6 +36,14 @@ const RESTRICTED_OUTPUT_PATTERNS = [
     name: 'private network detail',
     pattern: /\b(?:10(?:\.\d{1,3}){3}|192\.168(?:\.\d{1,3}){2}|172\.(?:1[6-9]|2\d|3[0-1])(?:\.\d{1,3}){2})\b/,
   },
+  {
+    name: 'production log detail',
+    pattern: /\bproduction\s+logs?\b/i,
+  },
+  {
+    name: 'real operational data detail',
+    pattern: /\breal\s+operational\s+data\b/i,
+  },
 ];
 
 function sanitize(message) {
@@ -155,6 +163,8 @@ function loadRuntimeReportHelpers() {
       reportModule.makeCodexAppServerRuntimeMvpInspectionReport,
     makeCodexAppServerRuntimeMvpOperatorSummary:
       reportModule.makeCodexAppServerRuntimeMvpOperatorSummary,
+    makeCodexAppServerRuntimeMvpTaskCardDraft:
+      reportModule.makeCodexAppServerRuntimeMvpTaskCardDraft,
     makeCodexAppServerRuntimeMvpScaffold:
       scaffoldModule.makeCodexAppServerRuntimeMvpScaffold,
   };
@@ -164,20 +174,25 @@ try {
   const {
     makeCodexAppServerRuntimeMvpInspectionReport,
     makeCodexAppServerRuntimeMvpOperatorSummary,
+    makeCodexAppServerRuntimeMvpTaskCardDraft,
     makeCodexAppServerRuntimeMvpScaffold,
   } = loadRuntimeReportHelpers();
   const args = process.argv.slice(2);
   const outputSummary = args.length === 1 && args[0] === '--summary';
+  const outputTaskCard = args.length === 1 && args[0] === '--taskcard';
 
-  if (args.length > 0 && !outputSummary) {
-    throw new Error('Usage: node scripts/codex-app-server-runtime-report.mjs [--summary]');
+  if (args.length > 0 && !outputSummary && !outputTaskCard) {
+    throw new Error('Usage: node scripts/codex-app-server-runtime-report.mjs [--summary|--taskcard]');
   }
 
   const scaffold = makeCodexAppServerRuntimeMvpScaffold();
   const report = makeCodexAppServerRuntimeMvpInspectionReport(scaffold);
-  const outputValue = outputSummary
-    ? makeCodexAppServerRuntimeMvpOperatorSummary(report)
-    : report;
+  const summary = makeCodexAppServerRuntimeMvpOperatorSummary(report);
+  const outputValue = outputTaskCard
+    ? makeCodexAppServerRuntimeMvpTaskCardDraft(summary)
+    : outputSummary
+      ? summary
+      : report;
   const output = JSON.stringify(outputValue, null, 2);
 
   assertSafeOutput(output);

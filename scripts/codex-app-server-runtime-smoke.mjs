@@ -97,10 +97,14 @@ function assertSafeReportOutput(output) {
   const restrictedPatterns = [
     /\b[A-Z]:\\[^\r\n'"`]+/,
     /\b[A-Z]:\/[^\r\n'"`<>|]+/,
+    /\\\\[^\\/\s]+[\\/][^\\/\s]+/,
     /(^|[\s'"`])\/(?:tmp|home|Users)\/[^\r\n'"`<>|]+/,
     /\b(?:10(?:\.\d{1,3}){3}|192\.168(?:\.\d{1,3}){2}|172\.(?:1[6-9]|2\d|3[0-1])(?:\.\d{1,3}){2})\b/,
     /\b(?:api[_-]?key|token|secret|password|credential|oauth[_-]?token)\s*[:=]/i,
     /\bsk-[A-Za-z0-9_-]{12,}\b/,
+    /(^|[\\/\s'"`])\.env(?:\.[A-Za-z0-9_-]+)?($|[\\/\s'"`:])/i,
+    /\bproduction\s+logs?\b/i,
+    /\breal\s+operational\s+data\b/i,
   ];
 
   assert(!output.includes(projectRoot), 'Report output leaked the project root.');
@@ -200,6 +204,7 @@ async function main() {
   const {
     makeCodexAppServerRuntimeMvpInspectionReport,
     makeCodexAppServerRuntimeMvpOperatorSummary,
+    makeCodexAppServerRuntimeMvpTaskCardDraft,
   } = require(path.join(buildDir, 'lib', 'codex-app-server-runtime', 'report.js'));
   const {
     validateCodexAppServerRuntimeMvpScaffold,
@@ -303,6 +308,64 @@ async function main() {
   );
   assertSafeReportOutput(JSON.stringify(summary));
   log('Accepted operator summary helper.');
+
+  const taskCardDraft = makeCodexAppServerRuntimeMvpTaskCardDraft(summary);
+  assert(
+    taskCardDraft.task_id === 'codex-app-server-runtime-mvp-taskcard-draft-codex-app-server-runtime-mvp-scaffold-v0',
+    'TaskCard draft must derive a deterministic task_id from the summary scaffold id.',
+  );
+  assert(
+    taskCardDraft.title === 'Review Codex App Server Runtime MVP operator summary TaskCard draft',
+    'TaskCard draft title must identify the operator review draft.',
+  );
+  assert(
+    taskCardDraft.source.type === 'codex_app_server_runtime_mvp_operator_summary_v0',
+    'TaskCard draft source must identify the operator summary.',
+  );
+  assert(
+    taskCardDraft.source.scaffold_id === summary.scaffold_id,
+    'TaskCard draft source must retain the sanitized scaffold id.',
+  );
+  assert(
+    taskCardDraft.status === 'waiting_for_human_approval',
+    'Valid TaskCard draft status must wait for human approval.',
+  );
+  assert(
+    taskCardDraft.autonomy_level === 'A1_draft_only',
+    'TaskCard draft autonomy must remain A1 draft-only.',
+  );
+  assert(taskCardDraft.proposal_only === true, 'TaskCard draft must be proposal-only.');
+  assert(taskCardDraft.is_production_state === false, 'TaskCard draft must not be production state.');
+  assert(
+    taskCardDraft.required_human_approval === true,
+    'TaskCard draft must require human approval.',
+  );
+  assert(
+    taskCardDraft.allowed_next_step === 'human_review_only',
+    'TaskCard draft allowed next step must remain human_review_only.',
+  );
+  assert(
+    taskCardDraft.forbidden_next_steps.includes('production_write'),
+    'TaskCard draft must forbid production writes.',
+  );
+  assert(
+    taskCardDraft.forbidden_next_steps.includes('create_pr'),
+    'TaskCard draft must not authorize PR creation.',
+  );
+  assert(
+    taskCardDraft.acceptance_criteria.some((criterion) => criterion.includes('stdout-only')),
+    'TaskCard draft acceptance criteria must preserve stdout-only output.',
+  );
+  assert(
+    taskCardDraft.risks.length > 0,
+    'TaskCard draft must include reviewable risks.',
+  );
+  assert(
+    taskCardDraft.references.includes('docs/TASK_BOARD_HANDOFF.md'),
+    'TaskCard draft must cite the Task Board / Handoff contract.',
+  );
+  assertSafeReportOutput(JSON.stringify(taskCardDraft));
+  log('Accepted stdout-only TaskCard draft helper.');
 
   for (const label of CODEX_APP_SERVER_RUNTIME_MVP_REQUIRED_SAFETY_LABELS) {
     assert(scaffold.safety_labels.includes(label), `Scaffold missing safety label: ${label}.`);
@@ -472,9 +535,19 @@ async function main() {
   const unsafeReportOutput = JSON.stringify(unsafeReport);
   const unsafeSummary = makeCodexAppServerRuntimeMvpOperatorSummary(unsafeReport);
   const unsafeSummaryOutput = JSON.stringify(unsafeSummary);
+  const unsafeTaskCardDraft = makeCodexAppServerRuntimeMvpTaskCardDraft(unsafeSummary);
+  const unsafeTaskCardDraftOutput = JSON.stringify(unsafeTaskCardDraft);
   assert(unsafeReport.validation.passed === false, 'Unsafe report scaffold must fail validation.');
   assert(unsafeSummary.status === 'blocked', 'Unsafe summary must be blocked.');
   assert(unsafeSummary.validation_passed === false, 'Unsafe summary validation_passed must be false.');
+  assert(
+    unsafeTaskCardDraft.status === 'blocked',
+    'Unsafe TaskCard draft status must be blocked.',
+  );
+  assert(
+    unsafeTaskCardDraft.allowed_next_step === 'human_review_only',
+    'Unsafe TaskCard draft next step must remain human_review_only.',
+  );
   assert(
     unsafeReport.review_notes.includes(
       'Withheld because scaffold validation failed. Review validation.issues only.',
@@ -483,8 +556,13 @@ async function main() {
   );
   assert(!unsafeReportOutput.includes(unsafeReportFixture), 'Unsafe report leaked restricted content.');
   assert(!unsafeSummaryOutput.includes(unsafeReportFixture), 'Unsafe summary leaked restricted content.');
+  assert(
+    !unsafeTaskCardDraftOutput.includes(unsafeReportFixture),
+    'Unsafe TaskCard draft leaked restricted content.',
+  );
   assertSafeReportOutput(unsafeReportOutput);
   assertSafeReportOutput(unsafeSummaryOutput);
+  assertSafeReportOutput(unsafeTaskCardDraftOutput);
   log('Accepted invalid scaffold report withholding.');
 
   const apiUpdateRecommendation = cloneValue(scaffold);
@@ -609,6 +687,56 @@ async function main() {
     'Summary script output must stop at human_review_only.',
   );
   log('Accepted read-only summary script output.');
+
+  const taskCardScriptResult = spawnSync(process.execPath, [
+    'scripts/codex-app-server-runtime-report.mjs',
+    '--taskcard',
+  ], {
+    cwd: projectRoot,
+    encoding: 'utf8',
+    stdio: ['ignore', 'pipe', 'pipe'],
+    windowsHide: true,
+  });
+  if (taskCardScriptResult.status !== 0) {
+    throw new Error([
+      'Codex App Server runtime TaskCard draft script failed.',
+      sanitize(taskCardScriptResult.stdout),
+      sanitize(taskCardScriptResult.stderr),
+    ].filter(Boolean).join('\n'));
+  }
+
+  assert(
+    taskCardScriptResult.stderr.trim().length === 0,
+    'TaskCard draft script must write the draft to stdout without stderr output.',
+  );
+  const taskCardScriptOutput = taskCardScriptResult.stdout.trim();
+  assertSafeReportOutput(taskCardScriptOutput);
+  const taskCardScriptJson = JSON.parse(taskCardScriptOutput);
+  assert(
+    taskCardScriptJson.status === 'waiting_for_human_approval',
+    'TaskCard draft script output must wait for human approval.',
+  );
+  assert(
+    taskCardScriptJson.allowed_next_step === 'human_review_only',
+    'TaskCard draft script output must stop at human_review_only.',
+  );
+  assert(
+    taskCardScriptJson.proposal_only === true,
+    'TaskCard draft script output must remain proposal-only.',
+  );
+  assert(
+    taskCardScriptJson.is_production_state === false,
+    'TaskCard draft script output must remain non-production.',
+  );
+  assert(
+    taskCardScriptJson.required_human_approval === true,
+    'TaskCard draft script output must require human approval.',
+  );
+  assert(
+    taskCardScriptJson.forbidden_next_steps.includes('merge_pr'),
+    'TaskCard draft script output must forbid PR merge.',
+  );
+  log('Accepted stdout-only TaskCard draft script output.');
 
   log('Codex App Server runtime MVP scaffold smoke checks passed.');
 }
