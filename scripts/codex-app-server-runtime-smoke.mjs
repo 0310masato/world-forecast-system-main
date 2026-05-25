@@ -205,6 +205,7 @@ async function main() {
     makeCodexAppServerRuntimeMvpInspectionReport,
     makeCodexAppServerRuntimeMvpOperatorSummary,
     makeCodexAppServerRuntimeMvpTaskCardDraft,
+    makeCodexAppServerRuntimeMvpTaskCardQaDraft,
   } = require(path.join(buildDir, 'lib', 'codex-app-server-runtime', 'report.js'));
   const {
     validateCodexAppServerRuntimeMvpScaffold,
@@ -366,6 +367,109 @@ async function main() {
   );
   assertSafeReportOutput(JSON.stringify(taskCardDraft));
   log('Accepted stdout-only TaskCard draft helper.');
+
+  const taskCardQaDraft = makeCodexAppServerRuntimeMvpTaskCardQaDraft(taskCardDraft, {
+    checkedAt: 1_800_000_000,
+  });
+  assert(
+    taskCardQaDraft.qa_report_id === 'codex-app-server-runtime-mvp-taskcard-qa-codex-app-server-runtime-mvp-taskcard-draft-codex-app-server-runtime-mvp-scaffold-v0',
+    'TaskCard QA draft must derive a deterministic qa_report_id from the reviewed task id.',
+  );
+  assert(
+    taskCardQaDraft.reviewed_task_id === taskCardDraft.task_id,
+    'TaskCard QA draft must identify the reviewed task id.',
+  );
+  assert(
+    taskCardQaDraft.reviewed_output_type === 'codex_app_server_runtime_mvp_taskcard_draft_v0',
+    'TaskCard QA draft must identify the reviewed output type.',
+  );
+  assert(
+    taskCardQaDraft.reviewer_role === 'qa_reviewer',
+    'TaskCard QA draft reviewer role must be qa_reviewer.',
+  );
+  assert(
+    taskCardQaDraft.recommendation === 'approve_for_human_review',
+    'Valid TaskCard QA draft must approve for human review.',
+  );
+  assert(taskCardQaDraft.proposal_only === true, 'TaskCard QA draft must be proposal-only.');
+  assert(
+    taskCardQaDraft.is_production_state === false,
+    'TaskCard QA draft must not be production state.',
+  );
+  assert(
+    taskCardQaDraft.required_human_approval === true,
+    'TaskCard QA draft must require human approval.',
+  );
+  assert(
+    taskCardQaDraft.checked_at === '2027-01-15T08:00:00.000Z',
+    'TaskCard QA draft timestamp must be ISO formatted.',
+  );
+  assert(
+    taskCardQaDraft.checks.scope_boundary_check.result === 'pass',
+    'TaskCard QA draft scope boundary check must pass.',
+  );
+  assert(
+    taskCardQaDraft.checks.status_allowed_next_step_check.result === 'pass',
+    'TaskCard QA draft status and allowed-next-step check must pass.',
+  );
+  assert(
+    taskCardQaDraft.checks.autonomy_level_check.result === 'pass',
+    'TaskCard QA draft autonomy check must pass.',
+  );
+  assert(
+    taskCardQaDraft.checks.protected_surface_check.result === 'pass',
+    'TaskCard QA draft protected surface check must pass.',
+  );
+  assert(
+    taskCardQaDraft.checks.forbidden_next_steps_check.result === 'pass',
+    'TaskCard QA draft forbidden next steps check must pass.',
+  );
+  assert(
+    taskCardQaDraft.checks.restricted_content_check.result === 'pass',
+    'TaskCard QA draft restricted content check must pass.',
+  );
+  assert(
+    taskCardQaDraft.checks.stdout_only_check.result === 'pass',
+    'TaskCard QA draft stdout-only check must pass.',
+  );
+  assert(
+    taskCardQaDraft.issues.length === 0,
+    'Valid TaskCard QA draft must have no issues.',
+  );
+  assert(
+    taskCardQaDraft.required_next_action === 'human_review_only',
+    'TaskCard QA draft next action must remain human_review_only.',
+  );
+  assert(
+    taskCardQaDraft.forbidden_next_steps.includes('create_pr'),
+    'TaskCard QA draft must not authorize PR creation.',
+  );
+  assert(
+    taskCardQaDraft.forbidden_next_steps.includes('merge_pr'),
+    'TaskCard QA draft must not authorize PR merge.',
+  );
+  assert(
+    taskCardQaDraft.forbidden_next_steps.includes('direct_deploy'),
+    'TaskCard QA draft must not authorize deploy.',
+  );
+  assert(
+    taskCardQaDraft.forbidden_next_steps.includes('db_write'),
+    'TaskCard QA draft must not authorize DB writes.',
+  );
+  assert(
+    taskCardQaDraft.forbidden_next_steps.includes('worker_runtime'),
+    'TaskCard QA draft must not authorize worker runtime.',
+  );
+  assert(
+    taskCardQaDraft.forbidden_next_steps.includes('scheduler_runtime'),
+    'TaskCard QA draft must not authorize scheduler runtime.',
+  );
+  assert(
+    taskCardQaDraft.references.includes('docs/templates/TASK_BOARD_QA_REPORT_TEMPLATE.md'),
+    'TaskCard QA draft must cite the Task Board QA template.',
+  );
+  assertSafeReportOutput(JSON.stringify(taskCardQaDraft));
+  log('Accepted stdout-only TaskCard QA draft helper.');
 
   for (const label of CODEX_APP_SERVER_RUNTIME_MVP_REQUIRED_SAFETY_LABELS) {
     assert(scaffold.safety_labels.includes(label), `Scaffold missing safety label: ${label}.`);
@@ -537,6 +641,8 @@ async function main() {
   const unsafeSummaryOutput = JSON.stringify(unsafeSummary);
   const unsafeTaskCardDraft = makeCodexAppServerRuntimeMvpTaskCardDraft(unsafeSummary);
   const unsafeTaskCardDraftOutput = JSON.stringify(unsafeTaskCardDraft);
+  const unsafeTaskCardQaDraft = makeCodexAppServerRuntimeMvpTaskCardQaDraft(unsafeTaskCardDraft);
+  const unsafeTaskCardQaDraftOutput = JSON.stringify(unsafeTaskCardQaDraft);
   assert(unsafeReport.validation.passed === false, 'Unsafe report scaffold must fail validation.');
   assert(unsafeSummary.status === 'blocked', 'Unsafe summary must be blocked.');
   assert(unsafeSummary.validation_passed === false, 'Unsafe summary validation_passed must be false.');
@@ -547,6 +653,30 @@ async function main() {
   assert(
     unsafeTaskCardDraft.allowed_next_step === 'human_review_only',
     'Unsafe TaskCard draft next step must remain human_review_only.',
+  );
+  assert(
+    unsafeTaskCardQaDraft.recommendation === 'block',
+    'Blocked TaskCard QA draft recommendation must be block.',
+  );
+  assert(
+    unsafeTaskCardQaDraft.required_next_action === 'human_review_only',
+    'Blocked TaskCard QA draft next action must remain human_review_only.',
+  );
+  assert(
+    unsafeTaskCardQaDraft.issues.some((issue) => issue.code === 'reviewed_taskcard_blocked'),
+    'Blocked TaskCard QA draft must include a reviewed_taskcard_blocked issue.',
+  );
+  assert(
+    unsafeTaskCardQaDraft.forbidden_next_steps.includes('create_pr'),
+    'Blocked TaskCard QA draft must not authorize PR creation.',
+  );
+  assert(
+    unsafeTaskCardQaDraft.forbidden_next_steps.includes('merge_pr'),
+    'Blocked TaskCard QA draft must not authorize PR merge.',
+  );
+  assert(
+    unsafeTaskCardQaDraft.forbidden_next_steps.includes('production_promotion'),
+    'Blocked TaskCard QA draft must not authorize production promotion.',
   );
   assert(
     unsafeReport.review_notes.includes(
@@ -560,9 +690,14 @@ async function main() {
     !unsafeTaskCardDraftOutput.includes(unsafeReportFixture),
     'Unsafe TaskCard draft leaked restricted content.',
   );
+  assert(
+    !unsafeTaskCardQaDraftOutput.includes(unsafeReportFixture),
+    'Unsafe TaskCard QA draft leaked restricted content.',
+  );
   assertSafeReportOutput(unsafeReportOutput);
   assertSafeReportOutput(unsafeSummaryOutput);
   assertSafeReportOutput(unsafeTaskCardDraftOutput);
+  assertSafeReportOutput(unsafeTaskCardQaDraftOutput);
   log('Accepted invalid scaffold report withholding.');
 
   const apiUpdateRecommendation = cloneValue(scaffold);
@@ -737,6 +872,80 @@ async function main() {
     'TaskCard draft script output must forbid PR merge.',
   );
   log('Accepted stdout-only TaskCard draft script output.');
+
+  const taskCardQaScriptResult = spawnSync(process.execPath, [
+    'scripts/codex-app-server-runtime-report.mjs',
+    '--taskcard-qa',
+  ], {
+    cwd: projectRoot,
+    encoding: 'utf8',
+    stdio: ['ignore', 'pipe', 'pipe'],
+    windowsHide: true,
+  });
+  if (taskCardQaScriptResult.status !== 0) {
+    throw new Error([
+      'Codex App Server runtime TaskCard QA draft script failed.',
+      sanitize(taskCardQaScriptResult.stdout),
+      sanitize(taskCardQaScriptResult.stderr),
+    ].filter(Boolean).join('\n'));
+  }
+
+  assert(
+    taskCardQaScriptResult.stderr.trim().length === 0,
+    'TaskCard QA draft script must write the draft to stdout without stderr output.',
+  );
+  const taskCardQaScriptOutput = taskCardQaScriptResult.stdout.trim();
+  assertSafeReportOutput(taskCardQaScriptOutput);
+  const taskCardQaScriptJson = JSON.parse(taskCardQaScriptOutput);
+  assert(
+    taskCardQaScriptJson.reviewed_output_type === 'codex_app_server_runtime_mvp_taskcard_draft_v0',
+    'TaskCard QA draft script output must identify the reviewed output type.',
+  );
+  assert(
+    taskCardQaScriptJson.recommendation === 'approve_for_human_review',
+    'TaskCard QA draft script output must approve valid drafts for human review.',
+  );
+  assert(
+    taskCardQaScriptJson.required_next_action === 'human_review_only',
+    'TaskCard QA draft script output must stop at human_review_only.',
+  );
+  assert(
+    taskCardQaScriptJson.proposal_only === true,
+    'TaskCard QA draft script output must remain proposal-only.',
+  );
+  assert(
+    taskCardQaScriptJson.is_production_state === false,
+    'TaskCard QA draft script output must remain non-production.',
+  );
+  assert(
+    taskCardQaScriptJson.required_human_approval === true,
+    'TaskCard QA draft script output must require human approval.',
+  );
+  assert(
+    taskCardQaScriptJson.checks.stdout_only_check.result === 'pass',
+    'TaskCard QA draft script output must pass stdout-only QA.',
+  );
+  assert(
+    taskCardQaScriptJson.forbidden_next_steps.includes('create_pr'),
+    'TaskCard QA draft script output must forbid PR creation.',
+  );
+  assert(
+    taskCardQaScriptJson.forbidden_next_steps.includes('merge_pr'),
+    'TaskCard QA draft script output must forbid PR merge.',
+  );
+  assert(
+    taskCardQaScriptJson.forbidden_next_steps.includes('db_write'),
+    'TaskCard QA draft script output must forbid DB writes.',
+  );
+  assert(
+    taskCardQaScriptJson.forbidden_next_steps.includes('worker_runtime'),
+    'TaskCard QA draft script output must forbid worker runtime.',
+  );
+  assert(
+    taskCardQaScriptJson.forbidden_next_steps.includes('scheduler_runtime'),
+    'TaskCard QA draft script output must forbid scheduler runtime.',
+  );
+  log('Accepted stdout-only TaskCard QA draft script output.');
 
   log('Codex App Server runtime MVP scaffold smoke checks passed.');
 }

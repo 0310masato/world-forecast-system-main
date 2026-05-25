@@ -1,5 +1,6 @@
 import { assertNoRestrictedContent } from '../memory/validation';
 import { makeTaskBoardForbiddenNextSteps } from '../task-board/handoff';
+import { CODEX_APP_SERVER_RUNTIME_MVP_FORBIDDEN_OPERATIONS } from './types';
 import type {
   TaskBoardAllowedNextStep,
   TaskBoardForbiddenNextStep,
@@ -111,6 +112,62 @@ export interface CodexAppServerRuntimeMvpTaskCardDraft {
   references: string[];
 }
 
+export type CodexAppServerRuntimeMvpTaskCardQaRecommendation =
+  | 'approve_for_human_review'
+  | 'revise_task_card'
+  | 'block';
+
+export type CodexAppServerRuntimeMvpTaskCardQaCheckResult =
+  | 'pass'
+  | 'revise'
+  | 'block';
+
+export type CodexAppServerRuntimeMvpTaskCardQaForbiddenNextStep =
+  | TaskBoardForbiddenNextStep
+  | CodexAppServerRuntimeMvpForbiddenOperation;
+
+export interface CodexAppServerRuntimeMvpTaskCardQaCheck {
+  result: CodexAppServerRuntimeMvpTaskCardQaCheckResult;
+  notes: string;
+}
+
+export interface CodexAppServerRuntimeMvpTaskCardQaIssue {
+  code: string;
+  severity: 'revision_required' | 'blocking';
+  message: string;
+  path?: string;
+}
+
+export interface CodexAppServerRuntimeMvpTaskCardQaDraft {
+  qa_report_id: string;
+  reviewed_task_id: string;
+  reviewed_output_type: 'codex_app_server_runtime_mvp_taskcard_draft_v0';
+  reviewer_role: 'qa_reviewer';
+  recommendation: CodexAppServerRuntimeMvpTaskCardQaRecommendation;
+  proposal_only: true;
+  is_production_state: false;
+  required_human_approval: true;
+  checked_at: string;
+  checks: {
+    scope_boundary_check: CodexAppServerRuntimeMvpTaskCardQaCheck;
+    status_allowed_next_step_check: CodexAppServerRuntimeMvpTaskCardQaCheck;
+    autonomy_level_check: CodexAppServerRuntimeMvpTaskCardQaCheck;
+    protected_surface_check: CodexAppServerRuntimeMvpTaskCardQaCheck;
+    forbidden_next_steps_check: CodexAppServerRuntimeMvpTaskCardQaCheck;
+    restricted_content_check: CodexAppServerRuntimeMvpTaskCardQaCheck;
+    stdout_only_check: CodexAppServerRuntimeMvpTaskCardQaCheck;
+  };
+  issues: CodexAppServerRuntimeMvpTaskCardQaIssue[];
+  residual_risks: string[];
+  required_next_action: 'human_review_only';
+  forbidden_next_steps: CodexAppServerRuntimeMvpTaskCardQaForbiddenNextStep[];
+  references: string[];
+}
+
+export interface MakeCodexAppServerRuntimeMvpTaskCardQaDraftOptions {
+  checkedAt?: number;
+}
+
 const WITHHELD_INVALID_SCAFFOLD = 'withheld_invalid_scaffold';
 const INVALID_SCAFFOLD_NOTICE = [
   'Withheld because scaffold validation failed. Review validation.issues only.',
@@ -134,6 +191,55 @@ const TASKCARD_DRAFT_RISKS = [
   'A reviewer could mistake stdout draft output for a persisted Task Board record unless the stdout-only boundary remains explicit.',
   'A blocked operator summary requires human review of validation issues before any later review artifact is considered.',
   'Future work could exceed A1/A2 scope unless forbidden next steps and human approval remain explicit.',
+] as const;
+const TASKCARD_QA_REFERENCES = [
+  'AGENTS.md',
+  'docs/CONTRACTS_INDEX.md',
+  'docs/TASK_BOARD_HANDOFF.md',
+  'docs/templates/TASK_BOARD_QA_REPORT_TEMPLATE.md',
+  'docs/CODEX_APP_SERVER.md',
+  'docs/CODEX_APP_SERVER_RUNTIME_MVP_SCOPE.md',
+  'lib/codex-app-server-runtime/report.ts',
+  'scripts/codex-app-server-runtime-report.mjs',
+] as const;
+const TASKCARD_QA_RESIDUAL_RISKS = [
+  'The QA draft is stdout-only review material and is not persisted to the Task Board.',
+  'Human reviewers must compare the reviewed TaskCard draft with source contracts before any later action.',
+  'A future implementation PR still needs explicit human approval, its own scope, tests, and rollback plan.',
+] as const;
+const PROTECTED_SURFACE_PATTERNS = [
+  {
+    name: 'API route path',
+    pattern: /\b(?:app|pages)\/api(?:\/|$)/i,
+  },
+  {
+    name: 'forecast API path',
+    pattern: /\/api\/forecast\b/i,
+  },
+  {
+    name: 'Hormuz API path',
+    pattern: /\/api\/hormuz\b/i,
+  },
+  {
+    name: 'database helper',
+    pattern: /\blib\/db\.ts\b/i,
+  },
+  {
+    name: 'NAS helper',
+    pattern: /\blib\/nas\.ts\b/i,
+  },
+  {
+    name: 'maritime path',
+    pattern: /\blib\/maritime(?:\/|$)/i,
+  },
+  {
+    name: 'dependency or CI surface',
+    pattern: /\b(?:package\.json|package-lock\.json|pnpm-lock\.yaml|yarn\.lock|\.github\/|next\.config\.ts)\b/i,
+  },
+  {
+    name: 'database schema surface',
+    pattern: /\b(?:db|migrations|prisma)\//i,
+  },
 ] as const;
 
 function makeInvalidScaffoldNotice(): string[] {
@@ -162,6 +268,85 @@ function normalizeTaskIdPart(value: string): string {
     .replace(/^-+|-+$/g, '');
 
   return normalized || 'withheld-invalid-scaffold';
+}
+
+function makeTaskCardQaForbiddenNextSteps(): CodexAppServerRuntimeMvpTaskCardQaForbiddenNextStep[] {
+  return Array.from(new Set([
+    ...makeTaskBoardForbiddenNextSteps(),
+    ...CODEX_APP_SERVER_RUNTIME_MVP_FORBIDDEN_OPERATIONS,
+  ]));
+}
+
+function makeCheck(
+  result: CodexAppServerRuntimeMvpTaskCardQaCheckResult,
+  notes: string,
+): CodexAppServerRuntimeMvpTaskCardQaCheck {
+  return { result, notes };
+}
+
+function makeQaIssue(params: CodexAppServerRuntimeMvpTaskCardQaIssue): CodexAppServerRuntimeMvpTaskCardQaIssue {
+  return { ...params };
+}
+
+function getRestrictedContentQaIssue(value: unknown): string | null {
+  try {
+    assertNoRestrictedContent(value, 'codexAppServerRuntimeMvpTaskCardQaInput');
+    return null;
+  } catch (error) {
+    if (error instanceof Error) {
+      return error.message;
+    }
+
+    return 'TaskCard draft contains restricted content.';
+  }
+}
+
+function findProtectedSurface(value: unknown): string | null {
+  const serialized = JSON.stringify(value);
+  if (!serialized) {
+    return 'unserializable draft';
+  }
+
+  for (const { name, pattern } of PROTECTED_SURFACE_PATTERNS) {
+    if (pattern.test(serialized.replace(/\\/g, '/'))) {
+      return name;
+    }
+  }
+
+  return null;
+}
+
+function hasRequiredForbiddenNextSteps(taskCardDraft: CodexAppServerRuntimeMvpTaskCardDraft): boolean {
+  return makeTaskBoardForbiddenNextSteps().every((step) => (
+    taskCardDraft.forbidden_next_steps.includes(step)
+  ));
+}
+
+function makeUniqueReferences(
+  taskCardDraft: CodexAppServerRuntimeMvpTaskCardDraft,
+): string[] {
+  return Array.from(new Set([
+    ...taskCardDraft.references,
+    ...TASKCARD_QA_REFERENCES,
+  ]));
+}
+
+function chooseTaskCardQaRecommendation(
+  taskCardDraft: CodexAppServerRuntimeMvpTaskCardDraft,
+  issues: CodexAppServerRuntimeMvpTaskCardQaIssue[],
+): CodexAppServerRuntimeMvpTaskCardQaRecommendation {
+  if (
+    taskCardDraft.status === 'blocked'
+    || issues.some((issue) => issue.severity === 'blocking')
+  ) {
+    return 'block';
+  }
+
+  if (issues.length > 0) {
+    return 'revise_task_card';
+  }
+
+  return 'approve_for_human_review';
 }
 
 export function makeCodexAppServerRuntimeMvpInspectionReport(
@@ -283,4 +468,173 @@ export function makeCodexAppServerRuntimeMvpTaskCardDraft(
   assertNoRestrictedContent(taskCardDraft, 'codexAppServerRuntimeMvpTaskCardDraft');
 
   return taskCardDraft;
+}
+
+export function makeCodexAppServerRuntimeMvpTaskCardQaDraft(
+  taskCardDraft: CodexAppServerRuntimeMvpTaskCardDraft,
+  options: MakeCodexAppServerRuntimeMvpTaskCardQaDraftOptions = {},
+): CodexAppServerRuntimeMvpTaskCardQaDraft {
+  const issues: CodexAppServerRuntimeMvpTaskCardQaIssue[] = [];
+  const restrictedContentIssue = getRestrictedContentQaIssue(taskCardDraft);
+  const protectedSurface = findProtectedSurface(taskCardDraft);
+  const requiredForbiddenNextStepsPresent = hasRequiredForbiddenNextSteps(taskCardDraft);
+  const stdoutBoundaryPresent = taskCardDraft.acceptance_criteria.some((criterion) => (
+    criterion.includes('stdout-only')
+  )) && taskCardDraft.objective.includes('without writing to the Task Board');
+  const scopeBoundaryOk = (
+    taskCardDraft.proposal_only === true
+    && taskCardDraft.is_production_state === false
+    && taskCardDraft.required_human_approval === true
+    && taskCardDraft.allowed_next_step === 'human_review_only'
+  );
+  const statusAllowedNextStepOk = (
+    (
+      taskCardDraft.status === 'waiting_for_human_approval'
+      || taskCardDraft.status === 'blocked'
+    )
+    && taskCardDraft.allowed_next_step === 'human_review_only'
+  );
+  const autonomyLevelOk = (
+    taskCardDraft.autonomy_level === 'A1_draft_only'
+    || taskCardDraft.autonomy_level === 'A2_prepare_for_approval'
+  );
+
+  if (!scopeBoundaryOk) {
+    issues.push(makeQaIssue({
+      code: 'scope_boundary_invalid',
+      severity: 'blocking',
+      message: 'TaskCard draft must remain proposal-only, non-production, human-review-only, and human-approval-required.',
+    }));
+  }
+
+  if (!statusAllowedNextStepOk) {
+    issues.push(makeQaIssue({
+      code: 'status_allowed_next_step_invalid',
+      severity: 'blocking',
+      message: 'TaskCard draft status must be waiting_for_human_approval or blocked with allowed_next_step human_review_only.',
+      path: 'status',
+    }));
+  }
+
+  if (!autonomyLevelOk) {
+    issues.push(makeQaIssue({
+      code: 'autonomy_level_invalid',
+      severity: 'blocking',
+      message: 'TaskCard draft autonomy must stay within A1_draft_only or A2_prepare_for_approval.',
+      path: 'autonomy_level',
+    }));
+  }
+
+  if (protectedSurface) {
+    issues.push(makeQaIssue({
+      code: 'protected_surface_detected',
+      severity: 'blocking',
+      message: `TaskCard draft references a protected or forbidden surface: ${protectedSurface}.`,
+    }));
+  }
+
+  if (!requiredForbiddenNextStepsPresent) {
+    issues.push(makeQaIssue({
+      code: 'forbidden_next_steps_missing',
+      severity: 'blocking',
+      message: 'TaskCard draft must include all Task Board required forbidden next steps.',
+      path: 'forbidden_next_steps',
+    }));
+  }
+
+  if (restrictedContentIssue) {
+    issues.push(makeQaIssue({
+      code: 'restricted_content_detected',
+      severity: 'blocking',
+      message: restrictedContentIssue,
+    }));
+  }
+
+  if (!stdoutBoundaryPresent) {
+    issues.push(makeQaIssue({
+      code: 'stdout_only_boundary_unclear',
+      severity: 'revision_required',
+      message: 'TaskCard draft must explicitly preserve stdout-only output and no Task Board or file writes.',
+    }));
+  }
+
+  if (taskCardDraft.status === 'blocked') {
+    issues.push(makeQaIssue({
+      code: 'reviewed_taskcard_blocked',
+      severity: 'blocking',
+      message: 'Reviewed TaskCard draft is blocked; human review must inspect upstream validation issues before accepting it.',
+      path: 'status',
+    }));
+  }
+
+  const recommendation = chooseTaskCardQaRecommendation(taskCardDraft, issues);
+  const qaDraft: CodexAppServerRuntimeMvpTaskCardQaDraft = {
+    qa_report_id: `codex-app-server-runtime-mvp-taskcard-qa-${normalizeTaskIdPart(taskCardDraft.task_id)}`,
+    reviewed_task_id: taskCardDraft.task_id,
+    reviewed_output_type: 'codex_app_server_runtime_mvp_taskcard_draft_v0',
+    reviewer_role: 'qa_reviewer',
+    recommendation,
+    proposal_only: true,
+    is_production_state: false,
+    required_human_approval: true,
+    checked_at: toIsoTimestamp(options.checkedAt ?? Math.floor(Date.now() / 1000)),
+    checks: {
+      scope_boundary_check: makeCheck(
+        scopeBoundaryOk ? 'pass' : 'block',
+        scopeBoundaryOk
+          ? 'TaskCard draft remains proposal-only, non-production, human-review-only, and human-approval-required.'
+          : 'TaskCard draft violates a required proposal-only or human-review boundary.',
+      ),
+      status_allowed_next_step_check: makeCheck(
+        statusAllowedNextStepOk ? 'pass' : 'block',
+        statusAllowedNextStepOk
+          ? 'Status and allowed_next_step remain consistent with human_review_only handling.'
+          : 'Status and allowed_next_step are not safe for human_review_only handling.',
+      ),
+      autonomy_level_check: makeCheck(
+        autonomyLevelOk ? 'pass' : 'block',
+        autonomyLevelOk
+          ? 'Autonomy remains within A1/A2 review-preparation scope.'
+          : 'Autonomy exceeds allowed Task Board review-preparation scope.',
+      ),
+      protected_surface_check: makeCheck(
+        protectedSurface ? 'block' : 'pass',
+        protectedSurface
+          ? `Protected or forbidden surface detected: ${protectedSurface}.`
+          : 'No protected API, DB, maritime, package, CI, or app-wide runtime surface is referenced for implementation.',
+      ),
+      forbidden_next_steps_check: makeCheck(
+        requiredForbiddenNextStepsPresent ? 'pass' : 'block',
+        requiredForbiddenNextStepsPresent
+          ? 'All required Task Board forbidden next steps are present.'
+          : 'One or more required Task Board forbidden next steps are missing.',
+      ),
+      restricted_content_check: makeCheck(
+        restrictedContentIssue ? 'block' : 'pass',
+        restrictedContentIssue
+          ? restrictedContentIssue
+          : 'No restricted content detected in the reviewed TaskCard draft.',
+      ),
+      stdout_only_check: makeCheck(
+        stdoutBoundaryPresent ? 'pass' : 'revise',
+        stdoutBoundaryPresent
+          ? 'TaskCard draft explicitly says the output is stdout-only and does not write to the Task Board.'
+          : 'TaskCard draft needs clearer stdout-only and no-write wording.',
+      ),
+    },
+    issues,
+    residual_risks: [
+      ...TASKCARD_QA_RESIDUAL_RISKS,
+      ...(taskCardDraft.status === 'blocked'
+        ? ['Blocked TaskCard drafts require upstream validation review before any later review artifact is accepted.']
+        : []),
+    ],
+    required_next_action: 'human_review_only',
+    forbidden_next_steps: makeTaskCardQaForbiddenNextSteps(),
+    references: makeUniqueReferences(taskCardDraft),
+  };
+
+  assertNoRestrictedContent(qaDraft, 'codexAppServerRuntimeMvpTaskCardQaDraft');
+
+  return qaDraft;
 }

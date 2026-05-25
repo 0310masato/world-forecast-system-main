@@ -165,6 +165,8 @@ function loadRuntimeReportHelpers() {
       reportModule.makeCodexAppServerRuntimeMvpOperatorSummary,
     makeCodexAppServerRuntimeMvpTaskCardDraft:
       reportModule.makeCodexAppServerRuntimeMvpTaskCardDraft,
+    makeCodexAppServerRuntimeMvpTaskCardQaDraft:
+      reportModule.makeCodexAppServerRuntimeMvpTaskCardQaDraft,
     makeCodexAppServerRuntimeMvpScaffold:
       scaffoldModule.makeCodexAppServerRuntimeMvpScaffold,
   };
@@ -175,24 +177,29 @@ try {
     makeCodexAppServerRuntimeMvpInspectionReport,
     makeCodexAppServerRuntimeMvpOperatorSummary,
     makeCodexAppServerRuntimeMvpTaskCardDraft,
+    makeCodexAppServerRuntimeMvpTaskCardQaDraft,
     makeCodexAppServerRuntimeMvpScaffold,
   } = loadRuntimeReportHelpers();
   const args = process.argv.slice(2);
   const outputSummary = args.length === 1 && args[0] === '--summary';
   const outputTaskCard = args.length === 1 && args[0] === '--taskcard';
+  const outputTaskCardQa = args.length === 1 && args[0] === '--taskcard-qa';
 
-  if (args.length > 0 && !outputSummary && !outputTaskCard) {
-    throw new Error('Usage: node scripts/codex-app-server-runtime-report.mjs [--summary|--taskcard]');
+  if (args.length > 0 && !outputSummary && !outputTaskCard && !outputTaskCardQa) {
+    throw new Error('Usage: node scripts/codex-app-server-runtime-report.mjs [--summary|--taskcard|--taskcard-qa]');
   }
 
   const scaffold = makeCodexAppServerRuntimeMvpScaffold();
   const report = makeCodexAppServerRuntimeMvpInspectionReport(scaffold);
   const summary = makeCodexAppServerRuntimeMvpOperatorSummary(report);
-  const outputValue = outputTaskCard
-    ? makeCodexAppServerRuntimeMvpTaskCardDraft(summary)
-    : outputSummary
-      ? summary
-      : report;
+  const taskCardDraft = makeCodexAppServerRuntimeMvpTaskCardDraft(summary);
+  const outputValue = outputTaskCardQa
+    ? makeCodexAppServerRuntimeMvpTaskCardQaDraft(taskCardDraft)
+    : outputTaskCard
+      ? taskCardDraft
+      : outputSummary
+        ? summary
+        : report;
   const output = JSON.stringify(outputValue, null, 2);
 
   assertSafeOutput(output);
