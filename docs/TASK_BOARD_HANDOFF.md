@@ -167,17 +167,12 @@ Every TaskCard and TaskHandoff must forbid:
 - `create_pr`
 - `merge_pr`
 
-Runtime Intake bridge TaskCards and Handoffs must additionally forbid:
-
-- `api_hormuz_news_update`
-- `api_update`
-- `db_write`
-- `package_dependency_change`
-- `ci_change`
-- `create_github_issue`
-- `file_writing_automation`
-- `ai_job_execution`
-- `production_promotion`
+Runtime Intake bridge TaskCards and Handoffs must keep `forbidden_next_steps`
+limited to the enum above. Broader Runtime Intake guardrails, such as
+`/api/hormuz/news`, package, CI, GitHub automation, file-writing automation, AI
+job execution, and production promotion restrictions, should be recorded in
+acceptance criteria, forbidden files, risks, safe-use notes, or review
+checklists instead of adding non-enum `forbidden_next_steps` values.
 
 `allowed_next_step` must never be one of:
 
