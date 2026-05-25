@@ -45,7 +45,7 @@ residual_risks:
 required_human_reviewed_next_action: "<human_review_only | revise_intake_only | prepare_runtime_design_pr_instructions_only | archive_only>"
 ```
 
-## Recommended Additional Fields
+## Required Safety Review Fields
 
 ```yaml
 policy_refs:
@@ -112,7 +112,12 @@ restricted_content_must_be_absent:
 - Missing materials are explicit.
 - The intake decision uses an allowed value.
 - The required human-reviewed next action uses an allowed value.
+- Required safety review fields are present.
 - Forbidden operations are not weakened.
+- `forbidden_operations` is present and not weakened.
+- `restricted_content_must_be_absent` is present.
+- Required design, test, and rollback / disable inputs are explicit or listed
+  as missing.
 - Runtime implementation, worker execution, scheduler execution, API changes,
   DB changes, dependency changes, CI changes, automation, and production
   promotion remain out of scope.
