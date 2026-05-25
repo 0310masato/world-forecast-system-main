@@ -115,6 +115,18 @@ runtime permission, API or DB connection permission, package or CI change
 permission, GitHub automation permission, file-writing automation permission,
 AI job execution permission, or production promotion permission.
 
+After the readiness review confirms that runtime design can proceed to a scoped
+implementation planning step, use `docs/CODEX_APP_SERVER_RUNTIME_MVP_SCOPE.md`
+to define the exact MVP scaffold implementation surface for a separate later
+PR. The MVP scope document is not a template or example, and it is not runtime
+implementation by itself.
+
+The MVP scope document must keep the next PR disabled-by-default,
+non-production, proposal-only, and disconnected from production forecast core,
+`/api/forecast`, `/api/hormuz`, `/api/hormuz/news`, DB writes, migrations,
+external APIs, worker runtime, scheduler runtime, package changes, CI changes,
+automation, AI job execution, and production promotion.
+
 ## Required Human Approval
 
 Human approval is required for every intake outcome.
@@ -266,6 +278,11 @@ For a sanitized filled example of that readiness review, see
 The example is a writing sample only. It is not a runtime design PR, not a PR
 request, not execution permission, and not implementation permission.
 
+Before a later MVP scaffold implementation PR, use
+`docs/CODEX_APP_SERVER_RUNTIME_MVP_SCOPE.md` for the concrete allowed files,
+forbidden files, test plan, rollback or disable plan, stop conditions, and
+review checklist. That scope document does not implement runtime behavior.
+
 ## Relationship To Existing Docs
 
 - `AGENTS.md` remains the repository safety boundary for protected core,
@@ -298,6 +315,10 @@ request, not execution permission, and not implementation permission.
   remains a sanitized readiness review writing sample. It is not a source
   contract, runtime design PR, PR request, execution permission, or
   implementation permission.
+- `docs/CODEX_APP_SERVER_RUNTIME_MVP_SCOPE.md` remains the docs-only final
+  scope for a later disabled-by-default, non-production, proposal-only MVP
+  scaffold implementation PR. It is not a template, not an example, and not
+  runtime implementation by itself.
 
 ## What This Document Does Not Authorize
 
