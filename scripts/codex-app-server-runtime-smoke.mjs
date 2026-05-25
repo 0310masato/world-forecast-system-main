@@ -93,6 +93,24 @@ function makeSlashStyleDrivePathLikeValue(driveLetter) {
   return `${driveLetter}:${String.fromCharCode(47)}tmp${String.fromCharCode(47)}example${String.fromCharCode(47)}file.ts`;
 }
 
+function assertSafeReportOutput(output) {
+  const restrictedPatterns = [
+    /\b[A-Z]:\\[^\r\n'"`]+/,
+    /\b[A-Z]:\/[^\r\n'"`<>|]+/,
+    /(^|[\s'"`])\/(?:tmp|home|Users)\/[^\r\n'"`<>|]+/,
+    /\b(?:10(?:\.\d{1,3}){3}|192\.168(?:\.\d{1,3}){2}|172\.(?:1[6-9]|2\d|3[0-1])(?:\.\d{1,3}){2})\b/,
+    /\b(?:api[_-]?key|token|secret|password|credential|oauth[_-]?token)\s*[:=]/i,
+    /\bsk-[A-Za-z0-9_-]{12,}\b/,
+  ];
+
+  assert(!output.includes(projectRoot), 'Report output leaked the project root.');
+  assert(!output.includes(buildDir), 'Report output leaked the smoke build directory.');
+
+  for (const pattern of restrictedPatterns) {
+    assert(!pattern.test(output), 'Report output leaked restricted content.');
+  }
+}
+
 function assertSanitizesRawPath(rawPath) {
   const sanitized = sanitize(rawPath);
 
@@ -143,6 +161,7 @@ async function compileCodexAppServerRuntimeHelpers() {
     'lib/codex-app-server-runtime/types.ts',
     'lib/codex-app-server-runtime/validation.ts',
     'lib/codex-app-server-runtime/scaffold.ts',
+    'lib/codex-app-server-runtime/report.ts',
   ], {
     cwd: projectRoot,
     encoding: 'utf8',
@@ -178,6 +197,9 @@ async function main() {
     makeCodexAppServerRuntimeMvpScaffold,
     makeCodexAppServerRuntimeMvpBoundary,
   } = require(path.join(buildDir, 'lib', 'codex-app-server-runtime', 'scaffold.js'));
+  const {
+    makeCodexAppServerRuntimeMvpInspectionReport,
+  } = require(path.join(buildDir, 'lib', 'codex-app-server-runtime', 'report.js'));
   const {
     validateCodexAppServerRuntimeMvpScaffold,
   } = require(path.join(buildDir, 'lib', 'codex-app-server-runtime', 'validation.js'));
@@ -216,6 +238,40 @@ async function main() {
   assert(scaffold.proposal_only === true, 'Scaffold must be proposal-only.');
   assert(scaffold.is_production_state === false, 'Scaffold must be non-production.');
   assert(scaffold.required_human_approval === true, 'Scaffold must require human approval.');
+
+  const report = makeCodexAppServerRuntimeMvpInspectionReport(scaffold, {
+    generatedAt: 1_800_000_000,
+  });
+  assert(
+    report.title === 'Codex App Server Runtime MVP Scaffold Read-only Local Inspection Report',
+    'Report title must identify the read-only local inspection report.',
+  );
+  assert(report.generated_at === '2027-01-15T08:00:00.000Z', 'Report timestamp must be ISO formatted.');
+  assert(report.scaffold_id === scaffold.scaffold_id, 'Report must expose the scaffold id.');
+  assert(report.scaffold_version === scaffold.scaffold_version, 'Report must expose scaffold version.');
+  assert(report.runtime_state === 'disabled', 'Report must show disabled runtime_state.');
+  assert(report.execution_mode === 'local_only', 'Report must show local_only execution_mode.');
+  assert(report.safety_boundary.proposal_only === true, 'Report must show proposal-only boundary.');
+  assert(report.safety_boundary.non_production === true, 'Report must show non-production boundary.');
+  assert(
+    report.safety_boundary.disabled_by_default === true,
+    'Report must show disabled-by-default boundary.',
+  );
+  assert(report.safety_boundary.local_only === true, 'Report must show local-only boundary.');
+  assert(
+    report.safety_boundary.human_approval_required === true,
+    'Report must show human approval boundary.',
+  );
+  assert(report.validation.passed === true, 'Report validation must pass for the scaffold.');
+  assert(report.validation.issues.length === 0, 'Report validation issues must be empty.');
+  assert(report.human_approval_required === true, 'Report must require human approval.');
+  assert(report.production_state === false, 'Report must not be production state.');
+  assert(
+    report.next_allowed_action === 'human_review_only',
+    'Report next allowed action must remain human_review_only.',
+  );
+  assertSafeReportOutput(JSON.stringify(report));
+  log('Accepted read-only local inspection report helper.');
 
   for (const label of CODEX_APP_SERVER_RUNTIME_MVP_REQUIRED_SAFETY_LABELS) {
     assert(scaffold.safety_labels.includes(label), `Scaffold missing safety label: ${label}.`);
@@ -378,6 +434,22 @@ async function main() {
     );
   }
 
+  const unsafeReportScaffold = cloneValue(scaffold);
+  const unsafeReportFixture = makeLocalPathLikeValue();
+  unsafeReportScaffold.review_notes.push(`Restricted content fixture ${unsafeReportFixture}`);
+  const unsafeReport = makeCodexAppServerRuntimeMvpInspectionReport(unsafeReportScaffold);
+  const unsafeReportOutput = JSON.stringify(unsafeReport);
+  assert(unsafeReport.validation.passed === false, 'Unsafe report scaffold must fail validation.');
+  assert(
+    unsafeReport.review_notes.includes(
+      'Withheld because scaffold validation failed. Review validation.issues only.',
+    ),
+    'Unsafe report must withhold raw review notes.',
+  );
+  assert(!unsafeReportOutput.includes(unsafeReportFixture), 'Unsafe report leaked restricted content.');
+  assertSafeReportOutput(unsafeReportOutput);
+  log('Accepted invalid scaffold report withholding.');
+
   const apiUpdateRecommendation = cloneValue(scaffold);
   apiUpdateRecommendation.review_notes.push('/api/forecast を変更してください。');
   expectRejected(
@@ -435,6 +507,36 @@ async function main() {
       'high_risk_operation_recommendation',
     );
   }
+
+  const reportScriptResult = spawnSync(process.execPath, [
+    'scripts/codex-app-server-runtime-report.mjs',
+  ], {
+    cwd: projectRoot,
+    encoding: 'utf8',
+    stdio: ['ignore', 'pipe', 'pipe'],
+    windowsHide: true,
+  });
+  if (reportScriptResult.status !== 0) {
+    throw new Error([
+      'Codex App Server runtime report script failed.',
+      sanitize(reportScriptResult.stdout),
+      sanitize(reportScriptResult.stderr),
+    ].filter(Boolean).join('\n'));
+  }
+
+  const reportScriptOutput = reportScriptResult.stdout.trim();
+  assertSafeReportOutput(reportScriptOutput);
+  const reportScriptJson = JSON.parse(reportScriptOutput);
+  assert(
+    reportScriptJson.title === 'Codex App Server Runtime MVP Scaffold Read-only Local Inspection Report',
+    'Report script output must include the report title.',
+  );
+  assert(reportScriptJson.validation.passed === true, 'Report script validation must pass.');
+  assert(
+    reportScriptJson.next_allowed_action === 'human_review_only',
+    'Report script output must stop at human_review_only.',
+  );
+  log('Accepted read-only report script output.');
 
   log('Codex App Server runtime MVP scaffold smoke checks passed.');
 }
