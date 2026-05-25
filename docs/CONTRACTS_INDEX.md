@@ -16,7 +16,7 @@ Issue/PR 自動化、file-writing automation、AI job 実行処理、production 
 
 ## 契約レイヤーの流れ
 
-PR #12 から PR #29 までで整備された proposal-only の契約レイヤー、docs index、
+PR #12 から PR #30 までで整備された proposal-only の契約レイヤー、docs index、
 template、example を順に読みます。Knowledge / Docs Stewardship v0 は
 docs/templates の品質管理レイヤーとして読みます。Docs Stewardship Example
 Reports v0 は、その品質管理レイヤーの記入例であり、Operations Routine Example
@@ -32,6 +32,8 @@ contract chain に対応する安全な記入例です。Examples Index / README
 Codex App Server Runtime Intake Gate v0 は、runtime design PR に進む前に
 ユーザー提供資料、scope、human approval、test plan、rollback / disable plan
 を確認する intake contract と template です。
+Codex App Server Runtime Intake Example v0 は、その intake template の安全な
+filled example であり、runtime 実装許可ではありません。
 これらはいずれも正本契約や実行許可ではありません。
 
 1. Memory Layer
@@ -90,13 +92,14 @@ forbidden operations、protected path boundary を維持して使います。
 | #27 | AI Analysis Contract Example Records v0 | Context Pack、AI Analysis Job Intake Preflight、AI Analysis Job Result、Human Review Decision、Implementation Proposal の安全な記入例 | いいえ。example records のみ | いいえ。runtime/API/DB/worker/scheduler/Codex App Server runtime/automation は未導入 | PR #12-#16 の AI analysis contract chain を proposal-only / human-review-only / non-production の記入例として示す |
 | #28 | Examples Index / README v0 | `docs/examples/README.md` による example records / reports / requests の category、正本対応表、読む順番、安全境界 | いいえ。README のみ | いいえ。runtime/API/DB/worker/scheduler/Codex App Server runtime/automation は未導入 | PR #23-#27 の examples を案内する。正本契約ではなく実行許可でもない |
 | #29 | Codex App Server Runtime Intake Gate v0 | Codex App Server runtime design PR の前に、ユーザー提供資料、scope、human approval、test plan、rollback / disable plan を確認する intake contract と template | いいえ。intake contract と template のみ | いいえ。runtime/API/DB/worker/scheduler/Codex App Server runtime/automation は未導入 | runtime design PR instructions に進む前の不足情報確認と停止条件を定義する |
+| #30 | Codex App Server Runtime Intake Example v0 | `docs/examples/CODEX_APP_SERVER_RUNTIME_INTAKE_EXAMPLE.md` による sanitized filled intake example | いいえ。example record のみ | いいえ。runtime/API/DB/worker/scheduler/Codex App Server runtime/automation は未導入 | PR #29 の intake contract と template を proposal-only / human-review-only / non-production の記入例として示す |
 
 ## Docs / Templates 用途表
 
 | ドキュメント名 | 主な読者 | 使う場面 | 正本として扱う内容 | 使ってはいけない用途 |
 | --- | --- | --- | --- | --- |
 | `AGENTS.md` | CodexApp Worker、AI worker、human reviewer | リポジトリ内で作業を始める前 | protected core、human approval、Codex App Server policy、Task Board / Handoff boundary、routine boundary | runtime/API/DB/automation の実装許可として扱わない |
-| `docs/CONTRACTS_INDEX.md` | 全読者 | 契約・運用 docs の入口を確認するとき | PR #12-#29 の地図、読む順番、用途、未導入領域、停止条件 | 実行、PR 作成、file-writing automation、production apply の許可として扱わない |
+| `docs/CONTRACTS_INDEX.md` | 全読者 | 契約・運用 docs の入口を確認するとき | PR #12-#30 の地図、読む順番、用途、未導入領域、停止条件 | 実行、PR 作成、file-writing automation、production apply の許可として扱わない |
 | `docs/CONTEXT_PACKS.md` | AI Analysis Reviewer、CodexApp Worker | AI 分析に渡す context pack の入力境界を確認するとき | context pack の定義、allowed/excluded inputs、sanitization、versioning | secrets、raw local path、production write instruction、live source of record を入れる根拠にしない |
 | `docs/AI_ANALYSIS_JOBS.md` | AI Analysis Reviewer、CodexApp Worker | AI job の allowed/forbidden scope、intake、result contract を確認するとき | AI job の proposal-only 入出力、preflight、result contract、人間レビュー前提 | AI job 実行処理、prompt execution、worker runtime、storage path の仕様として扱わない |
 | `docs/HUMAN_APPROVAL.md` | Human Owner、AI Analysis Reviewer、Risk / Safety Reviewer | AI output を承認、却下、revision、archive する境界を確認するとき | approval principle、decision outcome、implementation proposal への接続 | approval を production apply、deploy、DB write、API update の自動許可にしない |
@@ -113,6 +116,7 @@ forbidden operations、protected path boundary を維持して使います。
 | `docs/templates/CODEXAPP_OPERATION_REQUEST_TEMPLATE.md` | Human Owner、CodexApp Worker | CodexApp へ proposal-only review support を頼むとき | 日本語 request fields、forbidden operations、required output | PR 作成、GitHub Issue 自動作成、runtime 追加、file-writing automation の依頼に使わない |
 | `docs/templates/CODEX_APP_SERVER_RUNTIME_INTAKE_TEMPLATE.md` | Future Runtime Designer、Human Owner、Risk / Safety Reviewer | runtime design PR の前に intake record を下書きするとき | intake fields、runtime scope flags、decision outcome、required human-reviewed next action | runtime implementation spec、worker runtime spec、scheduler spec、file-writing automation として扱わない |
 | `docs/examples/CODEXAPP_OPERATION_REQUEST_*_EXAMPLE.md` | Human Owner、CodexApp Worker、QA Reviewer、Risk / Safety Reviewer | CodexApp への日本語 operation request の書き方を確認するとき | draft instructions、QA review notes、handoff summary の proposal-only / human-review-only / non-production 記入例。examples は正本契約ではなく記入例 | 正本契約、実運用ログ、実行許可、PR 作成、merge、deploy、API 更新、DB 変更、runtime 追加、automation の根拠として扱わない |
+| `docs/examples/CODEX_APP_SERVER_RUNTIME_INTAKE_EXAMPLE.md` | Future Runtime Designer、Human Owner、Risk / Safety Reviewer | runtime design PR instructions の前に sanitized intake record の記入例を確認するとき | PR #29 の runtime intake contract/template に対応する proposal-only、human-review-only、non-production の安全な記入例 | runtime implementation、worker/scheduler/API/DB/external integration、automation、PR 作成、merge、deploy、production promotion の根拠として扱わない |
 | `docs/templates/MORNING_STANDUP_TEMPLATE.md` | Human Owner、CodexApp Worker | 朝の状況整理を proposal-only に記録するとき | completed/blocked/waiting/priority/open questions の report fields | 定期実行 runtime や status 自動更新として扱わない |
 | `docs/templates/WEEKLY_REVIEW_TEMPLATE.md` | Human Owner、QA Reviewer | 週次で契約、Task Board、Handoff、品質を振り返るとき | repeated blockers、quality findings、docs update proposals | docs update や routine change を人間レビューなしに適用しない |
 | `docs/templates/NIGHTLY_QA_REPORT_TEMPLATE.md` | QA Reviewer、Risk / Safety Reviewer | 夜間 QA 報告の型を使って review 結果を残すとき | checked contracts、findings、regressions、restricted/protected findings | nightly runtime、scheduler、worker 実行の仕様として扱わない |

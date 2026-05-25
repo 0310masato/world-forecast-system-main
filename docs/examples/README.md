@@ -62,6 +62,10 @@ private network details、production logs、実運用データ、不要な priva
 - `HUMAN_REVIEW_DECISION_EXAMPLE.md`
 - `IMPLEMENTATION_PROPOSAL_EXAMPLE.md`
 
+### F. Codex App Server Runtime Intake Examples
+
+- `CODEX_APP_SERVER_RUNTIME_INTAKE_EXAMPLE.md`
+
 ## Source Mapping
 
 | Example file | Category | Source contract / source template | Primary reader | Use when | Must not be used for |
@@ -85,6 +89,7 @@ private network details、production logs、実運用データ、不要な priva
 | `AI_ANALYSIS_JOB_RESULT_EXAMPLE.md` | AI Analysis Contract Examples | `docs/AI_ANALYSIS_JOBS.md`, `lib/ai-analysis-jobs/types.ts`, `lib/ai-analysis-jobs/result-validation.ts` | AI Analysis Reviewer, Human Reviewer, QA Reviewer | AI-sidecar result の proposal-only output と allowed next step を確認するとき | production apply、approved/applied state、external publish、automated trading |
 | `HUMAN_REVIEW_DECISION_EXAMPLE.md` | AI Analysis Contract Examples | `docs/HUMAN_APPROVAL.md`, `lib/human-review/types.ts`, `lib/human-review/validation.ts` | Human Owner, Risk / Safety Reviewer | human decision outcome と separate implementation boundary を確認するとき | approval を production write、deploy、DB/API update の自動許可にすること |
 | `IMPLEMENTATION_PROPOSAL_EXAMPLE.md` | AI Analysis Contract Examples | `docs/HUMAN_APPROVAL.md`, `lib/implementation-proposals/types.ts`, `lib/implementation-proposals/validation.ts` | Human Owner, CodexApp Worker, Risk / Safety Reviewer | later separate PR 用の proposal-only implementation plan を確認するとき | 実装そのもの、runtime/API/DB migration、merge、deploy、production promotion |
+| `CODEX_APP_SERVER_RUNTIME_INTAKE_EXAMPLE.md` | Codex App Server Runtime Intake Examples | `docs/CODEX_APP_SERVER_RUNTIME_INTAKE.md`, `docs/templates/CODEX_APP_SERVER_RUNTIME_INTAKE_TEMPLATE.md` | Future Runtime Designer, Human Owner, Risk / Safety Reviewer | runtime design PR instructions の前に、sanitized intake record の記入例を確認するとき | runtime implementation、worker/scheduler/API/DB/external integration、automation、production promotion |
 
 ## Role別の読む順番
 
@@ -126,7 +131,10 @@ private network details、production logs、実運用データ、不要な priva
 2. `docs/CONTRACTS_INDEX.md`
 3. `docs/CODEX_APP_SERVER.md`
 4. `docs/examples/README.md`
-5. ユーザー提供資料
+5. `docs/CODEX_APP_SERVER_RUNTIME_INTAKE.md`
+6. `docs/templates/CODEX_APP_SERVER_RUNTIME_INTAKE_TEMPLATE.md`
+7. 対象 example
+8. ユーザー提供資料
 
 Future Runtime Designer は、examples を runtime 設計許可として扱いません。
 Codex App Server runtime 設計に進む場合は、ユーザー提供資料を受け取ってから

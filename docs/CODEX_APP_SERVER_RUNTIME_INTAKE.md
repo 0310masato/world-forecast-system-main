@@ -228,6 +228,10 @@ An intake record must preserve:
 Use `docs/templates/CODEX_APP_SERVER_RUNTIME_INTAKE_TEMPLATE.md` for the
 recommended record shape.
 
+For a sanitized filled example, see
+`docs/examples/CODEX_APP_SERVER_RUNTIME_INTAKE_EXAMPLE.md`. The example is a
+writing sample only. It is not runtime implementation permission.
+
 ## Relationship To Existing Docs
 
 - `AGENTS.md` remains the repository safety boundary for protected core,
@@ -241,6 +245,9 @@ recommended record shape.
   runbook for proposal-only Japanese instructions.
 - `docs/KNOWLEDGE_DOCS_STEWARDSHIP.md` remains the docs quality and boundary
   review layer.
+- `docs/examples/CODEX_APP_SERVER_RUNTIME_INTAKE_EXAMPLE.md` remains a
+  sanitized example record for this intake gate. It is not a source contract or
+  execution permission.
 
 ## What This Document Does Not Authorize
 
