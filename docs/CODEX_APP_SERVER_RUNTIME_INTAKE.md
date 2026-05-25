@@ -63,6 +63,7 @@ This document follows the existing proposal-only contract and operations layers:
 10. Operations Routine Templates v0
 11. Knowledge / Docs Stewardship v0
 12. Codex App Server Runtime Intake Gate v0
+13. Codex App Server Runtime Design PR Readiness Review Template v0
 
 The intake gate does not replace the earlier contracts. It preserves
 `proposal_only: true`, `required_human_approval: true`, and
@@ -102,6 +103,17 @@ Allowed intake decisions are:
 
 `ready_for_runtime_design_pr` is not permission to implement runtime code. It
 only means a later human-reviewed design PR instruction draft may be prepared.
+Before that instruction draft is prepared, use
+`docs/templates/CODEX_APP_SERVER_RUNTIME_DESIGN_PR_READINESS_REVIEW_TEMPLATE.md`
+to review whether the intake, bridge TaskCard, Handoff, QA report, scope,
+human approval, test plan inputs, and rollback or disable inputs are sufficient
+for instruction-drafting readiness.
+
+The readiness review is not PR creation permission, merge permission, deploy
+permission, implementation permission, worker runtime permission, scheduler
+runtime permission, API or DB connection permission, package or CI change
+permission, GitHub automation permission, file-writing automation permission,
+AI job execution permission, or production promotion permission.
 
 ## Required Human Approval
 
@@ -243,6 +255,12 @@ actions. They do not authorize runtime implementation, PR creation, merge,
 deploy, worker or scheduler behavior, API or DB connections, package changes,
 CI changes, file-writing automation, or production promotion.
 
+After those bridge records have been reviewed, use
+`docs/templates/CODEX_APP_SERVER_RUNTIME_DESIGN_PR_READINESS_REVIEW_TEMPLATE.md`
+before drafting future runtime design PR instructions. That template checks
+instruction-drafting readiness only and does not create a PR, merge, deploy,
+or implement runtime behavior.
+
 ## Relationship To Existing Docs
 
 - `AGENTS.md` remains the repository safety boundary for protected core,
@@ -267,6 +285,10 @@ CI changes, file-writing automation, or production promotion.
   sanitized QA report bridge example for reviewing Runtime Intake TaskCard and
   Handoff examples before human review. It is not a source contract, PR
   request, or execution permission.
+- `docs/templates/CODEX_APP_SERVER_RUNTIME_DESIGN_PR_READINESS_REVIEW_TEMPLATE.md`
+  remains a human-review-only readiness checklist for deciding whether future
+  runtime design PR instructions may be drafted. It is not a source contract,
+  runtime design PR, PR request, or execution permission.
 
 ## What This Document Does Not Authorize
 

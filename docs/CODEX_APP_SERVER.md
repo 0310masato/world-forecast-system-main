@@ -146,6 +146,19 @@ Before any implementation PR, confirm:
 - Rollback or disable behavior is documented
 - Tests cover the proposal-only boundary
 
+Implementation readiness and runtime design PR instruction readiness are
+different gates. Implementation readiness applies before a dedicated
+implementation PR and still requires explicit human approval, scope, tests, and
+rollback planning.
+
+After a Runtime Intake record reaches `ready_for_runtime_design_pr`, use
+`docs/templates/CODEX_APP_SERVER_RUNTIME_DESIGN_PR_READINESS_REVIEW_TEMPLATE.md`
+to review only whether future runtime design PR instructions may be drafted for
+human review. That template does not authorize PR creation, merge, deploy,
+runtime implementation, worker runtime, scheduler runtime, API connection, DB
+connection, package change, CI change, GitHub automation, file-writing
+automation, AI job execution, or production promotion.
+
 ## Agent Charter / Operations Runbook
 
 Before designing or introducing Codex App Server runtime, use
@@ -171,3 +184,8 @@ non-production. It does not authorize Codex App Server runtime code, worker
 runtime, scheduler runtime, external API integration, DB migration, `/api`
 connections, package or CI changes, GitHub automation, file-writing automation,
 AI job execution, deploy, merge, or production promotion.
+
+If the intake outcome is `ready_for_runtime_design_pr`, run the separate
+readiness review template before any instruction draft is prepared. Readiness
+means instruction-drafting readiness only, not implementation readiness or
+execution permission.
