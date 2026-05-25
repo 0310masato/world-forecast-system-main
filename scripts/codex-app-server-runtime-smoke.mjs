@@ -199,6 +199,7 @@ async function main() {
   } = require(path.join(buildDir, 'lib', 'codex-app-server-runtime', 'scaffold.js'));
   const {
     makeCodexAppServerRuntimeMvpInspectionReport,
+    makeCodexAppServerRuntimeMvpOperatorSummary,
   } = require(path.join(buildDir, 'lib', 'codex-app-server-runtime', 'report.js'));
   const {
     validateCodexAppServerRuntimeMvpScaffold,
@@ -272,6 +273,36 @@ async function main() {
   );
   assertSafeReportOutput(JSON.stringify(report));
   log('Accepted read-only local inspection report helper.');
+
+  const summary = makeCodexAppServerRuntimeMvpOperatorSummary(report);
+  assert(
+    summary.title === 'Codex App Server Runtime MVP Operator Summary',
+    'Summary title must identify the operator summary.',
+  );
+  assert(summary.generated_at === report.generated_at, 'Summary must reuse the report timestamp.');
+  assert(summary.scaffold_id === scaffold.scaffold_id, 'Summary must expose the scaffold id.');
+  assert(summary.status === 'safe_for_human_review', 'Valid summary must be safe_for_human_review.');
+  assert(summary.runtime_state === 'disabled', 'Summary must show disabled runtime_state.');
+  assert(summary.execution_mode === 'local_only', 'Summary must show local_only execution_mode.');
+  assert(summary.validation_passed === true, 'Summary validation_passed must be true.');
+  assert(
+    summary.safety_boundary_summary.proposal_only === true,
+    'Summary must preserve proposal-only boundary.',
+  );
+  assert(
+    summary.forbidden_surface_summary.api === 'forbidden',
+    'Summary must keep API surface forbidden.',
+  );
+  assert(
+    summary.forbidden_surface_summary.production_promotion === 'forbidden',
+    'Summary must keep production promotion forbidden.',
+  );
+  assert(
+    summary.next_allowed_action === 'human_review_only',
+    'Summary next allowed action must remain human_review_only.',
+  );
+  assertSafeReportOutput(JSON.stringify(summary));
+  log('Accepted operator summary helper.');
 
   for (const label of CODEX_APP_SERVER_RUNTIME_MVP_REQUIRED_SAFETY_LABELS) {
     assert(scaffold.safety_labels.includes(label), `Scaffold missing safety label: ${label}.`);
@@ -439,7 +470,11 @@ async function main() {
   unsafeReportScaffold.review_notes.push(`Restricted content fixture ${unsafeReportFixture}`);
   const unsafeReport = makeCodexAppServerRuntimeMvpInspectionReport(unsafeReportScaffold);
   const unsafeReportOutput = JSON.stringify(unsafeReport);
+  const unsafeSummary = makeCodexAppServerRuntimeMvpOperatorSummary(unsafeReport);
+  const unsafeSummaryOutput = JSON.stringify(unsafeSummary);
   assert(unsafeReport.validation.passed === false, 'Unsafe report scaffold must fail validation.');
+  assert(unsafeSummary.status === 'blocked', 'Unsafe summary must be blocked.');
+  assert(unsafeSummary.validation_passed === false, 'Unsafe summary validation_passed must be false.');
   assert(
     unsafeReport.review_notes.includes(
       'Withheld because scaffold validation failed. Review validation.issues only.',
@@ -447,7 +482,9 @@ async function main() {
     'Unsafe report must withhold raw review notes.',
   );
   assert(!unsafeReportOutput.includes(unsafeReportFixture), 'Unsafe report leaked restricted content.');
+  assert(!unsafeSummaryOutput.includes(unsafeReportFixture), 'Unsafe summary leaked restricted content.');
   assertSafeReportOutput(unsafeReportOutput);
+  assertSafeReportOutput(unsafeSummaryOutput);
   log('Accepted invalid scaffold report withholding.');
 
   const apiUpdateRecommendation = cloneValue(scaffold);
@@ -537,6 +574,41 @@ async function main() {
     'Report script output must stop at human_review_only.',
   );
   log('Accepted read-only report script output.');
+
+  const summaryScriptResult = spawnSync(process.execPath, [
+    'scripts/codex-app-server-runtime-report.mjs',
+    '--summary',
+  ], {
+    cwd: projectRoot,
+    encoding: 'utf8',
+    stdio: ['ignore', 'pipe', 'pipe'],
+    windowsHide: true,
+  });
+  if (summaryScriptResult.status !== 0) {
+    throw new Error([
+      'Codex App Server runtime summary script failed.',
+      sanitize(summaryScriptResult.stdout),
+      sanitize(summaryScriptResult.stderr),
+    ].filter(Boolean).join('\n'));
+  }
+
+  const summaryScriptOutput = summaryScriptResult.stdout.trim();
+  assertSafeReportOutput(summaryScriptOutput);
+  const summaryScriptJson = JSON.parse(summaryScriptOutput);
+  assert(
+    summaryScriptJson.title === 'Codex App Server Runtime MVP Operator Summary',
+    'Summary script output must include the summary title.',
+  );
+  assert(
+    summaryScriptJson.status === 'safe_for_human_review',
+    'Summary script output must be safe_for_human_review.',
+  );
+  assert(summaryScriptJson.validation_passed === true, 'Summary script validation must pass.');
+  assert(
+    summaryScriptJson.next_allowed_action === 'human_review_only',
+    'Summary script output must stop at human_review_only.',
+  );
+  log('Accepted read-only summary script output.');
 
   log('Codex App Server runtime MVP scaffold smoke checks passed.');
 }

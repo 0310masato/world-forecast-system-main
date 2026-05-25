@@ -50,6 +50,35 @@ export interface CodexAppServerRuntimeMvpInspectionReport {
   next_allowed_action: 'human_review_only';
 }
 
+export interface CodexAppServerRuntimeMvpOperatorSummary {
+  title: string;
+  generated_at: string;
+  scaffold_id: string;
+  status: 'safe_for_human_review' | 'blocked';
+  runtime_state: CodexAppServerRuntimeMvpInspectionReport['runtime_state'];
+  execution_mode: CodexAppServerRuntimeMvpInspectionReport['execution_mode'];
+  validation_passed: boolean;
+  safety_boundary_summary: {
+    proposal_only: true;
+    non_production: true;
+    disabled_by_default: true;
+    local_only: true;
+    human_approval_required: true;
+  };
+  forbidden_surface_summary: {
+    api: 'forbidden';
+    db: 'forbidden';
+    worker: 'forbidden';
+    scheduler: 'forbidden';
+    external_integration: 'forbidden';
+    package_or_ci: 'forbidden';
+    automation: 'forbidden';
+    ai_job_execution: 'forbidden';
+    production_promotion: 'forbidden';
+  };
+  next_allowed_action: 'human_review_only';
+}
+
 const WITHHELD_INVALID_SCAFFOLD = 'withheld_invalid_scaffold';
 const INVALID_SCAFFOLD_NOTICE = [
   'Withheld because scaffold validation failed. Review validation.issues only.',
@@ -121,4 +150,41 @@ export function makeCodexAppServerRuntimeMvpInspectionReport(
   assertNoRestrictedContent(report, 'codexAppServerRuntimeMvpInspectionReport');
 
   return report;
+}
+
+export function makeCodexAppServerRuntimeMvpOperatorSummary(
+  report: CodexAppServerRuntimeMvpInspectionReport,
+): CodexAppServerRuntimeMvpOperatorSummary {
+  const summary: CodexAppServerRuntimeMvpOperatorSummary = {
+    title: 'Codex App Server Runtime MVP Operator Summary',
+    generated_at: report.generated_at,
+    scaffold_id: report.scaffold_id,
+    status: report.validation.passed ? 'safe_for_human_review' : 'blocked',
+    runtime_state: report.runtime_state,
+    execution_mode: report.execution_mode,
+    validation_passed: report.validation.passed,
+    safety_boundary_summary: {
+      proposal_only: true,
+      non_production: true,
+      disabled_by_default: true,
+      local_only: true,
+      human_approval_required: true,
+    },
+    forbidden_surface_summary: {
+      api: 'forbidden',
+      db: 'forbidden',
+      worker: 'forbidden',
+      scheduler: 'forbidden',
+      external_integration: 'forbidden',
+      package_or_ci: 'forbidden',
+      automation: 'forbidden',
+      ai_job_execution: 'forbidden',
+      production_promotion: 'forbidden',
+    },
+    next_allowed_action: 'human_review_only',
+  };
+
+  assertNoRestrictedContent(summary, 'codexAppServerRuntimeMvpOperatorSummary');
+
+  return summary;
 }

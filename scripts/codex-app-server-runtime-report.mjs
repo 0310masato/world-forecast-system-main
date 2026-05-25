@@ -153,6 +153,8 @@ function loadRuntimeReportHelpers() {
   return {
     makeCodexAppServerRuntimeMvpInspectionReport:
       reportModule.makeCodexAppServerRuntimeMvpInspectionReport,
+    makeCodexAppServerRuntimeMvpOperatorSummary:
+      reportModule.makeCodexAppServerRuntimeMvpOperatorSummary,
     makeCodexAppServerRuntimeMvpScaffold:
       scaffoldModule.makeCodexAppServerRuntimeMvpScaffold,
   };
@@ -161,11 +163,22 @@ function loadRuntimeReportHelpers() {
 try {
   const {
     makeCodexAppServerRuntimeMvpInspectionReport,
+    makeCodexAppServerRuntimeMvpOperatorSummary,
     makeCodexAppServerRuntimeMvpScaffold,
   } = loadRuntimeReportHelpers();
+  const args = process.argv.slice(2);
+  const outputSummary = args.length === 1 && args[0] === '--summary';
+
+  if (args.length > 0 && !outputSummary) {
+    throw new Error('Usage: node scripts/codex-app-server-runtime-report.mjs [--summary]');
+  }
+
   const scaffold = makeCodexAppServerRuntimeMvpScaffold();
   const report = makeCodexAppServerRuntimeMvpInspectionReport(scaffold);
-  const output = JSON.stringify(report, null, 2);
+  const outputValue = outputSummary
+    ? makeCodexAppServerRuntimeMvpOperatorSummary(report)
+    : report;
+  const output = JSON.stringify(outputValue, null, 2);
 
   assertSafeOutput(output);
   console.log(output);
