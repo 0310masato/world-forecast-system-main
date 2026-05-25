@@ -165,6 +165,12 @@ only as a filled writing sample for that instruction-drafting readiness review.
 The example is not implementation readiness, execution permission, a runtime
 design PR, or runtime design PR instructions.
 
+Before the first MVP scaffold implementation PR, use
+`docs/CODEX_APP_SERVER_RUNTIME_MVP_SCOPE.md` to confirm the exact allowed
+implementation surface, non-goals, target files, test plan, rollback or disable
+plan, and review gate. That scope document is docs-only and does not add
+runtime code or authorize execution by itself.
+
 ## Agent Charter / Operations Runbook
 
 Before designing or introducing Codex App Server runtime, use
@@ -200,3 +206,20 @@ The sanitized filled example at
 `docs/examples/CODEX_APP_SERVER_RUNTIME_DESIGN_PR_READINESS_REVIEW_EXAMPLE.md`
 shows the review record shape only. It does not permit PR creation, merge,
 deploy, implementation, automation, AI job execution, or production promotion.
+
+## Runtime MVP Scope
+
+`docs/CODEX_APP_SERVER_RUNTIME_MVP_SCOPE.md` defines the final docs-only scope
+for a later Codex App Server Runtime MVP scaffold implementation PR.
+
+The MVP scope is limited to a disabled-by-default, non-production,
+proposal-only scaffold. It may define the next PR's allowed files, forbidden
+files, data boundary, human approval boundary, test plan, rollback or disable
+plan, acceptance criteria, stop conditions, and review checklist.
+
+The MVP scope document does not add runtime code. It does not authorize
+production forecast core changes, `/api/forecast`, `/api/hormuz`,
+`/api/hormuz/news`, DB writes, migrations, package or dependency changes,
+lockfile changes, CI changes, external API integration, scheduler runtime,
+worker runtime, GitHub automation, file-writing automation, AI job execution,
+external publishing, or production promotion.
