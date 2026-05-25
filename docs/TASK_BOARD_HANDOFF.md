@@ -67,6 +67,24 @@ human-reviewed next action should be.
 Neither record executes work. Both records preserve proposal-only,
 human-approval-only boundaries.
 
+## Runtime Intake Bridge Records
+
+Runtime Intake bridge records are TaskCards or Handoffs that carry a sanitized
+Codex App Server Runtime Intake outcome into human review. They may cite
+`docs/CODEX_APP_SERVER_RUNTIME_INTAKE.md` and sanitized intake labels, but they
+must not contain full conversation logs, secrets, `.env` values, OAuth tokens,
+API keys, raw local paths, NAS paths, private network details, production logs,
+or real operational data.
+
+Runtime Intake bridge TaskCards and Handoffs should use the existing Task Board
+`allowed_next_step` values. The safest default is `human_review_only`. The
+Runtime Intake template may separately record
+`required_human_reviewed_next_action` as
+`prepare_runtime_design_pr_instructions_only`, but that intake value is not PR
+creation permission and must not be treated as runtime implementation, merge,
+deploy, package changes, CI changes, file-writing automation, or production
+promotion.
+
 ## Allowed Statuses
 
 TaskCard `status` and TaskHandoff `current_status` may be:
@@ -148,6 +166,13 @@ Every TaskCard and TaskHandoff must forbid:
 - `external_api_integration`
 - `create_pr`
 - `merge_pr`
+
+Runtime Intake bridge TaskCards and Handoffs must keep `forbidden_next_steps`
+limited to the enum above. Broader Runtime Intake guardrails, such as
+`/api/hormuz/news`, package, CI, GitHub automation, file-writing automation, AI
+job execution, and production promotion restrictions, should be recorded in
+acceptance criteria, forbidden files, risks, safe-use notes, or review
+checklists instead of adding non-enum `forbidden_next_steps` values.
 
 `allowed_next_step` must never be one of:
 
@@ -244,10 +269,18 @@ contracts/templates, reading order, and safety boundary.
 - `docs/examples/TASK_CARD_EXAMPLE.md`
 - `docs/examples/HANDOFF_EXAMPLE.md`
 - `docs/examples/TASK_BOARD_QA_REPORT_EXAMPLE.md`
+- `docs/examples/RUNTIME_INTAKE_TASK_CARD_EXAMPLE.md`
+- `docs/examples/RUNTIME_INTAKE_HANDOFF_EXAMPLE.md`
 
 These examples are safe filled samples, not real operations logs. They are not
 the source contracts; the source contracts are this document and the templates
 in `docs/templates/`.
+
+Runtime Intake TaskCard and Handoff examples are bridge samples for moving a
+sanitized intake outcome into human review before later runtime design PR
+instruction drafting. They do not authorize runtime implementation, PR
+creation, merge, deploy, package changes, CI changes, file-writing automation,
+or production promotion.
 
 Examples do not authorize execution, PR creation, merge, deploy, API update,
 DB change, migration, runtime addition, worker or scheduler behavior, Codex App

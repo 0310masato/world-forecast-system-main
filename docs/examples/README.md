@@ -66,6 +66,11 @@ private network details、production logs、実運用データ、不要な priva
 
 - `CODEX_APP_SERVER_RUNTIME_INTAKE_EXAMPLE.md`
 
+### G. Runtime Intake Task Board / Handoff Examples
+
+- `RUNTIME_INTAKE_TASK_CARD_EXAMPLE.md`
+- `RUNTIME_INTAKE_HANDOFF_EXAMPLE.md`
+
 ## Source Mapping
 
 | Example file | Category | Source contract / source template | Primary reader | Use when | Must not be used for |
@@ -90,6 +95,8 @@ private network details、production logs、実運用データ、不要な priva
 | `HUMAN_REVIEW_DECISION_EXAMPLE.md` | AI Analysis Contract Examples | `docs/HUMAN_APPROVAL.md`, `lib/human-review/types.ts`, `lib/human-review/validation.ts` | Human Owner, Risk / Safety Reviewer | human decision outcome と separate implementation boundary を確認するとき | approval を production write、deploy、DB/API update の自動許可にすること |
 | `IMPLEMENTATION_PROPOSAL_EXAMPLE.md` | AI Analysis Contract Examples | `docs/HUMAN_APPROVAL.md`, `lib/implementation-proposals/types.ts`, `lib/implementation-proposals/validation.ts` | Human Owner, CodexApp Worker, Risk / Safety Reviewer | later separate PR 用の proposal-only implementation plan を確認するとき | 実装そのもの、runtime/API/DB migration、merge、deploy、production promotion |
 | `CODEX_APP_SERVER_RUNTIME_INTAKE_EXAMPLE.md` | Codex App Server Runtime Intake Examples | `docs/CODEX_APP_SERVER_RUNTIME_INTAKE.md`, `docs/templates/CODEX_APP_SERVER_RUNTIME_INTAKE_TEMPLATE.md` | Future Runtime Designer, Human Owner, Risk / Safety Reviewer | runtime design PR instructions の前に、sanitized intake record の記入例を確認するとき | runtime implementation、worker/scheduler/API/DB/external integration、automation、PR 作成、merge、deploy、production promotion |
+| `RUNTIME_INTAKE_TASK_CARD_EXAMPLE.md` | Runtime Intake Task Board / Handoff Examples | `docs/CODEX_APP_SERVER_RUNTIME_INTAKE.md`, `docs/TASK_BOARD_HANDOFF.md`, `docs/templates/TASK_CARD_TEMPLATE.md` | Future Runtime Designer, Human Owner, QA Reviewer | Runtime Intake outcome を TaskCard として human review に渡す記入例を確認するとき | runtime implementation、worker/scheduler/API/DB/package/CI changes、GitHub automation、PR 作成、merge、deploy、production promotion |
+| `RUNTIME_INTAKE_HANDOFF_EXAMPLE.md` | Runtime Intake Task Board / Handoff Examples | `docs/CODEX_APP_SERVER_RUNTIME_INTAKE.md`, `docs/TASK_BOARD_HANDOFF.md`, `docs/templates/HANDOFF_TEMPLATE.md` | Future Runtime Designer, Human Owner, QA Reviewer | Runtime Intake から future design instructions 前の durable handoff を確認するとき | 会話ログ全文、secret/local path/NAS path 保存、runtime implementation、PR 作成、merge、deploy、production promotion |
 
 ## Role別の読む順番
 
@@ -139,6 +146,12 @@ private network details、production logs、実運用データ、不要な priva
 Future Runtime Designer は、examples を runtime 設計許可として扱いません。
 Codex App Server runtime 設計に進む場合は、ユーザー提供資料を受け取ってから
 別 PR で扱います。
+
+Runtime Intake から Task Board / Handoff へつなぐ場合は、
+`RUNTIME_INTAKE_TASK_CARD_EXAMPLE.md` と
+`RUNTIME_INTAKE_HANDOFF_EXAMPLE.md` を writing sample としてだけ参照します。
+これらは runtime 実装、PR 作成、merge、deploy、production promotion を許可
+しません。
 
 ## Safety Boundary
 

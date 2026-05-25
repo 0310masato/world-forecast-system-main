@@ -232,6 +232,14 @@ For a sanitized filled example, see
 `docs/examples/CODEX_APP_SERVER_RUNTIME_INTAKE_EXAMPLE.md`. The example is a
 writing sample only. It is not runtime implementation permission.
 
+When a reviewed intake outcome needs to be carried into Task Board / Handoff
+review, use `docs/examples/RUNTIME_INTAKE_TASK_CARD_EXAMPLE.md` and
+`docs/examples/RUNTIME_INTAKE_HANDOFF_EXAMPLE.md` as writing samples only.
+Those examples preserve sanitized references, durable facts, open questions,
+blockers, residual risks, and human-reviewed next actions. They do not
+authorize runtime implementation, PR creation, merge, deploy, package changes,
+CI changes, file-writing automation, or production promotion.
+
 ## Relationship To Existing Docs
 
 - `AGENTS.md` remains the repository safety boundary for protected core,
@@ -248,6 +256,10 @@ writing sample only. It is not runtime implementation permission.
 - `docs/examples/CODEX_APP_SERVER_RUNTIME_INTAKE_EXAMPLE.md` remains a
   sanitized example record for this intake gate. It is not a source contract or
   execution permission.
+- `docs/examples/RUNTIME_INTAKE_TASK_CARD_EXAMPLE.md` and
+  `docs/examples/RUNTIME_INTAKE_HANDOFF_EXAMPLE.md` remain sanitized bridge
+  examples for moving an intake outcome into Task Board / Handoff review. They
+  are not source contracts, PR requests, or execution permission.
 
 ## What This Document Does Not Authorize
 
