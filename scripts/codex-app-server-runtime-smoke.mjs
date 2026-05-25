@@ -22,7 +22,9 @@ function sanitize(message) {
     .replaceAll(buildDirUrlPath, '<build-dir>')
     .replaceAll(projectRoot, '<project-root>')
     .replaceAll(projectRootUrlPath, '<project-root>')
-    .replace(/[A-Z]:\\[^\r\n'"`]+/g, '<local-path>');
+    .replace(/[A-Z]:\\[^\r\n'"`]+/g, '<local-path>')
+    .replace(/[A-Z]:\/[^\r\n'"`<>|]+/g, '<local-path>')
+    .replace(/(^|[\s'"`])\/(?:tmp|home|Users)\/[^\r\n'"`<>|]+/g, '$1<local-path>');
 }
 
 function log(message) {
@@ -73,6 +75,32 @@ function makeSecretLikeValue() {
 
 function makeEnvFileReference() {
   return ['.env', 'local'].join('.');
+}
+
+function makePosixTmpPathLikeValue() {
+  return ['', 'tmp', 'example', 'file.ts'].join('/');
+}
+
+function makePosixHomePathLikeValue() {
+  return ['', 'home', 'example', 'file.ts'].join('/');
+}
+
+function makePosixUsersPathLikeValue() {
+  return ['', 'Users', 'example', 'file.ts'].join('/');
+}
+
+function makeSlashStyleDrivePathLikeValue(driveLetter) {
+  return `${driveLetter}:${String.fromCharCode(47)}tmp${String.fromCharCode(47)}example${String.fromCharCode(47)}file.ts`;
+}
+
+function assertSanitizesRawPath(rawPath) {
+  const sanitized = sanitize(rawPath);
+
+  assert(!sanitized.includes(rawPath), 'sanitize leaked a raw local path.');
+  assert(
+    sanitized.includes('<local-path>'),
+    'sanitize did not mark a raw local path as <local-path>.',
+  );
 }
 
 async function pathExists(filePath) {
@@ -132,6 +160,14 @@ async function compileCodexAppServerRuntimeHelpers() {
 }
 
 async function main() {
+  assertSanitizesRawPath(makePosixTmpPathLikeValue());
+  assertSanitizesRawPath(makePosixHomePathLikeValue());
+  assertSanitizesRawPath(makePosixUsersPathLikeValue());
+  assertSanitizesRawPath(makeSlashStyleDrivePathLikeValue('C'));
+  assertSanitizesRawPath(makeSlashStyleDrivePathLikeValue('Z'));
+  assertSanitizesRawPath(makeLocalPathLikeValue());
+  log('Accepted local path sanitization checks.');
+
   await compileCodexAppServerRuntimeHelpers();
 
   const {
@@ -359,6 +395,46 @@ async function main() {
     productionDeployRecommendation,
     'high_risk_operation_recommendation',
   );
+
+  const negatedProductionWarnings = [
+    'Do not use this scaffold in production.',
+    'This scaffold must not be applied to production.',
+    'Never promote this scaffold to production.',
+  ];
+
+  for (const warning of negatedProductionWarnings) {
+    const safeWarning = cloneValue(scaffold);
+    safeWarning.review_notes.push(warning);
+    const safeWarningValidation = validateCodexAppServerRuntimeMvpScaffold(safeWarning);
+
+    assert(
+      safeWarningValidation.passed === true,
+      `Negated production warning must pass validation: ${warning}`,
+    );
+    assert(
+      !hasIssue(safeWarningValidation, 'high_risk_operation_recommendation'),
+      `Negated production warning must not be high-risk: ${warning}`,
+    );
+  }
+  log('Accepted negated production warnings.');
+
+  const positiveProductionRecommendations = [
+    'Use this scaffold in production.',
+    'Apply this scaffold to production.',
+    'Promote this scaffold to production.',
+    'Deploy this scaffold to production.',
+  ];
+
+  for (const recommendation of positiveProductionRecommendations) {
+    const unsafeRecommendation = cloneValue(scaffold);
+    unsafeRecommendation.review_notes.push(recommendation);
+    expectRejected(
+      `positive production recommendation scaffold: ${recommendation}`,
+      validateCodexAppServerRuntimeMvpScaffold,
+      unsafeRecommendation,
+      'high_risk_operation_recommendation',
+    );
+  }
 
   log('Codex App Server runtime MVP scaffold smoke checks passed.');
 }

@@ -142,6 +142,12 @@ const HIGH_RISK_OPERATION_RECOMMENDATION_PATTERNS = [
   },
 ] as const;
 
+const NEGATED_PRODUCTION_PROMOTION_PATTERNS = [
+  /\b(?:do\s+not|don't|never)\s+(?:use|apply|promote)\b[\w\s-]{0,80}\b(?:in|to)?\s*production\b/i,
+  /\b(?:must|should|shall|may|can)\s+not\s+(?:use|apply|promote)\b[\w\s-]{0,80}\b(?:in|to)?\s*production\b/i,
+  /\b(?:must|should|shall|may|can)\s+not\s+be\s+(?:used|applied|promoted)\b[\w\s-]{0,80}\b(?:in|to)?\s*production\b/i,
+] as const;
+
 function asRecord(value: unknown): UnknownRecord | null {
   if (value !== null && typeof value === 'object' && !Array.isArray(value)) {
     return value as UnknownRecord;
@@ -191,6 +197,15 @@ function getHighRiskOperationRecommendationIssue(
 
   for (const { name, pattern } of HIGH_RISK_OPERATION_RECOMMENDATION_PATTERNS) {
     if (pattern.test(value)) {
+      if (
+        name === 'production promotion recommendation'
+        && NEGATED_PRODUCTION_PROMOTION_PATTERNS.some((negatedPattern) => (
+          negatedPattern.test(value)
+        ))
+      ) {
+        continue;
+      }
+
       return {
         message: `${path} contains a high-risk operation recommendation: ${name}.`,
         path,
