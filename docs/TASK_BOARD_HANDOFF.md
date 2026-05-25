@@ -271,14 +271,15 @@ contracts/templates, reading order, and safety boundary.
 - `docs/examples/TASK_BOARD_QA_REPORT_EXAMPLE.md`
 - `docs/examples/RUNTIME_INTAKE_TASK_CARD_EXAMPLE.md`
 - `docs/examples/RUNTIME_INTAKE_HANDOFF_EXAMPLE.md`
+- `docs/examples/RUNTIME_INTAKE_TASK_BOARD_QA_REPORT_EXAMPLE.md`
 
 These examples are safe filled samples, not real operations logs. They are not
 the source contracts; the source contracts are this document and the templates
 in `docs/templates/`.
 
-Runtime Intake TaskCard and Handoff examples are bridge samples for moving a
-sanitized intake outcome into human review before later runtime design PR
-instruction drafting. They do not authorize runtime implementation, PR
+Runtime Intake TaskCard, Handoff, and QA Report examples are bridge samples for
+moving a sanitized intake outcome into human review before later runtime design
+PR instruction drafting. They do not authorize runtime implementation, PR
 creation, merge, deploy, package changes, CI changes, file-writing automation,
 or production promotion.
 
