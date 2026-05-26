@@ -165,6 +165,8 @@ function loadRuntimeReportHelpers() {
       reportModule.makeCodexAppServerRuntimeMvpHandoffDraft,
     makeCodexAppServerRuntimeMvpOperatorSummary:
       reportModule.makeCodexAppServerRuntimeMvpOperatorSummary,
+    makeCodexAppServerRuntimeMvpReviewPacket:
+      reportModule.makeCodexAppServerRuntimeMvpReviewPacket,
     makeCodexAppServerRuntimeMvpTaskCardDraft:
       reportModule.makeCodexAppServerRuntimeMvpTaskCardDraft,
     makeCodexAppServerRuntimeMvpTaskCardQaDraft:
@@ -179,6 +181,7 @@ try {
     makeCodexAppServerRuntimeMvpInspectionReport,
     makeCodexAppServerRuntimeMvpHandoffDraft,
     makeCodexAppServerRuntimeMvpOperatorSummary,
+    makeCodexAppServerRuntimeMvpReviewPacket,
     makeCodexAppServerRuntimeMvpTaskCardDraft,
     makeCodexAppServerRuntimeMvpTaskCardQaDraft,
     makeCodexAppServerRuntimeMvpScaffold,
@@ -188,9 +191,17 @@ try {
   const outputTaskCard = args.length === 1 && args[0] === '--taskcard';
   const outputTaskCardQa = args.length === 1 && args[0] === '--taskcard-qa';
   const outputHandoff = args.length === 1 && args[0] === '--handoff';
+  const outputPacket = args.length === 1 && args[0] === '--packet';
 
-  if (args.length > 0 && !outputSummary && !outputTaskCard && !outputTaskCardQa && !outputHandoff) {
-    throw new Error('Usage: node scripts/codex-app-server-runtime-report.mjs [--summary|--taskcard|--taskcard-qa|--handoff]');
+  if (
+    args.length > 0
+    && !outputSummary
+    && !outputTaskCard
+    && !outputTaskCardQa
+    && !outputHandoff
+    && !outputPacket
+  ) {
+    throw new Error('Usage: node scripts/codex-app-server-runtime-report.mjs [--summary|--taskcard|--taskcard-qa|--handoff|--packet]');
   }
 
   const scaffold = makeCodexAppServerRuntimeMvpScaffold();
@@ -208,6 +219,8 @@ try {
     outputValue = outputHandoff
       ? makeCodexAppServerRuntimeMvpHandoffDraft(taskCardDraft, taskCardQaDraft)
       : taskCardQaDraft;
+  } else if (outputPacket) {
+    outputValue = makeCodexAppServerRuntimeMvpReviewPacket(scaffold);
   }
   const output = JSON.stringify(outputValue, null, 2);
 

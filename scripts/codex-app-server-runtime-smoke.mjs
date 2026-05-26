@@ -12,6 +12,35 @@ const buildDir = path.join(
   'world-forecast-codex-app-server-runtime-smoke',
 );
 const originalConsoleLog = console.log.bind(console);
+const REQUIRED_PACKET_FORBIDDEN_OPERATIONS = [
+  'create_pr',
+  'merge_pr',
+  'direct_deploy',
+  'production_write',
+  'production_promotion',
+  'api_forecast_update',
+  'api_hormuz_update',
+  'api_hormuz_news_update',
+  'api_route_creation',
+  'db_read',
+  'db_write',
+  'db_migration',
+  'worker_runtime',
+  'scheduler_runtime',
+  'external_api_integration',
+  'package_change',
+  'ci_change',
+  'github_automation',
+  'file_writing_automation',
+  'handoff_file_creation',
+  'task_board_write',
+  'ai_job_execution',
+  'external_publish',
+  'automated_trading',
+  'investment_advice',
+  'navigation_guidance',
+  'military_guidance',
+];
 
 function sanitize(message) {
   const buildDirUrlPath = buildDir.replaceAll(path.sep, '/');
@@ -115,6 +144,15 @@ function assertSafeReportOutput(output) {
   }
 }
 
+function assertPacketForbidsRequiredOperations(packet, label) {
+  for (const operation of REQUIRED_PACKET_FORBIDDEN_OPERATIONS) {
+    assert(
+      packet.forbidden_operations.includes(operation),
+      `${label} must forbid ${operation}.`,
+    );
+  }
+}
+
 function assertSanitizesRawPath(rawPath) {
   const sanitized = sanitize(rawPath);
 
@@ -205,6 +243,7 @@ async function main() {
     makeCodexAppServerRuntimeMvpHandoffDraft,
     makeCodexAppServerRuntimeMvpInspectionReport,
     makeCodexAppServerRuntimeMvpOperatorSummary,
+    makeCodexAppServerRuntimeMvpReviewPacket,
     makeCodexAppServerRuntimeMvpTaskCardDraft,
     makeCodexAppServerRuntimeMvpTaskCardQaDraft,
   } = require(path.join(buildDir, 'lib', 'codex-app-server-runtime', 'report.js'));
@@ -564,6 +603,62 @@ async function main() {
   assertSafeReportOutput(JSON.stringify(handoffDraft));
   log('Accepted stdout-only HANDOFF draft helper.');
 
+  const reviewPacket = makeCodexAppServerRuntimeMvpReviewPacket(scaffold, {
+    generatedAt: 1_800_000_000,
+  });
+  const reviewPacketOutput = JSON.stringify(reviewPacket);
+  assert(
+    reviewPacket.packet_id === 'codex-app-server-runtime-mvp-review-packet-v0',
+    'Review packet must use the expected packet_id.',
+  );
+  assert(reviewPacket.packet_version === 1, 'Review packet version must be 1.');
+  assert(
+    reviewPacket.title === 'Codex App Server Runtime MVP Review Packet',
+    'Review packet title must identify the bundled review packet.',
+  );
+  assert(
+    reviewPacket.generated_at === '2027-01-15T08:00:00.000Z',
+    'Review packet timestamp must be ISO formatted.',
+  );
+  assert(
+    reviewPacket.overall_status === 'ready_for_human_review',
+    'Valid review packet must be ready_for_human_review.',
+  );
+  assert(
+    reviewPacket.required_next_action === 'human_review_only',
+    'Review packet required next action must remain human_review_only.',
+  );
+  assert(
+    reviewPacket.allowed_next_step === 'human_review_only',
+    'Review packet allowed next step must remain human_review_only.',
+  );
+  assert(
+    reviewPacket.human_approval_required === true,
+    'Review packet must require human approval.',
+  );
+  assert(reviewPacket.proposal_only === true, 'Review packet must be proposal-only.');
+  assert(
+    reviewPacket.is_production_state === false,
+    'Review packet must not be production state.',
+  );
+  assert(reviewPacket.stdout_only === true, 'Review packet must be stdout-only.');
+  assert(reviewPacket.report, 'Review packet must include report.');
+  assert(reviewPacket.summary, 'Review packet must include summary.');
+  assert(reviewPacket.taskcard, 'Review packet must include taskcard.');
+  assert(reviewPacket.taskcard_qa, 'Review packet must include taskcard_qa.');
+  assert(reviewPacket.handoff, 'Review packet must include handoff.');
+  assert(
+    reviewPacket.handoff.current_status === 'waiting_for_human_approval',
+    'Valid review packet handoff must wait for human approval.',
+  );
+  assertPacketForbidsRequiredOperations(reviewPacket, 'Review packet');
+  assert(
+    reviewPacket.references.includes('scripts/codex-app-server-runtime-report.mjs'),
+    'Review packet must cite the report script.',
+  );
+  assertSafeReportOutput(reviewPacketOutput);
+  log('Accepted stdout-only review packet helper.');
+
   const revisionTaskCardQaDraft = cloneValue(taskCardQaDraft);
   revisionTaskCardQaDraft.recommendation = 'revise_task_card';
   revisionTaskCardQaDraft.checks.stdout_only_check.result = 'revise';
@@ -629,6 +724,43 @@ async function main() {
   );
   assertSafeReportOutput(revisionHandoffDraftOutput);
   log('Accepted revise_task_card HANDOFF draft handling.');
+
+  const revisionReviewPacket = makeCodexAppServerRuntimeMvpReviewPacket(scaffold, {
+    generatedAt: 1_800_000_000,
+    taskCardQaDraft: revisionTaskCardQaDraft,
+  });
+  const revisionReviewPacketOutput = JSON.stringify(revisionReviewPacket);
+  assert(
+    revisionReviewPacket.overall_status === 'needs_revision',
+    'revise_task_card review packet must map to needs_revision.',
+  );
+  assert(
+    revisionReviewPacket.required_next_action === 'human_review_only',
+    'Revision review packet required next action must remain human_review_only.',
+  );
+  assert(
+    revisionReviewPacket.allowed_next_step === 'human_review_only',
+    'Revision review packet allowed next step must remain human_review_only.',
+  );
+  assert(
+    revisionReviewPacket.proposal_only === true,
+    'Revision review packet must remain proposal-only.',
+  );
+  assert(
+    revisionReviewPacket.is_production_state === false,
+    'Revision review packet must not be production state.',
+  );
+  assert(
+    revisionReviewPacket.stdout_only === true,
+    'Revision review packet must remain stdout-only.',
+  );
+  assert(
+    revisionReviewPacket.handoff.current_status === 'needs_revision',
+    'Revision review packet must carry a needs_revision HANDOFF draft.',
+  );
+  assertPacketForbidsRequiredOperations(revisionReviewPacket, 'Revision review packet');
+  assertSafeReportOutput(revisionReviewPacketOutput);
+  log('Accepted needs_revision review packet handling.');
 
   const mismatchedTaskCardQaDraft = cloneValue(taskCardQaDraft);
   const mismatchedReviewedTaskIdFixture = makeEnvFileReference();
@@ -997,6 +1129,44 @@ async function main() {
   assertSafeReportOutput(unsafeTaskCardDraftOutput);
   assertSafeReportOutput(unsafeTaskCardQaDraftOutput);
   assertSafeReportOutput(unsafeHandoffDraftOutput);
+  const blockedReviewPacket = makeCodexAppServerRuntimeMvpReviewPacket(
+    unsafeReportScaffold,
+    {
+      generatedAt: 1_800_000_000,
+    },
+  );
+  const blockedReviewPacketOutput = JSON.stringify(blockedReviewPacket);
+  assert(
+    blockedReviewPacket.overall_status === 'blocked',
+    'Blocked review packet must map to blocked.',
+  );
+  assert(
+    blockedReviewPacket.required_next_action === 'human_review_only',
+    'Blocked review packet required next action must remain human_review_only.',
+  );
+  assert(
+    blockedReviewPacket.allowed_next_step === 'human_review_only',
+    'Blocked review packet allowed next step must remain human_review_only.',
+  );
+  assert(
+    blockedReviewPacket.proposal_only === true,
+    'Blocked review packet must remain proposal-only.',
+  );
+  assert(
+    blockedReviewPacket.is_production_state === false,
+    'Blocked review packet must not be production state.',
+  );
+  assert(
+    blockedReviewPacket.stdout_only === true,
+    'Blocked review packet must remain stdout-only.',
+  );
+  assert(
+    blockedReviewPacket.handoff.current_status === 'blocked',
+    'Blocked review packet must carry a blocked HANDOFF draft.',
+  );
+  assertPacketForbidsRequiredOperations(blockedReviewPacket, 'Blocked review packet');
+  assert(!blockedReviewPacketOutput.includes(unsafeReportFixture), 'Blocked review packet leaked restricted content.');
+  assertSafeReportOutput(blockedReviewPacketOutput);
   log('Accepted invalid scaffold report withholding.');
 
   const apiUpdateRecommendation = cloneValue(scaffold);
@@ -1335,6 +1505,58 @@ async function main() {
     'HANDOFF draft script output must forbid scheduler runtime.',
   );
   log('Accepted stdout-only HANDOFF draft script output.');
+
+  const packetScriptResult = spawnSync(process.execPath, [
+    'scripts/codex-app-server-runtime-report.mjs',
+    '--packet',
+  ], {
+    cwd: projectRoot,
+    encoding: 'utf8',
+    stdio: ['ignore', 'pipe', 'pipe'],
+    windowsHide: true,
+  });
+  if (packetScriptResult.status !== 0) {
+    throw new Error([
+      'Codex App Server runtime review packet script failed.',
+      sanitize(packetScriptResult.stdout),
+      sanitize(packetScriptResult.stderr),
+    ].filter(Boolean).join('\n'));
+  }
+
+  assert(
+    packetScriptResult.stderr.trim().length === 0,
+    'Review packet script must write the packet to stdout without stderr output.',
+  );
+  const packetScriptOutput = packetScriptResult.stdout.trim();
+  assertSafeReportOutput(packetScriptOutput);
+  const packetScriptJson = JSON.parse(packetScriptOutput);
+  assert(
+    packetScriptJson.overall_status,
+    'Review packet script output must include overall_status.',
+  );
+  assert(
+    packetScriptJson.overall_status === 'ready_for_human_review',
+    'Review packet script output must be ready_for_human_review.',
+  );
+  assert(
+    packetScriptJson.required_next_action === 'human_review_only',
+    'Review packet script output required action must remain human_review_only.',
+  );
+  assert(
+    packetScriptJson.allowed_next_step === 'human_review_only',
+    'Review packet script output allowed next step must remain human_review_only.',
+  );
+  assert(
+    packetScriptJson.stdout_only === true,
+    'Review packet script output must remain stdout-only.',
+  );
+  assert(packetScriptJson.report, 'Review packet script output must include report.');
+  assert(packetScriptJson.summary, 'Review packet script output must include summary.');
+  assert(packetScriptJson.taskcard, 'Review packet script output must include taskcard.');
+  assert(packetScriptJson.taskcard_qa, 'Review packet script output must include taskcard_qa.');
+  assert(packetScriptJson.handoff, 'Review packet script output must include handoff.');
+  assertPacketForbidsRequiredOperations(packetScriptJson, 'Review packet script output');
+  log('Accepted stdout-only review packet script output.');
 
   log('Codex App Server runtime MVP scaffold smoke checks passed.');
 }

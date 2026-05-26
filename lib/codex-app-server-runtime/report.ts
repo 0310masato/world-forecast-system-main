@@ -169,6 +169,17 @@ export type CodexAppServerRuntimeMvpHandoffForbiddenNextStep =
   | TaskBoardForbiddenNextStep
   | CodexAppServerRuntimeMvpForbiddenOperation;
 
+export type CodexAppServerRuntimeMvpReviewPacketOverallStatus =
+  | 'ready_for_human_review'
+  | 'needs_revision'
+  | 'blocked';
+
+export type CodexAppServerRuntimeMvpReviewPacketForbiddenOperation =
+  | CodexAppServerRuntimeMvpForbiddenOperation
+  | 'api_route_creation'
+  | 'handoff_file_creation'
+  | 'task_board_write';
+
 export interface CodexAppServerRuntimeMvpHandoffDraft {
   handoff_id: string;
   handoff_version: typeof TASK_HANDOFF_VERSION;
@@ -194,14 +205,45 @@ export interface CodexAppServerRuntimeMvpHandoffDraft {
   references: string[];
 }
 
+export interface CodexAppServerRuntimeMvpReviewPacket {
+  packet_id: string;
+  packet_version: 1;
+  generated_at: string;
+  title: string;
+  report: CodexAppServerRuntimeMvpInspectionReport;
+  summary: CodexAppServerRuntimeMvpOperatorSummary;
+  taskcard: CodexAppServerRuntimeMvpTaskCardDraft;
+  taskcard_qa: CodexAppServerRuntimeMvpTaskCardQaDraft;
+  handoff: CodexAppServerRuntimeMvpHandoffDraft;
+  overall_status: CodexAppServerRuntimeMvpReviewPacketOverallStatus;
+  required_next_action: 'human_review_only';
+  allowed_next_step: 'human_review_only';
+  human_approval_required: true;
+  proposal_only: true;
+  is_production_state: false;
+  stdout_only: true;
+  forbidden_operations: CodexAppServerRuntimeMvpReviewPacketForbiddenOperation[];
+  references: string[];
+}
+
 export interface MakeCodexAppServerRuntimeMvpTaskCardQaDraftOptions {
   checkedAt?: number;
+}
+
+export interface MakeCodexAppServerRuntimeMvpReviewPacketOptions {
+  generatedAt?: number;
+  taskCardQaDraft?: CodexAppServerRuntimeMvpTaskCardQaDraft;
 }
 
 const WITHHELD_INVALID_SCAFFOLD = 'withheld_invalid_scaffold';
 const INVALID_SCAFFOLD_NOTICE = [
   'Withheld because scaffold validation failed. Review validation.issues only.',
 ];
+const REVIEW_PACKET_EXTRA_FORBIDDEN_OPERATIONS = [
+  'api_route_creation',
+  'handoff_file_creation',
+  'task_board_write',
+] as const;
 const TASKCARD_DRAFT_REFERENCES = [
   'AGENTS.md',
   'docs/CONTRACTS_INDEX.md',
@@ -341,6 +383,13 @@ function makeHandoffForbiddenNextSteps(): CodexAppServerRuntimeMvpHandoffForbidd
   ]));
 }
 
+function makeReviewPacketForbiddenOperations(): CodexAppServerRuntimeMvpReviewPacketForbiddenOperation[] {
+  return Array.from(new Set([
+    ...CODEX_APP_SERVER_RUNTIME_MVP_FORBIDDEN_OPERATIONS,
+    ...REVIEW_PACKET_EXTRA_FORBIDDEN_OPERATIONS,
+  ]));
+}
+
 function makeCheck(
   result: CodexAppServerRuntimeMvpTaskCardQaCheckResult,
   notes: string,
@@ -402,6 +451,23 @@ function makeUniqueHandoffReferences(
   ]));
 }
 
+function makeUniqueReviewPacketReferences(
+  report: CodexAppServerRuntimeMvpInspectionReport,
+  taskCardDraft: CodexAppServerRuntimeMvpTaskCardDraft,
+  qaDraft: CodexAppServerRuntimeMvpTaskCardQaDraft,
+  handoffDraft: CodexAppServerRuntimeMvpHandoffDraft,
+): string[] {
+  return Array.from(new Set([
+    ...report.policy_refs,
+    ...taskCardDraft.references,
+    ...qaDraft.references,
+    ...handoffDraft.references,
+    'lib/codex-app-server-runtime/report.ts',
+    'scripts/codex-app-server-runtime-report.mjs',
+    'scripts/codex-app-server-runtime-smoke.mjs',
+  ]));
+}
+
 function chooseTaskCardQaRecommendation(
   taskCardDraft: CodexAppServerRuntimeMvpTaskCardDraft,
   issues: CodexAppServerRuntimeMvpTaskCardQaIssue[],
@@ -455,6 +521,24 @@ function chooseHandoffCurrentStatus(
 
   if (isValidTaskCardQaDraft(qaDraft)) {
     return 'waiting_for_human_approval';
+  }
+
+  return 'blocked';
+}
+
+function chooseReviewPacketOverallStatus(
+  handoffDraft: CodexAppServerRuntimeMvpHandoffDraft,
+): CodexAppServerRuntimeMvpReviewPacketOverallStatus {
+  if (handoffDraft.current_status === 'waiting_for_human_approval') {
+    return 'ready_for_human_review';
+  }
+
+  if (handoffDraft.current_status === 'needs_revision') {
+    return 'needs_revision';
+  }
+
+  if (handoffDraft.current_status === 'blocked') {
+    return 'blocked';
   }
 
   return 'blocked';
@@ -845,4 +929,53 @@ export function makeCodexAppServerRuntimeMvpHandoffDraft(
   assertNoRestrictedContent(handoffDraft, 'codexAppServerRuntimeMvpHandoffDraft');
 
   return handoffDraft;
+}
+
+export function makeCodexAppServerRuntimeMvpReviewPacket(
+  scaffold: CodexAppServerRuntimeMvpScaffold,
+  options: MakeCodexAppServerRuntimeMvpReviewPacketOptions = {},
+): CodexAppServerRuntimeMvpReviewPacket {
+  const generatedAt = options.generatedAt ?? Math.floor(Date.now() / 1000);
+  const report = makeCodexAppServerRuntimeMvpInspectionReport(scaffold, {
+    generatedAt,
+  });
+  const summary = makeCodexAppServerRuntimeMvpOperatorSummary(report);
+  const taskCardDraft = makeCodexAppServerRuntimeMvpTaskCardDraft(summary);
+  const taskCardQaDraft = options.taskCardQaDraft
+    ?? makeCodexAppServerRuntimeMvpTaskCardQaDraft(taskCardDraft, {
+      checkedAt: generatedAt,
+    });
+  const handoffDraft = makeCodexAppServerRuntimeMvpHandoffDraft(
+    taskCardDraft,
+    taskCardQaDraft,
+  );
+  const packet: CodexAppServerRuntimeMvpReviewPacket = {
+    packet_id: 'codex-app-server-runtime-mvp-review-packet-v0',
+    packet_version: 1,
+    generated_at: toIsoTimestamp(generatedAt),
+    title: 'Codex App Server Runtime MVP Review Packet',
+    report,
+    summary,
+    taskcard: taskCardDraft,
+    taskcard_qa: taskCardQaDraft,
+    handoff: handoffDraft,
+    overall_status: chooseReviewPacketOverallStatus(handoffDraft),
+    required_next_action: 'human_review_only',
+    allowed_next_step: 'human_review_only',
+    human_approval_required: true,
+    proposal_only: true,
+    is_production_state: false,
+    stdout_only: true,
+    forbidden_operations: makeReviewPacketForbiddenOperations(),
+    references: makeUniqueReviewPacketReferences(
+      report,
+      taskCardDraft,
+      taskCardQaDraft,
+      handoffDraft,
+    ),
+  };
+
+  assertNoRestrictedContent(packet, 'codexAppServerRuntimeMvpReviewPacket');
+
+  return packet;
 }
