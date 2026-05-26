@@ -732,6 +732,87 @@ async function main() {
   assertSafeReportOutput(dryRunResultOutput);
   log('Accepted Task Board / HANDOFF write dry-run validation helper.');
 
+  const nonJsonBigIntRequest = {
+    ...dryRunRequest,
+    source_packet: {
+      ...reviewPacket,
+      non_json_fixture: BigInt(1),
+    },
+    source_packet_sha256: 'sha256-placeholder-for-invalid-packet',
+  };
+  const nonJsonBigIntResult =
+    runTaskBoardHandoffWriteDryRun(nonJsonBigIntRequest);
+  const nonJsonBigIntOutput = JSON.stringify(nonJsonBigIntResult);
+  assert(
+    nonJsonBigIntResult.status === 'blocked',
+    'BigInt source_packet dry run must be blocked.',
+  );
+  assert(
+    nonJsonBigIntResult.wrote_anything === false,
+    'BigInt source_packet dry run must not write anything.',
+  );
+  assert(
+    hasIssue(nonJsonBigIntResult.validation, 'E_PACKET_INVALID'),
+    'BigInt source_packet dry run must report E_PACKET_INVALID.',
+  );
+  assert(
+    nonJsonBigIntResult.validation.issues.some((issue) => (
+      issue.message === 'source_packet must be JSON serializable for hash validation.'
+    )),
+    'BigInt source_packet dry run must report a fixed hash validation message.',
+  );
+  assert(
+    nonJsonBigIntResult.required_next_action === 'human_review_only',
+    'BigInt source_packet dry run must stop at human_review_only.',
+  );
+  assert(
+    !nonJsonBigIntOutput.includes('TypeError')
+      && !nonJsonBigIntOutput.includes('Do not know how to serialize'),
+    'BigInt source_packet dry run must not leak a raw serialization error.',
+  );
+  assertSafeReportOutput(nonJsonBigIntOutput);
+  log('Accepted BigInt source_packet dry-run blocking.');
+
+  const circularPacket = { ...reviewPacket };
+  circularPacket.self = circularPacket;
+  const circularPacketRequest = {
+    ...dryRunRequest,
+    source_packet: circularPacket,
+    source_packet_sha256: 'sha256-placeholder-for-circular-packet',
+  };
+  const circularPacketResult =
+    runTaskBoardHandoffWriteDryRun(circularPacketRequest);
+  const circularPacketOutput = JSON.stringify(circularPacketResult);
+  assert(
+    circularPacketResult.status === 'blocked',
+    'Circular source_packet dry run must be blocked.',
+  );
+  assert(
+    circularPacketResult.wrote_anything === false,
+    'Circular source_packet dry run must not write anything.',
+  );
+  assert(
+    hasIssue(circularPacketResult.validation, 'E_PACKET_INVALID'),
+    'Circular source_packet dry run must report E_PACKET_INVALID.',
+  );
+  assert(
+    circularPacketResult.validation.issues.some((issue) => (
+      issue.message === 'source_packet must be JSON serializable for hash validation.'
+    )),
+    'Circular source_packet dry run must report a fixed hash validation message.',
+  );
+  assert(
+    circularPacketResult.required_next_action === 'human_review_only',
+    'Circular source_packet dry run must stop at human_review_only.',
+  );
+  assert(
+    !circularPacketOutput.includes('TypeError')
+      && !circularPacketOutput.includes('Converting circular structure'),
+    'Circular source_packet dry run must not leak a raw serialization error.',
+  );
+  assertSafeReportOutput(circularPacketOutput);
+  log('Accepted circular source_packet dry-run blocking.');
+
   const invalidWriteModeRequest = cloneValue(dryRunRequest);
   invalidWriteModeRequest.write_mode = 'write_after_human_approval';
   invalidWriteModeRequest.dry_run = false;

@@ -95,6 +95,9 @@ export interface MakeTaskBoardHandoffWriteDryRunRequestOptions {
 }
 
 type UnknownRecord = Record<string, unknown>;
+type JsonHashResult =
+  | { ok: true; hash: string }
+  | { ok: false };
 
 const SOURCE_COMMAND =
   'node scripts/codex-app-server-runtime-report.mjs --packet' as const;
@@ -185,9 +188,25 @@ function toIsoTimestamp(unixSeconds?: number): string {
 }
 
 function sha256Json(value: unknown): string {
-  return createHash('sha256')
-    .update(JSON.stringify(value))
-    .digest('hex');
+  const result = trySha256Json(value);
+  if (!result.ok) {
+    throw new Error('Value must be JSON serializable before hashing.');
+  }
+
+  return result.hash;
+}
+
+function trySha256Json(value: unknown): JsonHashResult {
+  try {
+    return {
+      ok: true,
+      hash: createHash('sha256')
+        .update(JSON.stringify(value))
+        .digest('hex'),
+    };
+  } catch {
+    return { ok: false };
+  }
 }
 
 function getRestrictedContentIssue(value: unknown): string | null {
@@ -201,7 +220,13 @@ function getRestrictedContentIssue(value: unknown): string | null {
     return 'Task Board / HANDOFF write dry-run request contains restricted content.';
   }
 
-  const serialized = JSON.stringify(value);
+  let serialized: string | undefined;
+  try {
+    serialized = JSON.stringify(value);
+  } catch {
+    return 'Task Board / HANDOFF write dry-run request contains non-JSON-serializable content.';
+  }
+
   if (!serialized) {
     return null;
   }
@@ -443,15 +468,21 @@ export function validateTaskBoardHandoffWriteDryRunRequest(
       'E_PACKET_INVALID',
       'source_packet_sha256 must be a non-empty string.',
     );
-  } else if (
-    asRecord(requestRecord.source_packet)
-    && requestRecord.source_packet_sha256 !== sha256Json(requestRecord.source_packet)
-  ) {
-    addIssue(
-      issues,
-      'E_PACKET_INVALID',
-      'source_packet_sha256 must match source_packet.',
-    );
+  } else if (asRecord(requestRecord.source_packet)) {
+    const sourcePacketHash = trySha256Json(requestRecord.source_packet);
+    if (!sourcePacketHash.ok) {
+      addIssue(
+        issues,
+        'E_PACKET_INVALID',
+        'source_packet must be JSON serializable for hash validation.',
+      );
+    } else if (requestRecord.source_packet_sha256 !== sourcePacketHash.hash) {
+      addIssue(
+        issues,
+        'E_PACKET_INVALID',
+        'source_packet_sha256 must match source_packet.',
+      );
+    }
   }
 
   if (!isNonEmptyString(requestRecord.human_owner)) {
