@@ -224,6 +224,20 @@ external integration, publishing, or production promotion.
 If execution is needed later, it must be requested through explicit human
 approval and a dedicated implementation PR with its own scope and checks.
 
+## Stdout Drafts And Future Write Contract
+
+Codex App Server Runtime TaskCard, QA, HANDOFF, and review packet outputs are
+stdout-only review material. They are not Task Board writes, HANDOFF file
+creation, repository artifact writes, API updates, DB writes, worker execution,
+scheduler execution, package or CI changes, automation, or production
+promotion.
+
+Before any future Task Board / HANDOFF write implementation is proposed, use
+`docs/tool-contracts/TASK_BOARD_HANDOFF_WRITE_TOOL_CONTRACT.md` as the required
+approval, validation, audit, rollback, and forbidden-operation gate. Future
+Task Board / HANDOFF writes require separate explicit human approval and a
+separate implementation PR.
+
 ## CodexApp Operating Rules
 
 When CodexApp or another AI worker handles TaskCards or Handoffs:
