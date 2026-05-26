@@ -471,6 +471,34 @@ async function main() {
   assertSafeReportOutput(JSON.stringify(taskCardQaDraft));
   log('Accepted stdout-only TaskCard QA draft helper.');
 
+  const restrictedTaskCardDraft = cloneValue(taskCardDraft);
+  const restrictedTaskCardFixture = makeEnvFileReference();
+  restrictedTaskCardDraft.risks.push(`Restricted content fixture ${restrictedTaskCardFixture}`);
+  const restrictedTaskCardQaDraft =
+    makeCodexAppServerRuntimeMvpTaskCardQaDraft(restrictedTaskCardDraft);
+  const restrictedTaskCardQaDraftOutput = JSON.stringify(restrictedTaskCardQaDraft);
+  assert(
+    restrictedTaskCardQaDraft.recommendation === 'block',
+    'Restricted TaskCard QA draft recommendation must be block.',
+  );
+  assert(
+    restrictedTaskCardQaDraft.checks.restricted_content_check.result === 'block',
+    'Restricted TaskCard QA draft restricted content check must block.',
+  );
+  assert(
+    restrictedTaskCardQaDraft.issues.some((issue) => (
+      issue.code === 'restricted_content_detected'
+      && issue.message === 'Restricted content was detected in the reviewed TaskCard draft; details are withheld for safety.'
+    )),
+    'Restricted TaskCard QA draft must use a sanitized restricted-content issue message.',
+  );
+  assert(
+    !restrictedTaskCardQaDraftOutput.includes(restrictedTaskCardFixture),
+    'Restricted TaskCard QA draft leaked restricted fixture content.',
+  );
+  assertSafeReportOutput(restrictedTaskCardQaDraftOutput);
+  log('Accepted restricted-content TaskCard QA draft withholding.');
+
   for (const label of CODEX_APP_SERVER_RUNTIME_MVP_REQUIRED_SAFETY_LABELS) {
     assert(scaffold.safety_labels.includes(label), `Scaffold missing safety label: ${label}.`);
   }

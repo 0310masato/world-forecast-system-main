@@ -207,6 +207,8 @@ const TASKCARD_QA_RESIDUAL_RISKS = [
   'Human reviewers must compare the reviewed TaskCard draft with source contracts before any later action.',
   'A future implementation PR still needs explicit human approval, its own scope, tests, and rollback plan.',
 ] as const;
+const TASKCARD_QA_RESTRICTED_CONTENT_NOTICE =
+  'Restricted content was detected in the reviewed TaskCard draft; details are withheld for safety.';
 const PROTECTED_SURFACE_PATTERNS = [
   {
     name: 'API route path',
@@ -292,12 +294,8 @@ function getRestrictedContentQaIssue(value: unknown): string | null {
   try {
     assertNoRestrictedContent(value, 'codexAppServerRuntimeMvpTaskCardQaInput');
     return null;
-  } catch (error) {
-    if (error instanceof Error) {
-      return error.message;
-    }
-
-    return 'TaskCard draft contains restricted content.';
+  } catch {
+    return TASKCARD_QA_RESTRICTED_CONTENT_NOTICE;
   }
 }
 
