@@ -175,7 +175,7 @@ export interface CodexAppServerRuntimeMvpHandoffDraft {
   source_role: 'codex_app_server_runtime_reporter';
   target_role: 'human_owner';
   task_id: string;
-  current_status: Extract<TaskCardStatus, 'waiting_for_human_approval' | 'blocked'>;
+  current_status: Extract<TaskCardStatus, 'waiting_for_human_approval' | 'needs_revision' | 'blocked'>;
   objective: string;
   what_has_been_done: string[];
   key_findings: string[];
@@ -428,6 +428,58 @@ function isValidTaskCardQaDraft(
     && qaDraft.issues.length === 0
     && Object.values(qaDraft.checks).every((check) => check.result === 'pass')
   );
+}
+
+function hasTaskCardQaLinkageMismatch(
+  taskCardDraft: CodexAppServerRuntimeMvpTaskCardDraft,
+  qaDraft: CodexAppServerRuntimeMvpTaskCardQaDraft,
+): boolean {
+  return qaDraft.reviewed_task_id !== taskCardDraft.task_id;
+}
+
+function chooseHandoffCurrentStatus(
+  taskCardDraft: CodexAppServerRuntimeMvpTaskCardDraft,
+  qaDraft: CodexAppServerRuntimeMvpTaskCardQaDraft,
+): CodexAppServerRuntimeMvpHandoffDraft['current_status'] {
+  if (
+    hasTaskCardQaLinkageMismatch(taskCardDraft, qaDraft)
+    || taskCardDraft.status === 'blocked'
+    || qaDraft.recommendation === 'block'
+  ) {
+    return 'blocked';
+  }
+
+  if (qaDraft.recommendation === 'revise_task_card') {
+    return 'needs_revision';
+  }
+
+  if (isValidTaskCardQaDraft(qaDraft)) {
+    return 'waiting_for_human_approval';
+  }
+
+  return 'blocked';
+}
+
+function makeHandoffBlockers(
+  taskCardDraft: CodexAppServerRuntimeMvpTaskCardDraft,
+  qaDraft: CodexAppServerRuntimeMvpTaskCardQaDraft,
+  currentStatus: CodexAppServerRuntimeMvpHandoffDraft['current_status'],
+): string[] {
+  if (hasTaskCardQaLinkageMismatch(taskCardDraft, qaDraft)) {
+    return [
+      'taskcard_qa_linkage_mismatch: QA draft reviewed_task_id does not match TaskCard draft task_id.',
+    ];
+  }
+
+  if (currentStatus !== 'blocked') {
+    return ['none'];
+  }
+
+  return qaDraft.issues.length > 0
+    ? qaDraft.issues.map((issue) => (
+      `${issue.code}${issue.path ? ` at ${issue.path}` : ''}: ${issue.message}`
+    ))
+    : ['TaskCard draft or QA draft is blocked and requires human review.'];
 }
 
 export function makeCodexAppServerRuntimeMvpInspectionReport(
@@ -725,15 +777,16 @@ export function makeCodexAppServerRuntimeMvpHandoffDraft(
   qaDraft: CodexAppServerRuntimeMvpTaskCardQaDraft,
 ): CodexAppServerRuntimeMvpHandoffDraft {
   const qaIsValid = isValidTaskCardQaDraft(qaDraft);
-  const currentStatus = qaIsValid ? 'waiting_for_human_approval' : 'blocked';
-  const blockers = qaIsValid
-    ? ['none']
-    : qaDraft.issues.map((issue) => (
-      `${issue.code}${issue.path ? ` at ${issue.path}` : ''}: ${issue.message}`
-    ));
-  const qaFinding = qaIsValid
+  const linkageMismatch = hasTaskCardQaLinkageMismatch(taskCardDraft, qaDraft);
+  const currentStatus = chooseHandoffCurrentStatus(taskCardDraft, qaDraft);
+  const blockers = makeHandoffBlockers(taskCardDraft, qaDraft, currentStatus);
+  const qaFinding = linkageMismatch
+    ? 'TaskCard draft and QA draft linkage mismatch detected; the HANDOFF draft is blocked for human review.'
+    : qaIsValid
     ? 'TaskCard QA draft passed all stdout-only, scope, status, autonomy, protected-surface, forbidden-next-step, and restricted-content checks.'
-    : 'TaskCard QA draft is blocked or not fully approved; human review must inspect QA issues before accepting the handoff.';
+    : currentStatus === 'needs_revision'
+      ? 'TaskCard QA draft requires revision; this is not treated as a blocker, but human review must inspect revision issues before accepting the handoff.'
+      : 'TaskCard QA draft is blocked or not fully approved; human review must inspect QA issues before accepting the handoff.';
   const handoffDraft: CodexAppServerRuntimeMvpHandoffDraft = {
     handoff_id: `codex-app-server-runtime-mvp-handoff-${normalizeTaskIdPart(taskCardDraft.task_id)}`,
     handoff_version: TASK_HANDOFF_VERSION,
@@ -752,9 +805,11 @@ export function makeCodexAppServerRuntimeMvpHandoffDraft(
     decisions_made: [...HANDOFF_DRAFT_DECISIONS],
     open_questions: [
       'Should the human owner accept the TaskCard and QA drafts for review, request revision, or archive them?',
-      ...(qaIsValid
+      ...(currentStatus === 'waiting_for_human_approval'
         ? ['Are the referenced contracts sufficient for a later dedicated implementation request?']
-        : ['Which blocking QA issue must be revised before the review artifact can be accepted?']),
+        : currentStatus === 'needs_revision'
+          ? ['Which non-blocking TaskCard revision should be made before the review artifact is accepted?']
+          : ['Which blocking QA issue must be revised before the review artifact can be accepted?']),
     ],
     blockers,
     required_next_action: 'human_review_only',
@@ -774,6 +829,12 @@ export function makeCodexAppServerRuntimeMvpHandoffDraft(
       ...HANDOFF_DRAFT_BASE_RISKS,
       ...taskCardDraft.risks,
       ...qaDraft.residual_risks,
+      ...(currentStatus === 'needs_revision'
+        ? ['TaskCard QA requested revision; reviewers must not treat this HANDOFF draft as approval-ready until the revision is reviewed.']
+        : []),
+      ...(linkageMismatch
+        ? ['TaskCard and QA linkage mismatch prevents approval posture until the referenced records are reconciled.']
+        : []),
     ],
     human_approval_required: true,
     allowed_next_step: 'human_review_only',

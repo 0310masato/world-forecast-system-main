@@ -564,6 +564,138 @@ async function main() {
   assertSafeReportOutput(JSON.stringify(handoffDraft));
   log('Accepted stdout-only HANDOFF draft helper.');
 
+  const revisionTaskCardQaDraft = cloneValue(taskCardQaDraft);
+  revisionTaskCardQaDraft.recommendation = 'revise_task_card';
+  revisionTaskCardQaDraft.checks.stdout_only_check.result = 'revise';
+  revisionTaskCardQaDraft.checks.stdout_only_check.notes =
+    'Synthetic revision fixture for HANDOFF status coverage.';
+  revisionTaskCardQaDraft.issues.push({
+    code: 'synthetic_revision_required',
+    severity: 'revision_required',
+    message: 'Synthetic revision fixture requires TaskCard wording review.',
+  });
+  const revisionHandoffDraft = makeCodexAppServerRuntimeMvpHandoffDraft(
+    taskCardDraft,
+    revisionTaskCardQaDraft,
+  );
+  const revisionHandoffDraftOutput = JSON.stringify(revisionHandoffDraft);
+  assert(
+    revisionHandoffDraft.current_status === 'needs_revision',
+    'revise_task_card QA recommendation must yield needs_revision handoff status.',
+  );
+  assert(
+    revisionHandoffDraft.required_next_action === 'human_review_only',
+    'Revision HANDOFF draft next action must remain human_review_only.',
+  );
+  assert(
+    revisionHandoffDraft.allowed_next_step === 'human_review_only',
+    'Revision HANDOFF draft allowed next step must remain human_review_only.',
+  );
+  assert(
+    revisionHandoffDraft.blockers.includes('none'),
+    'Revision HANDOFF draft must not treat revise_task_card as a blocker.',
+  );
+  assert(
+    revisionHandoffDraft.key_findings.some((finding) => finding.includes('requires revision')),
+    'Revision HANDOFF draft must record revision required in key findings.',
+  );
+  assert(
+    revisionHandoffDraft.open_questions.some((question) => question.includes('non-blocking')),
+    'Revision HANDOFF draft must route revision work through open questions.',
+  );
+  assert(
+    revisionHandoffDraft.risks.some((risk) => risk.includes('requested revision')),
+    'Revision HANDOFF draft must preserve revision risk.',
+  );
+  assert(
+    revisionHandoffDraft.forbidden_next_steps.includes('create_pr'),
+    'Revision HANDOFF draft must not authorize PR creation.',
+  );
+  assert(
+    revisionHandoffDraft.forbidden_next_steps.includes('merge_pr'),
+    'Revision HANDOFF draft must not authorize PR merge.',
+  );
+  assert(
+    revisionHandoffDraft.forbidden_next_steps.includes('db_write'),
+    'Revision HANDOFF draft must not authorize DB writes.',
+  );
+  assert(
+    revisionHandoffDraft.forbidden_next_steps.includes('worker_runtime'),
+    'Revision HANDOFF draft must not authorize worker runtime.',
+  );
+  assert(
+    revisionHandoffDraft.forbidden_next_steps.includes('scheduler_runtime'),
+    'Revision HANDOFF draft must not authorize scheduler runtime.',
+  );
+  assertSafeReportOutput(revisionHandoffDraftOutput);
+  log('Accepted revise_task_card HANDOFF draft handling.');
+
+  const mismatchedTaskCardQaDraft = cloneValue(taskCardQaDraft);
+  const mismatchedReviewedTaskIdFixture = makeEnvFileReference();
+  mismatchedTaskCardQaDraft.reviewed_task_id =
+    `mismatched-task-${mismatchedReviewedTaskIdFixture}`;
+  const mismatchedHandoffDraft = makeCodexAppServerRuntimeMvpHandoffDraft(
+    taskCardDraft,
+    mismatchedTaskCardQaDraft,
+  );
+  const mismatchedHandoffDraftOutput = JSON.stringify(mismatchedHandoffDraft);
+  assert(
+    mismatchedHandoffDraft.current_status === 'blocked',
+    'Mismatched TaskCard/QA linkage must yield blocked handoff status.',
+  );
+  assert(
+    mismatchedHandoffDraft.required_next_action === 'human_review_only',
+    'Mismatched HANDOFF draft next action must remain human_review_only.',
+  );
+  assert(
+    mismatchedHandoffDraft.allowed_next_step === 'human_review_only',
+    'Mismatched HANDOFF draft allowed next step must remain human_review_only.',
+  );
+  assert(
+    mismatchedHandoffDraft.blockers.some((blocker) => (
+      blocker.includes('taskcard_qa_linkage_mismatch')
+    )),
+    'Mismatched HANDOFF draft must include a sanitized linkage blocker.',
+  );
+  assert(
+    mismatchedHandoffDraft.task_id === taskCardDraft.task_id,
+    'Mismatched HANDOFF draft must keep the TaskCard task_id as the handoff task_id.',
+  );
+  assert(
+    !mismatchedHandoffDraftOutput.includes(mismatchedTaskCardQaDraft.reviewed_task_id),
+    'Mismatched HANDOFF draft must not echo the mismatched reviewed_task_id.',
+  );
+  assert(
+    !mismatchedHandoffDraftOutput.includes(mismatchedReviewedTaskIdFixture),
+    'Mismatched HANDOFF draft leaked restricted linkage fixture content.',
+  );
+  assert(
+    mismatchedHandoffDraft.forbidden_next_steps.includes('create_pr'),
+    'Mismatched HANDOFF draft must not authorize PR creation.',
+  );
+  assert(
+    mismatchedHandoffDraft.forbidden_next_steps.includes('merge_pr'),
+    'Mismatched HANDOFF draft must not authorize PR merge.',
+  );
+  assert(
+    mismatchedHandoffDraft.forbidden_next_steps.includes('db_write'),
+    'Mismatched HANDOFF draft must not authorize DB writes.',
+  );
+  assert(
+    mismatchedHandoffDraft.forbidden_next_steps.includes('worker_runtime'),
+    'Mismatched HANDOFF draft must not authorize worker runtime.',
+  );
+  assert(
+    mismatchedHandoffDraft.forbidden_next_steps.includes('scheduler_runtime'),
+    'Mismatched HANDOFF draft must not authorize scheduler runtime.',
+  );
+  assert(
+    mismatchedHandoffDraft.forbidden_next_steps.includes('production_promotion'),
+    'Mismatched HANDOFF draft must not authorize production promotion.',
+  );
+  assertSafeReportOutput(mismatchedHandoffDraftOutput);
+  log('Accepted mismatched TaskCard/QA HANDOFF draft blocking.');
+
   const restrictedTaskCardDraft = cloneValue(taskCardDraft);
   const restrictedTaskCardFixture = makeEnvFileReference();
   restrictedTaskCardDraft.risks.push(`Restricted content fixture ${restrictedTaskCardFixture}`);
