@@ -122,6 +122,11 @@ function makeSlashStyleDrivePathLikeValue(driveLetter) {
   return `${driveLetter}:${String.fromCharCode(47)}tmp${String.fromCharCode(47)}example${String.fromCharCode(47)}file.ts`;
 }
 
+function makeUncPathLikeValue() {
+  const separator = String.fromCharCode(92);
+  return `${separator}${separator}server${separator}share${separator}review-packet.json`;
+}
+
 function assertSafeReportOutput(output) {
   const restrictedPatterns = [
     /\b[A-Z]:\\[^\r\n'"`]+/,
@@ -204,6 +209,7 @@ async function compileCodexAppServerRuntimeHelpers() {
     'lib/codex-app-server-runtime/validation.ts',
     'lib/codex-app-server-runtime/scaffold.ts',
     'lib/codex-app-server-runtime/report.ts',
+    'lib/codex-app-server-runtime/write-dry-run.ts',
   ], {
     cwd: projectRoot,
     encoding: 'utf8',
@@ -250,6 +256,11 @@ async function main() {
   const {
     validateCodexAppServerRuntimeMvpScaffold,
   } = require(path.join(buildDir, 'lib', 'codex-app-server-runtime', 'validation.js'));
+  const {
+    makeTaskBoardHandoffWriteDryRunRequest,
+    runTaskBoardHandoffWriteDryRun,
+    validateTaskBoardHandoffWriteDryRunRequest,
+  } = require(path.join(buildDir, 'lib', 'codex-app-server-runtime', 'write-dry-run.js'));
 
   const boundary = makeCodexAppServerRuntimeMvpBoundary();
   assert(boundary.proposal_only === true, 'Boundary must be proposal-only.');
@@ -658,6 +669,175 @@ async function main() {
   );
   assertSafeReportOutput(reviewPacketOutput);
   log('Accepted stdout-only review packet helper.');
+
+  const dryRunRequest = makeTaskBoardHandoffWriteDryRunRequest({
+    sourcePacket: reviewPacket,
+  });
+  const dryRunValidation =
+    validateTaskBoardHandoffWriteDryRunRequest(dryRunRequest);
+  assert(
+    dryRunValidation.passed === true,
+    'Valid write dry-run request must pass validation.',
+  );
+  assert(
+    dryRunValidation.issues.length === 0,
+    'Valid write dry-run request must have no validation issues.',
+  );
+  const dryRunResult = runTaskBoardHandoffWriteDryRun(dryRunRequest);
+  const dryRunResultOutput = JSON.stringify(dryRunResult);
+  assert(
+    dryRunResult.status === 'dry_run_passed',
+    'Valid write dry-run result must pass.',
+  );
+  assert(
+    dryRunResult.wrote_anything === false,
+    'Write dry-run result must never write anything.',
+  );
+  assert(
+    dryRunResult.validation.passed === true,
+    'Write dry-run result validation must pass.',
+  );
+  assert(
+    dryRunResult.required_next_action === 'human_review_only',
+    'Write dry-run result next action must remain human_review_only.',
+  );
+  assert(
+    dryRunResult.rollback_plan.some((entry) => (
+      entry.includes('No rollback required') && entry.includes('wrote nothing')
+    )),
+    'Write dry-run rollback plan must say no rollback is required because nothing was written.',
+  );
+  assert(
+    dryRunResult.audit_log_entry,
+    'Write dry-run result must include a conceptual audit log entry.',
+  );
+  assert(
+    dryRunResult.audit_log_entry.wrote_anything === false,
+    'Write dry-run audit log entry must record wrote_anything false.',
+  );
+  assert(
+    dryRunResult.target_kind === 'repository_artifact',
+    'Write dry-run target kind must be repository_artifact.',
+  );
+  assert(
+    dryRunResult.target_path_or_target_id === 'docs/generated/codex-app-server-runtime/review-packet.sample.json',
+    'Write dry-run target must be the approved repository-relative example target.',
+  );
+  assert(
+    !dryRunResult.target_path_or_target_id.startsWith('/')
+      && !dryRunResult.target_path_or_target_id.includes('\\')
+      && !dryRunResult.target_path_or_target_id.includes('..'),
+    'Write dry-run target must remain repository-relative.',
+  );
+  assertSafeReportOutput(dryRunResultOutput);
+  log('Accepted Task Board / HANDOFF write dry-run validation helper.');
+
+  const invalidWriteModeRequest = cloneValue(dryRunRequest);
+  invalidWriteModeRequest.write_mode = 'write_after_human_approval';
+  invalidWriteModeRequest.dry_run = false;
+  const invalidWriteModeResult =
+    runTaskBoardHandoffWriteDryRun(invalidWriteModeRequest);
+  assert(
+    invalidWriteModeResult.status === 'blocked',
+    'Write-capable mode must be blocked in PR #44.',
+  );
+  assert(
+    invalidWriteModeResult.wrote_anything === false,
+    'Blocked write-capable mode must not write anything.',
+  );
+  assert(
+    hasIssue(invalidWriteModeResult.validation, 'E_FORBIDDEN_OPERATION'),
+    'Write-capable mode must report E_FORBIDDEN_OPERATION.',
+  );
+  assert(
+    invalidWriteModeResult.required_next_action === 'human_review_only',
+    'Blocked write-capable mode must stop at human_review_only.',
+  );
+  assertSafeReportOutput(JSON.stringify(invalidWriteModeResult));
+  log('Accepted blocked write-capable dry-run mode.');
+
+  const missingIdempotencyRequest = cloneValue(dryRunRequest);
+  delete missingIdempotencyRequest.idempotency_key;
+  const missingIdempotencyResult =
+    runTaskBoardHandoffWriteDryRun(missingIdempotencyRequest);
+  assert(
+    missingIdempotencyResult.status === 'blocked',
+    'Missing idempotency key must be blocked.',
+  );
+  assert(
+    hasIssue(missingIdempotencyResult.validation, 'E_IDEMPOTENCY_MISSING'),
+    'Missing idempotency key must report E_IDEMPOTENCY_MISSING.',
+  );
+  assert(
+    missingIdempotencyResult.wrote_anything === false,
+    'Missing idempotency key must not write anything.',
+  );
+  assertSafeReportOutput(JSON.stringify(missingIdempotencyResult));
+  log('Accepted missing idempotency dry-run blocking.');
+
+  const forbiddenTargets = [
+    ['', 'tmp', 'review-packet.json'].join('/'),
+    ['', 'home', 'user', 'review-packet.json'].join('/'),
+    ['', 'Users', 'user', 'review-packet.json'].join('/'),
+    makeSlashStyleDrivePathLikeValue('C').replace('example/file.ts', 'review-packet.json'),
+    `${String.fromCharCode(67)}:${String.fromCharCode(92)}tmp${String.fromCharCode(92)}review-packet.json`,
+    `${String.fromCharCode(65)}:${String.fromCharCode(47)}AI-System${String.fromCharCode(47)}review-packet.json`,
+    makeUncPathLikeValue(),
+    'http://example.com/review-packet.json',
+    'https://example.com/review-packet.json',
+  ];
+
+  for (const [index, forbiddenTarget] of forbiddenTargets.entries()) {
+    const forbiddenTargetRequest = cloneValue(dryRunRequest);
+    forbiddenTargetRequest.target_path_or_target_id = forbiddenTarget;
+    const forbiddenTargetResult =
+      runTaskBoardHandoffWriteDryRun(forbiddenTargetRequest);
+    const forbiddenTargetOutput = JSON.stringify(forbiddenTargetResult);
+
+    assert(
+      forbiddenTargetResult.status === 'blocked',
+      `Forbidden dry-run target ${index} must be blocked.`,
+    );
+    assert(
+      hasIssue(forbiddenTargetResult.validation, 'E_TARGET_NOT_ALLOWED'),
+      `Forbidden dry-run target ${index} must report E_TARGET_NOT_ALLOWED.`,
+    );
+    assert(
+      forbiddenTargetResult.wrote_anything === false,
+      `Forbidden dry-run target ${index} must not write anything.`,
+    );
+    assert(
+      !forbiddenTargetOutput.includes(forbiddenTarget),
+      `Forbidden dry-run target ${index} leaked the raw target.`,
+    );
+    assertSafeReportOutput(forbiddenTargetOutput);
+  }
+  log('Accepted forbidden dry-run target blocking.');
+
+  const restrictedOwnerRequest = cloneValue(dryRunRequest);
+  const restrictedOwnerFixture = makeSecretLikeValue();
+  restrictedOwnerRequest.human_owner = restrictedOwnerFixture;
+  const restrictedOwnerResult =
+    runTaskBoardHandoffWriteDryRun(restrictedOwnerRequest);
+  const restrictedOwnerOutput = JSON.stringify(restrictedOwnerResult);
+  assert(
+    restrictedOwnerResult.status === 'blocked',
+    'Restricted dry-run owner content must be blocked.',
+  );
+  assert(
+    hasIssue(restrictedOwnerResult.validation, 'E_RESTRICTED_CONTENT'),
+    'Restricted dry-run owner content must report E_RESTRICTED_CONTENT.',
+  );
+  assert(
+    !restrictedOwnerOutput.includes(restrictedOwnerFixture),
+    'Restricted dry-run owner output leaked the raw fixture.',
+  );
+  assert(
+    restrictedOwnerResult.wrote_anything === false,
+    'Restricted dry-run owner content must not write anything.',
+  );
+  assertSafeReportOutput(restrictedOwnerOutput);
+  log('Accepted restricted dry-run content blocking.');
 
   const revisionTaskCardQaDraft = cloneValue(taskCardQaDraft);
   revisionTaskCardQaDraft.recommendation = 'revise_task_card';
@@ -1557,6 +1737,47 @@ async function main() {
   assert(packetScriptJson.handoff, 'Review packet script output must include handoff.');
   assertPacketForbidsRequiredOperations(packetScriptJson, 'Review packet script output');
   log('Accepted stdout-only review packet script output.');
+
+  const writeDryRunScriptResult = spawnSync(process.execPath, [
+    'scripts/codex-app-server-runtime-write-dry-run.mjs',
+  ], {
+    cwd: projectRoot,
+    encoding: 'utf8',
+    stdio: ['ignore', 'pipe', 'pipe'],
+    windowsHide: true,
+  });
+  if (writeDryRunScriptResult.status !== 0) {
+    throw new Error([
+      'Codex App Server runtime write dry-run script failed.',
+      sanitize(writeDryRunScriptResult.stdout),
+      sanitize(writeDryRunScriptResult.stderr),
+    ].filter(Boolean).join('\n'));
+  }
+
+  assert(
+    writeDryRunScriptResult.stderr.trim().length === 0,
+    'Write dry-run script must write JSON to stdout without stderr output.',
+  );
+  const writeDryRunScriptOutput = writeDryRunScriptResult.stdout.trim();
+  assertSafeReportOutput(writeDryRunScriptOutput);
+  const writeDryRunScriptJson = JSON.parse(writeDryRunScriptOutput);
+  assert(
+    writeDryRunScriptJson.status === 'dry_run_passed',
+    'Write dry-run script output must pass.',
+  );
+  assert(
+    writeDryRunScriptJson.wrote_anything === false,
+    'Write dry-run script output must never write anything.',
+  );
+  assert(
+    writeDryRunScriptJson.required_next_action === 'human_review_only',
+    'Write dry-run script output must stop at human_review_only.',
+  );
+  assert(
+    writeDryRunScriptJson.validation.passed === true,
+    'Write dry-run script output validation must pass.',
+  );
+  log('Accepted stdout-only write dry-run script output.');
 
   log('Codex App Server runtime MVP scaffold smoke checks passed.');
 }
