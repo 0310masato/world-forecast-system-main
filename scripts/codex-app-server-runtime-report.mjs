@@ -161,6 +161,8 @@ function loadRuntimeReportHelpers() {
   return {
     makeCodexAppServerRuntimeMvpInspectionReport:
       reportModule.makeCodexAppServerRuntimeMvpInspectionReport,
+    makeCodexAppServerRuntimeMvpHandoffDraft:
+      reportModule.makeCodexAppServerRuntimeMvpHandoffDraft,
     makeCodexAppServerRuntimeMvpOperatorSummary:
       reportModule.makeCodexAppServerRuntimeMvpOperatorSummary,
     makeCodexAppServerRuntimeMvpTaskCardDraft:
@@ -175,6 +177,7 @@ function loadRuntimeReportHelpers() {
 try {
   const {
     makeCodexAppServerRuntimeMvpInspectionReport,
+    makeCodexAppServerRuntimeMvpHandoffDraft,
     makeCodexAppServerRuntimeMvpOperatorSummary,
     makeCodexAppServerRuntimeMvpTaskCardDraft,
     makeCodexAppServerRuntimeMvpTaskCardQaDraft,
@@ -184,22 +187,28 @@ try {
   const outputSummary = args.length === 1 && args[0] === '--summary';
   const outputTaskCard = args.length === 1 && args[0] === '--taskcard';
   const outputTaskCardQa = args.length === 1 && args[0] === '--taskcard-qa';
+  const outputHandoff = args.length === 1 && args[0] === '--handoff';
 
-  if (args.length > 0 && !outputSummary && !outputTaskCard && !outputTaskCardQa) {
-    throw new Error('Usage: node scripts/codex-app-server-runtime-report.mjs [--summary|--taskcard|--taskcard-qa]');
+  if (args.length > 0 && !outputSummary && !outputTaskCard && !outputTaskCardQa && !outputHandoff) {
+    throw new Error('Usage: node scripts/codex-app-server-runtime-report.mjs [--summary|--taskcard|--taskcard-qa|--handoff]');
   }
 
   const scaffold = makeCodexAppServerRuntimeMvpScaffold();
   const report = makeCodexAppServerRuntimeMvpInspectionReport(scaffold);
   const summary = makeCodexAppServerRuntimeMvpOperatorSummary(report);
   const taskCardDraft = makeCodexAppServerRuntimeMvpTaskCardDraft(summary);
-  const outputValue = outputTaskCardQa
-    ? makeCodexAppServerRuntimeMvpTaskCardQaDraft(taskCardDraft)
-    : outputTaskCard
-      ? taskCardDraft
-      : outputSummary
-        ? summary
-        : report;
+  let outputValue = report;
+
+  if (outputSummary) {
+    outputValue = summary;
+  } else if (outputTaskCard) {
+    outputValue = taskCardDraft;
+  } else if (outputTaskCardQa || outputHandoff) {
+    const taskCardQaDraft = makeCodexAppServerRuntimeMvpTaskCardQaDraft(taskCardDraft);
+    outputValue = outputHandoff
+      ? makeCodexAppServerRuntimeMvpHandoffDraft(taskCardDraft, taskCardQaDraft)
+      : taskCardQaDraft;
+  }
   const output = JSON.stringify(outputValue, null, 2);
 
   assertSafeOutput(output);

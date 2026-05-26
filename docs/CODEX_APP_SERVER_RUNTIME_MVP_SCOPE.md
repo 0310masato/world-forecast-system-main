@@ -305,6 +305,21 @@ Optional checks if the implementation adds a smoke script:
 
 The next PR must not add a `package.json` script for the smoke test.
 
+For stdout-only runtime review artifacts layered on top of the MVP scaffold,
+the report script may also be checked with:
+
+- `node scripts/codex-app-server-runtime-report.mjs`
+- `node scripts/codex-app-server-runtime-report.mjs --summary`
+- `node scripts/codex-app-server-runtime-report.mjs --taskcard`
+- `node scripts/codex-app-server-runtime-report.mjs --taskcard-qa`
+- `node scripts/codex-app-server-runtime-report.mjs --handoff`
+
+These outputs must remain stdout-only review material. They must not write to
+the Task Board, create a HANDOFF file, automate file writes, connect to APIs or
+DB, add worker or scheduler runtime, call external services, change package or
+CI configuration, create PRs or issues, execute AI jobs, deploy, publish
+externally, or promote proposal data to production.
+
 ## Acceptance Criteria For Next Implementation PR
 
 The next implementation PR is acceptable only if:
@@ -317,6 +332,9 @@ The next implementation PR is acceptable only if:
 - the scaffold is disabled by default
 - the scaffold is local-only and non-production
 - proposal-only and human-review-only boundaries are represented in code
+- stdout-only TaskCard, QA, and HANDOFF drafts keep
+  `required_next_action` / `allowed_next_step` limited to `human_review_only`
+  and require human approval
 - restricted content is rejected or explicitly blocked by validation
 - test or smoke output does not expose local paths, NAS paths, private network
   details, secrets, real operational data, or production logs

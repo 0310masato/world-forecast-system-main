@@ -62,6 +62,12 @@ Codex App Server Runtime MVP Scaffold v0 は、PR #35 の allowed surface 内で
 local-only、proposal-only、non-production、人間承認必須の metadata と validation
 だけを提供します。enabled runtime、API/DB 接続、worker/scheduler 実行、外部 API
 連携、package/CI 変更、automation、production 昇格は追加しません。
+Codex App Server Runtime read-only stdout report layer は、その scaffold から
+read-only inspection report、operator summary、TaskCard draft、TaskCard QA draft、
+HANDOFF draft を stdout に出すだけの review-material layer です。Task Board write、
+HANDOFF file creation、file-writing automation、API/DB/worker/scheduler、
+external integration、package/CI、GitHub automation、AI job execution、
+production promotion は追加しません。
 これらはいずれも正本契約や実行許可ではありません。
 
 1. Memory Layer
@@ -80,6 +86,7 @@ local-only、proposal-only、non-production、人間承認必須の metadata と
 14. Codex App Server Runtime Design PR Readiness Review Example v0
 15. Codex App Server Runtime MVP Scope v0
 16. Codex App Server Runtime MVP Scaffold v0
+17. Codex App Server Runtime read-only stdout report layer
 
 矢印で表すと、次の流れです。
 
@@ -100,6 +107,7 @@ Memory Layer
 -> Codex App Server Runtime Design PR Readiness Review Example v0
 -> Codex App Server Runtime MVP Scope v0
 -> Codex App Server Runtime MVP Scaffold v0
+-> Codex App Server Runtime read-only stdout report layer
 ```
 
 各レイヤーは前段を上書きしません。後段の docs や template は、
@@ -135,6 +143,10 @@ forbidden operations、protected path boundary を維持して使います。
 | #34 | Runtime Design PR Readiness Review Example v0 | `docs/examples/CODEX_APP_SERVER_RUNTIME_DESIGN_PR_READINESS_REVIEW_EXAMPLE.md` による sanitized filled readiness review example | いいえ。example record のみ | いいえ。実行 runtime、DB/API/worker/scheduler/Codex App Server runtime/package/CI/automation は未導入 | PR #33 の readiness review template を instruction-drafting readiness only の記入例として示す |
 | #35 | Codex App Server Runtime MVP Scope v0 | `docs/CODEX_APP_SERVER_RUNTIME_MVP_SCOPE.md` による next implementation PR の allowed files、forbidden files、test plan、rollback / disable plan、review gate | いいえ。docs-only scope document のみ | いいえ。実行 runtime、DB/API/worker/scheduler/Codex App Server runtime/package/CI/automation は未導入 | 次 PR で disabled-by-default / non-production / proposal-only の MVP scaffold を安全に実装するための範囲を定義する |
 | #36 | Codex App Server Runtime MVP Scaffold v0 | `lib/codex-app-server-runtime/types.ts`、`validation.ts`、`scaffold.ts`、`scripts/codex-app-server-runtime-smoke.mjs` による isolated disabled scaffold | いいえ。enabled runtime は未導入。disabled-by-default scaffold metadata と validation のみ | いいえ。DB/API/worker/scheduler/package/CI/automation は未導入 | PR #35 の allowed surface 内で local-only / proposal-only / non-production scaffold を表現する |
+| #37 | Codex App Server Runtime read-only report v0 | `lib/codex-app-server-runtime/report.ts` と `scripts/codex-app-server-runtime-report.mjs` による stdout-only inspection report | いいえ。read-only report のみ | いいえ。DB/API/worker/scheduler/package/CI/automation は未導入 | PR #36 の scaffold を人間レビュー用 JSON に整える |
+| #38 | Codex App Server Runtime operator summary v0 | stdout-only operator summary helper と report script `--summary` | いいえ。summary のみ | いいえ。DB/API/worker/scheduler/package/CI/automation は未導入 | read-only report を短い human-review summary にする |
+| #39 | Codex App Server Runtime TaskCard draft stdout v0 | stdout-only TaskCard draft helper と report script `--taskcard` | いいえ。draft 出力のみ | いいえ。Task Board write、DB/API/worker/scheduler/package/CI/automation は未導入 | operator summary を Task Board review material に接続する |
+| #40 | Codex App Server Runtime TaskCard QA draft stdout v0 | stdout-only TaskCard QA draft helper と report script `--taskcard-qa` | いいえ。QA draft 出力のみ | いいえ。Task Board write、DB/API/worker/scheduler/package/CI/automation は未導入 | TaskCard draft を human-review-only QA material として点検する |
 
 ## Docs / Templates 用途表
 
