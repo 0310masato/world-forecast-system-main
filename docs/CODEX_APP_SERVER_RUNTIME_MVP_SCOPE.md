@@ -328,6 +328,12 @@ docs-only. It defines the future write boundary and does not authorize or add
 write implementation, Task Board write, HANDOFF file creation, API, DB, worker,
 scheduler, package, CI, automation, or production promotion.
 
+PR #44 adds stdout-only dry-run validation for that boundary. PR #45 adds a
+stdout-only approval request draft generated from the dry-run result. The
+approval request draft does not approve anything, writes nothing, creates no
+Task Board record or HANDOFF file, and does not add file-writing automation,
+API, DB, worker, scheduler, package, CI, automation, or production promotion.
+
 ## Acceptance Criteria For Next Implementation PR
 
 The next implementation PR is acceptable only if:
