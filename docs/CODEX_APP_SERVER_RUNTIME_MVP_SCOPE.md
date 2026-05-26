@@ -313,12 +313,20 @@ the report script may also be checked with:
 - `node scripts/codex-app-server-runtime-report.mjs --taskcard`
 - `node scripts/codex-app-server-runtime-report.mjs --taskcard-qa`
 - `node scripts/codex-app-server-runtime-report.mjs --handoff`
+- `node scripts/codex-app-server-runtime-report.mjs --packet`
 
 These outputs must remain stdout-only review material. They must not write to
 the Task Board, create a HANDOFF file, automate file writes, connect to APIs or
 DB, add worker or scheduler runtime, call external services, change package or
 CI configuration, create PRs or issues, execute AI jobs, deploy, publish
 externally, or promote proposal data to production.
+
+After the stdout-only review packet, any move toward Task Board, HANDOFF, or
+repository artifact persistence must pass through
+`docs/tool-contracts/TASK_BOARD_HANDOFF_WRITE_TOOL_CONTRACT.md`. PR #43 is
+docs-only. It defines the future write boundary and does not authorize or add
+write implementation, Task Board write, HANDOFF file creation, API, DB, worker,
+scheduler, package, CI, automation, or production promotion.
 
 ## Acceptance Criteria For Next Implementation PR
 

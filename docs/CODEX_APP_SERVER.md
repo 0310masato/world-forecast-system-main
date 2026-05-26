@@ -236,3 +236,16 @@ connections, does not start a worker or scheduler, does not add external
 integration, does not change package or CI configuration, does not automate
 file writes or GitHub actions, does not execute AI jobs, and does not promote
 anything to production.
+
+## Runtime Review Packet And Write Gate
+
+The stdout-only runtime review packet may collect the read-only report,
+operator summary, TaskCard draft, TaskCard QA draft, and HANDOFF draft into one
+human-review-only packet. The packet is still review material only.
+
+`docs/tool-contracts/TASK_BOARD_HANDOFF_WRITE_TOOL_CONTRACT.md` is the gate
+before any future persistence or write implementation for Task Board, HANDOFF,
+QA report, or repository artifact targets. That Tool Contract is docs-only and
+does not authorize implementation, Task Board write, HANDOFF file creation,
+API, DB, worker, scheduler, package, CI, automation, AI job execution, or
+production promotion.

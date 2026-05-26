@@ -64,10 +64,15 @@ local-only、proposal-only、non-production、人間承認必須の metadata と
 連携、package/CI 変更、automation、production 昇格は追加しません。
 Codex App Server Runtime read-only stdout report layer は、その scaffold から
 read-only inspection report、operator summary、TaskCard draft、TaskCard QA draft、
-PR #41 の HANDOFF draft を stdout に出すだけの review-material layer です。Task Board write、
+PR #41 の HANDOFF draft、PR #42 の review packet を stdout に出すだけの review-material layer です。Task Board write、
 HANDOFF file creation、file-writing automation、API/DB/worker/scheduler、
 external integration、package/CI、GitHub automation、AI job execution、
 production promotion は追加しません。
+Task Board / HANDOFF Write Tool Contract v0 は、その stdout-only review
+packet の後で将来の persistence / write を検討する前に読む docs-only gate です。
+approval、validation、audit、rollback、forbidden operations を定義しますが、
+write implementation、Task Board write、HANDOFF file creation、API、DB、worker、
+scheduler、package、CI、automation、production promotion は追加しません。
 これらはいずれも正本契約や実行許可ではありません。
 
 1. Memory Layer
@@ -87,6 +92,7 @@ production promotion は追加しません。
 15. Codex App Server Runtime MVP Scope v0
 16. Codex App Server Runtime MVP Scaffold v0
 17. Codex App Server Runtime read-only stdout report layer
+18. Task Board / HANDOFF Write Tool Contract v0
 
 矢印で表すと、次の流れです。
 
@@ -108,6 +114,7 @@ Memory Layer
 -> Codex App Server Runtime MVP Scope v0
 -> Codex App Server Runtime MVP Scaffold v0
 -> Codex App Server Runtime read-only stdout report layer
+-> Task Board / HANDOFF Write Tool Contract v0
 ```
 
 各レイヤーは前段を上書きしません。後段の docs や template は、
@@ -148,19 +155,22 @@ forbidden operations、protected path boundary を維持して使います。
 | #39 | Codex App Server Runtime TaskCard draft stdout v0 | stdout-only TaskCard draft helper と report script `--taskcard` | いいえ。draft 出力のみ | いいえ。Task Board write、DB/API/worker/scheduler/package/CI/automation は未導入 | operator summary を Task Board review material に接続する |
 | #40 | Codex App Server Runtime TaskCard QA draft stdout v0 | stdout-only TaskCard QA draft helper と report script `--taskcard-qa` | いいえ。QA draft 出力のみ | いいえ。Task Board write、DB/API/worker/scheduler/package/CI/automation は未導入 | TaskCard draft を human-review-only QA material として点検する |
 | #41 | Codex App Server Runtime HANDOFF draft stdout v0 | `lib/codex-app-server-runtime/report.ts` と `scripts/codex-app-server-runtime-report.mjs --handoff` による stdout-only HANDOFF draft | いいえ。stdout-only HANDOFF draft のみで、実装済み runtime は未導入 | いいえ。Task Board write、HANDOFF file creation、file-writing automation、API/DB/worker/scheduler、external integration、GitHub automation、AI job execution、production promotion は未導入。package/CI 変更も未導入 | TaskCard draft / QA draft を human-review-only HANDOFF draft にまとめる |
+| #42 | Codex App Server Runtime review packet stdout v0 | stdout-only review packet helper と report script `--packet` | いいえ。review packet 出力のみ | いいえ。Task Board write、HANDOFF file creation、file-writing automation、API/DB/worker/scheduler、external integration、GitHub automation、AI job execution、production promotion は未導入。package/CI 変更も未導入 | report、summary、TaskCard draft、QA draft、HANDOFF draft を human-review-only packet にまとめる |
+| #43 | Task Board / HANDOFF Write Tool Contract v0 | `docs/tool-contracts/TASK_BOARD_HANDOFF_WRITE_TOOL_CONTRACT.md` による future write/persistence 前の approval、validation、audit、rollback、forbidden-operation boundary | いいえ。docs-only contract のみ | いいえ。Task Board write、HANDOFF file creation、API、DB、worker、scheduler、package、CI、automation、production promotion は未実装のまま | stdout-only review packet から将来の persistence に進む前の gate を定義する。write implementation は別 PR と明示承認が必要 |
 
 ## Docs / Templates 用途表
 
 | ドキュメント名 | 主な読者 | 使う場面 | 正本として扱う内容 | 使ってはいけない用途 |
 | --- | --- | --- | --- | --- |
 | `AGENTS.md` | CodexApp Worker、AI worker、human reviewer | リポジトリ内で作業を始める前 | protected core、human approval、Codex App Server policy、Task Board / Handoff boundary、routine boundary | runtime/API/DB/automation の実装許可として扱わない |
-| `docs/CONTRACTS_INDEX.md` | 全読者 | 契約・運用 docs の入口を確認するとき | PR #12-#36 の地図、読む順番、用途、未導入領域、停止条件 | 実行、PR 作成、file-writing automation、production apply の許可として扱わない |
+| `docs/CONTRACTS_INDEX.md` | 全読者 | 契約・運用 docs の入口を確認するとき | PR #12-#43 の地図、読む順番、用途、未導入領域、停止条件 | 実行、PR 作成、file-writing automation、production apply の許可として扱わない |
 | `docs/CONTEXT_PACKS.md` | AI Analysis Reviewer、CodexApp Worker | AI 分析に渡す context pack の入力境界を確認するとき | context pack の定義、allowed/excluded inputs、sanitization、versioning | secrets、raw local path、production write instruction、live source of record を入れる根拠にしない |
 | `docs/AI_ANALYSIS_JOBS.md` | AI Analysis Reviewer、CodexApp Worker | AI job の allowed/forbidden scope、intake、result contract を確認するとき | AI job の proposal-only 入出力、preflight、result contract、人間レビュー前提 | AI job 実行処理、prompt execution、worker runtime、storage path の仕様として扱わない |
 | `docs/HUMAN_APPROVAL.md` | Human Owner、AI Analysis Reviewer、Risk / Safety Reviewer | AI output を承認、却下、revision、archive する境界を確認するとき | approval principle、decision outcome、implementation proposal への接続 | approval を production apply、deploy、DB write、API update の自動許可にしない |
 | `docs/CODEX_APP_SERVER.md` | Future Runtime Designer、Risk / Safety Reviewer | Codex App Server の sidecar boundary を確認するとき | future Codex App Server の allowed/forbidden responsibilities と prerequisite | runtime 実装設計の十分条件として扱わない |
 | `docs/CODEX_APP_SERVER_RUNTIME_INTAKE.md` | Future Runtime Designer、Human Owner、Risk / Safety Reviewer | Codex App Server runtime design PR instructions の前にユーザー提供資料と停止条件を確認するとき | intake decision、required materials、required design/test/rollback inputs、protected core boundary | runtime 実装、worker、scheduler、API/DB 接続、external integration、automation、production 昇格の許可として扱わない |
 | `docs/CODEX_APP_SERVER_RUNTIME_MVP_SCOPE.md` | Future Runtime Designer、Human Owner、QA Reviewer、Risk / Safety Reviewer | MVP scaffold implementation PR の具体的な allowed surface、non-goals、test plan、rollback / disable plan、review gate を確認するとき | disabled-by-default / non-production / proposal-only MVP scaffold の target files、forbidden files、acceptance criteria、stop conditions | enabled runtime、API/DB 接続、worker/scheduler 実行、package/CI 変更、automation、production 昇格の許可として扱わない |
+| `docs/tool-contracts/TASK_BOARD_HANDOFF_WRITE_TOOL_CONTRACT.md` | Future Runtime Designer、Human Owner、QA Reviewer、Risk / Safety Reviewer | stdout-only review packet の後で将来の Task Board / HANDOFF write boundary を確認するとき | approval、input/output schema、validation、audit、rollback、disable、forbidden operations、review gates | write implementation、Task Board write、HANDOFF file creation、API/DB/worker/scheduler/package/CI/automation、production 昇格の許可として扱わない |
 | `docs/TASK_BOARD_HANDOFF.md` | CodexApp Worker、QA Reviewer、Human Owner | TaskCard / Handoff を作る、読む、QA するとき | status、autonomy、allowed next step、forbidden next steps、protected intended files | TaskCard を実行命令、PR 作成命令、merge/deploy 許可として扱わない |
 | `docs/AGENT_CHARTER_OPERATIONS_RUNBOOK.md` | CodexApp Worker、AI worker、Human Owner | CodexApp への日本語 request や review support を作るとき | 日本語指示書ルール、A0-A2 autonomy、開始前 gate、停止条件 | CodexApp Server runtime、worker、scheduler、file-writing automation の導入許可として扱わない |
 | `docs/OPERATIONS_ROUTINES.md` | Human Owner、CodexApp Worker、QA Reviewer | morning/weekly/nightly/blocker/audit reports を使い分けるとき | routine template の用途、human approval line、forbidden operations | routine runner、scheduler、worker runtime、自動書き込みの仕様として扱わない |
