@@ -202,6 +202,7 @@ async function main() {
     makeCodexAppServerRuntimeMvpBoundary,
   } = require(path.join(buildDir, 'lib', 'codex-app-server-runtime', 'scaffold.js'));
   const {
+    makeCodexAppServerRuntimeMvpHandoffDraft,
     makeCodexAppServerRuntimeMvpInspectionReport,
     makeCodexAppServerRuntimeMvpOperatorSummary,
     makeCodexAppServerRuntimeMvpTaskCardDraft,
@@ -471,6 +472,230 @@ async function main() {
   assertSafeReportOutput(JSON.stringify(taskCardQaDraft));
   log('Accepted stdout-only TaskCard QA draft helper.');
 
+  const handoffDraft = makeCodexAppServerRuntimeMvpHandoffDraft(
+    taskCardDraft,
+    taskCardQaDraft,
+  );
+  assert(
+    handoffDraft.handoff_id === 'codex-app-server-runtime-mvp-handoff-codex-app-server-runtime-mvp-taskcard-draft-codex-app-server-runtime-mvp-scaffold-v0',
+    'HANDOFF draft must derive a deterministic handoff_id from the reviewed task id.',
+  );
+  assert(handoffDraft.handoff_version === 1, 'HANDOFF draft version must be 1.');
+  assert(
+    handoffDraft.source_role === 'codex_app_server_runtime_reporter',
+    'HANDOFF draft source role must identify the runtime reporter.',
+  );
+  assert(
+    handoffDraft.target_role === 'human_owner',
+    'HANDOFF draft target role must be human_owner.',
+  );
+  assert(
+    handoffDraft.task_id === taskCardDraft.task_id,
+    'HANDOFF draft must reference the TaskCard draft task id.',
+  );
+  assert(
+    handoffDraft.current_status === 'waiting_for_human_approval',
+    'Valid TaskCard QA draft must yield waiting_for_human_approval handoff status.',
+  );
+  assert(
+    handoffDraft.required_next_action === 'human_review_only',
+    'HANDOFF draft required next action must remain human_review_only.',
+  );
+  assert(
+    handoffDraft.allowed_next_step === 'human_review_only',
+    'HANDOFF draft allowed next step must remain human_review_only.',
+  );
+  assert(
+    handoffDraft.human_approval_required === true,
+    'HANDOFF draft must require human approval.',
+  );
+  assert(
+    handoffDraft.outputs_produced.includes('stdout-only HANDOFF draft JSON'),
+    'HANDOFF draft must identify stdout-only JSON output.',
+  );
+  assert(
+    handoffDraft.outputs_produced.includes('no HANDOFF file created'),
+    'HANDOFF draft must state that no HANDOFF file is created.',
+  );
+  assert(
+    handoffDraft.outputs_produced.includes('no Task Board write performed'),
+    'HANDOFF draft must state that no Task Board write is performed.',
+  );
+  assert(
+    handoffDraft.forbidden_next_steps.includes('create_pr'),
+    'HANDOFF draft must not authorize PR creation.',
+  );
+  assert(
+    handoffDraft.forbidden_next_steps.includes('merge_pr'),
+    'HANDOFF draft must not authorize PR merge.',
+  );
+  assert(
+    handoffDraft.forbidden_next_steps.includes('direct_deploy'),
+    'HANDOFF draft must not authorize deploy.',
+  );
+  assert(
+    handoffDraft.forbidden_next_steps.includes('production_write'),
+    'HANDOFF draft must not authorize production writes.',
+  );
+  assert(
+    handoffDraft.forbidden_next_steps.includes('api_forecast_update'),
+    'HANDOFF draft must not authorize forecast API updates.',
+  );
+  assert(
+    handoffDraft.forbidden_next_steps.includes('api_hormuz_update'),
+    'HANDOFF draft must not authorize Hormuz API updates.',
+  );
+  assert(
+    handoffDraft.forbidden_next_steps.includes('db_write'),
+    'HANDOFF draft must not authorize DB writes.',
+  );
+  assert(
+    handoffDraft.forbidden_next_steps.includes('worker_runtime'),
+    'HANDOFF draft must not authorize worker runtime.',
+  );
+  assert(
+    handoffDraft.forbidden_next_steps.includes('scheduler_runtime'),
+    'HANDOFF draft must not authorize scheduler runtime.',
+  );
+  assert(
+    handoffDraft.references.includes('docs/templates/HANDOFF_TEMPLATE.md'),
+    'HANDOFF draft must cite the Handoff template.',
+  );
+  assertSafeReportOutput(JSON.stringify(handoffDraft));
+  log('Accepted stdout-only HANDOFF draft helper.');
+
+  const revisionTaskCardQaDraft = cloneValue(taskCardQaDraft);
+  revisionTaskCardQaDraft.recommendation = 'revise_task_card';
+  revisionTaskCardQaDraft.checks.stdout_only_check.result = 'revise';
+  revisionTaskCardQaDraft.checks.stdout_only_check.notes =
+    'Synthetic revision fixture for HANDOFF status coverage.';
+  revisionTaskCardQaDraft.issues.push({
+    code: 'synthetic_revision_required',
+    severity: 'revision_required',
+    message: 'Synthetic revision fixture requires TaskCard wording review.',
+  });
+  const revisionHandoffDraft = makeCodexAppServerRuntimeMvpHandoffDraft(
+    taskCardDraft,
+    revisionTaskCardQaDraft,
+  );
+  const revisionHandoffDraftOutput = JSON.stringify(revisionHandoffDraft);
+  assert(
+    revisionHandoffDraft.current_status === 'needs_revision',
+    'revise_task_card QA recommendation must yield needs_revision handoff status.',
+  );
+  assert(
+    revisionHandoffDraft.required_next_action === 'human_review_only',
+    'Revision HANDOFF draft next action must remain human_review_only.',
+  );
+  assert(
+    revisionHandoffDraft.allowed_next_step === 'human_review_only',
+    'Revision HANDOFF draft allowed next step must remain human_review_only.',
+  );
+  assert(
+    revisionHandoffDraft.blockers.includes('none'),
+    'Revision HANDOFF draft must not treat revise_task_card as a blocker.',
+  );
+  assert(
+    revisionHandoffDraft.key_findings.some((finding) => finding.includes('requires revision')),
+    'Revision HANDOFF draft must record revision required in key findings.',
+  );
+  assert(
+    revisionHandoffDraft.open_questions.some((question) => question.includes('non-blocking')),
+    'Revision HANDOFF draft must route revision work through open questions.',
+  );
+  assert(
+    revisionHandoffDraft.risks.some((risk) => risk.includes('requested revision')),
+    'Revision HANDOFF draft must preserve revision risk.',
+  );
+  assert(
+    revisionHandoffDraft.forbidden_next_steps.includes('create_pr'),
+    'Revision HANDOFF draft must not authorize PR creation.',
+  );
+  assert(
+    revisionHandoffDraft.forbidden_next_steps.includes('merge_pr'),
+    'Revision HANDOFF draft must not authorize PR merge.',
+  );
+  assert(
+    revisionHandoffDraft.forbidden_next_steps.includes('db_write'),
+    'Revision HANDOFF draft must not authorize DB writes.',
+  );
+  assert(
+    revisionHandoffDraft.forbidden_next_steps.includes('worker_runtime'),
+    'Revision HANDOFF draft must not authorize worker runtime.',
+  );
+  assert(
+    revisionHandoffDraft.forbidden_next_steps.includes('scheduler_runtime'),
+    'Revision HANDOFF draft must not authorize scheduler runtime.',
+  );
+  assertSafeReportOutput(revisionHandoffDraftOutput);
+  log('Accepted revise_task_card HANDOFF draft handling.');
+
+  const mismatchedTaskCardQaDraft = cloneValue(taskCardQaDraft);
+  const mismatchedReviewedTaskIdFixture = makeEnvFileReference();
+  mismatchedTaskCardQaDraft.reviewed_task_id =
+    `mismatched-task-${mismatchedReviewedTaskIdFixture}`;
+  const mismatchedHandoffDraft = makeCodexAppServerRuntimeMvpHandoffDraft(
+    taskCardDraft,
+    mismatchedTaskCardQaDraft,
+  );
+  const mismatchedHandoffDraftOutput = JSON.stringify(mismatchedHandoffDraft);
+  assert(
+    mismatchedHandoffDraft.current_status === 'blocked',
+    'Mismatched TaskCard/QA linkage must yield blocked handoff status.',
+  );
+  assert(
+    mismatchedHandoffDraft.required_next_action === 'human_review_only',
+    'Mismatched HANDOFF draft next action must remain human_review_only.',
+  );
+  assert(
+    mismatchedHandoffDraft.allowed_next_step === 'human_review_only',
+    'Mismatched HANDOFF draft allowed next step must remain human_review_only.',
+  );
+  assert(
+    mismatchedHandoffDraft.blockers.some((blocker) => (
+      blocker.includes('taskcard_qa_linkage_mismatch')
+    )),
+    'Mismatched HANDOFF draft must include a sanitized linkage blocker.',
+  );
+  assert(
+    mismatchedHandoffDraft.task_id === taskCardDraft.task_id,
+    'Mismatched HANDOFF draft must keep the TaskCard task_id as the handoff task_id.',
+  );
+  assert(
+    !mismatchedHandoffDraftOutput.includes(mismatchedTaskCardQaDraft.reviewed_task_id),
+    'Mismatched HANDOFF draft must not echo the mismatched reviewed_task_id.',
+  );
+  assert(
+    !mismatchedHandoffDraftOutput.includes(mismatchedReviewedTaskIdFixture),
+    'Mismatched HANDOFF draft leaked restricted linkage fixture content.',
+  );
+  assert(
+    mismatchedHandoffDraft.forbidden_next_steps.includes('create_pr'),
+    'Mismatched HANDOFF draft must not authorize PR creation.',
+  );
+  assert(
+    mismatchedHandoffDraft.forbidden_next_steps.includes('merge_pr'),
+    'Mismatched HANDOFF draft must not authorize PR merge.',
+  );
+  assert(
+    mismatchedHandoffDraft.forbidden_next_steps.includes('db_write'),
+    'Mismatched HANDOFF draft must not authorize DB writes.',
+  );
+  assert(
+    mismatchedHandoffDraft.forbidden_next_steps.includes('worker_runtime'),
+    'Mismatched HANDOFF draft must not authorize worker runtime.',
+  );
+  assert(
+    mismatchedHandoffDraft.forbidden_next_steps.includes('scheduler_runtime'),
+    'Mismatched HANDOFF draft must not authorize scheduler runtime.',
+  );
+  assert(
+    mismatchedHandoffDraft.forbidden_next_steps.includes('production_promotion'),
+    'Mismatched HANDOFF draft must not authorize production promotion.',
+  );
+  assertSafeReportOutput(mismatchedHandoffDraftOutput);
+  log('Accepted mismatched TaskCard/QA HANDOFF draft blocking.');
+
   const restrictedTaskCardDraft = cloneValue(taskCardDraft);
   const restrictedTaskCardFixture = makeEnvFileReference();
   restrictedTaskCardDraft.risks.push(`Restricted content fixture ${restrictedTaskCardFixture}`);
@@ -706,6 +931,47 @@ async function main() {
     unsafeTaskCardQaDraft.forbidden_next_steps.includes('production_promotion'),
     'Blocked TaskCard QA draft must not authorize production promotion.',
   );
+  const unsafeHandoffDraft = makeCodexAppServerRuntimeMvpHandoffDraft(
+    unsafeTaskCardDraft,
+    unsafeTaskCardQaDraft,
+  );
+  const unsafeHandoffDraftOutput = JSON.stringify(unsafeHandoffDraft);
+  assert(
+    unsafeHandoffDraft.current_status === 'blocked',
+    'Blocked TaskCard QA draft must yield blocked handoff status.',
+  );
+  assert(
+    unsafeHandoffDraft.required_next_action === 'human_review_only',
+    'Blocked HANDOFF draft next action must remain human_review_only.',
+  );
+  assert(
+    unsafeHandoffDraft.allowed_next_step === 'human_review_only',
+    'Blocked HANDOFF draft allowed next step must remain human_review_only.',
+  );
+  assert(
+    unsafeHandoffDraft.blockers.some((blocker) => blocker.includes('reviewed_taskcard_blocked')),
+    'Blocked HANDOFF draft must carry sanitized QA blockers.',
+  );
+  assert(
+    unsafeHandoffDraft.forbidden_next_steps.includes('create_pr'),
+    'Blocked HANDOFF draft must not authorize PR creation.',
+  );
+  assert(
+    unsafeHandoffDraft.forbidden_next_steps.includes('merge_pr'),
+    'Blocked HANDOFF draft must not authorize PR merge.',
+  );
+  assert(
+    unsafeHandoffDraft.forbidden_next_steps.includes('db_write'),
+    'Blocked HANDOFF draft must not authorize DB writes.',
+  );
+  assert(
+    unsafeHandoffDraft.forbidden_next_steps.includes('worker_runtime'),
+    'Blocked HANDOFF draft must not authorize worker runtime.',
+  );
+  assert(
+    unsafeHandoffDraft.forbidden_next_steps.includes('scheduler_runtime'),
+    'Blocked HANDOFF draft must not authorize scheduler runtime.',
+  );
   assert(
     unsafeReport.review_notes.includes(
       'Withheld because scaffold validation failed. Review validation.issues only.',
@@ -722,10 +988,15 @@ async function main() {
     !unsafeTaskCardQaDraftOutput.includes(unsafeReportFixture),
     'Unsafe TaskCard QA draft leaked restricted content.',
   );
+  assert(
+    !unsafeHandoffDraftOutput.includes(unsafeReportFixture),
+    'Unsafe HANDOFF draft leaked restricted content.',
+  );
   assertSafeReportOutput(unsafeReportOutput);
   assertSafeReportOutput(unsafeSummaryOutput);
   assertSafeReportOutput(unsafeTaskCardDraftOutput);
   assertSafeReportOutput(unsafeTaskCardQaDraftOutput);
+  assertSafeReportOutput(unsafeHandoffDraftOutput);
   log('Accepted invalid scaffold report withholding.');
 
   const apiUpdateRecommendation = cloneValue(scaffold);
@@ -974,6 +1245,96 @@ async function main() {
     'TaskCard QA draft script output must forbid scheduler runtime.',
   );
   log('Accepted stdout-only TaskCard QA draft script output.');
+
+  const handoffScriptResult = spawnSync(process.execPath, [
+    'scripts/codex-app-server-runtime-report.mjs',
+    '--handoff',
+  ], {
+    cwd: projectRoot,
+    encoding: 'utf8',
+    stdio: ['ignore', 'pipe', 'pipe'],
+    windowsHide: true,
+  });
+  if (handoffScriptResult.status !== 0) {
+    throw new Error([
+      'Codex App Server runtime HANDOFF draft script failed.',
+      sanitize(handoffScriptResult.stdout),
+      sanitize(handoffScriptResult.stderr),
+    ].filter(Boolean).join('\n'));
+  }
+
+  assert(
+    handoffScriptResult.stderr.trim().length === 0,
+    'HANDOFF draft script must write the draft to stdout without stderr output.',
+  );
+  const handoffScriptOutput = handoffScriptResult.stdout.trim();
+  assertSafeReportOutput(handoffScriptOutput);
+  const handoffScriptJson = JSON.parse(handoffScriptOutput);
+  assert(
+    handoffScriptJson.source_role === 'codex_app_server_runtime_reporter',
+    'HANDOFF draft script output must identify the source role.',
+  );
+  assert(
+    handoffScriptJson.target_role === 'human_owner',
+    'HANDOFF draft script output must identify the target role.',
+  );
+  assert(
+    handoffScriptJson.current_status === 'waiting_for_human_approval',
+    'HANDOFF draft script output must wait for human approval for valid QA drafts.',
+  );
+  assert(
+    handoffScriptJson.required_next_action === 'human_review_only',
+    'HANDOFF draft script output required action must remain human_review_only.',
+  );
+  assert(
+    handoffScriptJson.allowed_next_step === 'human_review_only',
+    'HANDOFF draft script output allowed next step must remain human_review_only.',
+  );
+  assert(
+    handoffScriptJson.human_approval_required === true,
+    'HANDOFF draft script output must require human approval.',
+  );
+  assert(
+    handoffScriptJson.outputs_produced.includes('stdout-only HANDOFF draft JSON'),
+    'HANDOFF draft script output must identify stdout-only JSON output.',
+  );
+  assert(
+    handoffScriptJson.outputs_produced.includes('no HANDOFF file created'),
+    'HANDOFF draft script output must state that no HANDOFF file is created.',
+  );
+  assert(
+    handoffScriptJson.outputs_produced.includes('no Task Board write performed'),
+    'HANDOFF draft script output must state that no Task Board write is performed.',
+  );
+  assert(
+    handoffScriptJson.forbidden_next_steps.includes('create_pr'),
+    'HANDOFF draft script output must forbid PR creation.',
+  );
+  assert(
+    handoffScriptJson.forbidden_next_steps.includes('merge_pr'),
+    'HANDOFF draft script output must forbid PR merge.',
+  );
+  assert(
+    handoffScriptJson.forbidden_next_steps.includes('direct_deploy'),
+    'HANDOFF draft script output must forbid deploy.',
+  );
+  assert(
+    handoffScriptJson.forbidden_next_steps.includes('production_write'),
+    'HANDOFF draft script output must forbid production writes.',
+  );
+  assert(
+    handoffScriptJson.forbidden_next_steps.includes('db_write'),
+    'HANDOFF draft script output must forbid DB writes.',
+  );
+  assert(
+    handoffScriptJson.forbidden_next_steps.includes('worker_runtime'),
+    'HANDOFF draft script output must forbid worker runtime.',
+  );
+  assert(
+    handoffScriptJson.forbidden_next_steps.includes('scheduler_runtime'),
+    'HANDOFF draft script output must forbid scheduler runtime.',
+  );
+  log('Accepted stdout-only HANDOFF draft script output.');
 
   log('Codex App Server runtime MVP scaffold smoke checks passed.');
 }

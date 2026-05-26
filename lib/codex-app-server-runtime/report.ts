@@ -1,11 +1,12 @@
 import { assertNoRestrictedContent } from '../memory/validation';
 import { makeTaskBoardForbiddenNextSteps } from '../task-board/handoff';
 import { CODEX_APP_SERVER_RUNTIME_MVP_FORBIDDEN_OPERATIONS } from './types';
-import type {
-  TaskBoardAllowedNextStep,
-  TaskBoardForbiddenNextStep,
-  TaskCardAutonomyLevel,
-  TaskCardStatus,
+import {
+  TASK_HANDOFF_VERSION,
+  type TaskBoardAllowedNextStep,
+  type TaskBoardForbiddenNextStep,
+  type TaskCardAutonomyLevel,
+  type TaskCardStatus,
 } from '../task-board/types';
 import type {
   CodexAppServerRuntimeMvpAllowedOutput,
@@ -164,6 +165,35 @@ export interface CodexAppServerRuntimeMvpTaskCardQaDraft {
   references: string[];
 }
 
+export type CodexAppServerRuntimeMvpHandoffForbiddenNextStep =
+  | TaskBoardForbiddenNextStep
+  | CodexAppServerRuntimeMvpForbiddenOperation;
+
+export interface CodexAppServerRuntimeMvpHandoffDraft {
+  handoff_id: string;
+  handoff_version: typeof TASK_HANDOFF_VERSION;
+  source_role: 'codex_app_server_runtime_reporter';
+  target_role: 'human_owner';
+  task_id: string;
+  current_status: Extract<TaskCardStatus, 'waiting_for_human_approval' | 'needs_revision' | 'blocked'>;
+  objective: string;
+  what_has_been_done: string[];
+  key_findings: string[];
+  decisions_made: string[];
+  open_questions: string[];
+  blockers: string[];
+  required_next_action: 'human_review_only';
+  inputs_passed: string[];
+  outputs_produced: string[];
+  confidence: number;
+  completeness: number;
+  risks: string[];
+  human_approval_required: true;
+  allowed_next_step: Extract<TaskBoardAllowedNextStep, 'human_review_only'>;
+  forbidden_next_steps: CodexAppServerRuntimeMvpHandoffForbiddenNextStep[];
+  references: string[];
+}
+
 export interface MakeCodexAppServerRuntimeMvpTaskCardQaDraftOptions {
   checkedAt?: number;
 }
@@ -206,6 +236,31 @@ const TASKCARD_QA_RESIDUAL_RISKS = [
   'The QA draft is stdout-only review material and is not persisted to the Task Board.',
   'Human reviewers must compare the reviewed TaskCard draft with source contracts before any later action.',
   'A future implementation PR still needs explicit human approval, its own scope, tests, and rollback plan.',
+] as const;
+const HANDOFF_DRAFT_REFERENCES = [
+  'AGENTS.md',
+  'docs/CONTRACTS_INDEX.md',
+  'docs/TASK_BOARD_HANDOFF.md',
+  'docs/templates/HANDOFF_TEMPLATE.md',
+  'docs/CODEX_APP_SERVER.md',
+  'docs/CODEX_APP_SERVER_RUNTIME_MVP_SCOPE.md',
+  'lib/codex-app-server-runtime/report.ts',
+  'scripts/codex-app-server-runtime-report.mjs',
+] as const;
+const HANDOFF_DRAFT_DONE = [
+  'Generated a stdout-only TaskCard draft from the Codex App Server Runtime MVP operator summary.',
+  'Generated a stdout-only TaskCard QA draft for human review.',
+  'Prepared this HANDOFF draft as review material only without writing a HANDOFF file or Task Board record.',
+] as const;
+const HANDOFF_DRAFT_DECISIONS = [
+  'The HANDOFF draft remains proposal-only, non-production, stdout-only, and human-review-only.',
+  'Task Board writes, HANDOFF file creation, file-writing automation, API, DB, worker, scheduler, external integration, package, CI, GitHub automation, AI job execution, and production promotion remain forbidden.',
+  'Human approval is required before any later action outside review.',
+] as const;
+const HANDOFF_DRAFT_BASE_RISKS = [
+  'The stdout HANDOFF draft could be mistaken for a persisted handoff unless reviewers keep the stdout-only boundary explicit.',
+  'Human reviewers must compare the TaskCard draft, QA draft, and source contracts before deciding whether to revise, archive, or continue review.',
+  'Any later implementation work needs a separate approved PR with its own scope, tests, and rollback plan.',
 ] as const;
 const TASKCARD_QA_RESTRICTED_CONTENT_NOTICE =
   'Restricted content was detected in the reviewed TaskCard draft; details are withheld for safety.';
@@ -279,6 +334,13 @@ function makeTaskCardQaForbiddenNextSteps(): CodexAppServerRuntimeMvpTaskCardQaF
   ]));
 }
 
+function makeHandoffForbiddenNextSteps(): CodexAppServerRuntimeMvpHandoffForbiddenNextStep[] {
+  return Array.from(new Set([
+    ...makeTaskBoardForbiddenNextSteps(),
+    ...CODEX_APP_SERVER_RUNTIME_MVP_FORBIDDEN_OPERATIONS,
+  ]));
+}
+
 function makeCheck(
   result: CodexAppServerRuntimeMvpTaskCardQaCheckResult,
   notes: string,
@@ -329,6 +391,17 @@ function makeUniqueReferences(
   ]));
 }
 
+function makeUniqueHandoffReferences(
+  taskCardDraft: CodexAppServerRuntimeMvpTaskCardDraft,
+  qaDraft: CodexAppServerRuntimeMvpTaskCardQaDraft,
+): string[] {
+  return Array.from(new Set([
+    ...taskCardDraft.references,
+    ...qaDraft.references,
+    ...HANDOFF_DRAFT_REFERENCES,
+  ]));
+}
+
 function chooseTaskCardQaRecommendation(
   taskCardDraft: CodexAppServerRuntimeMvpTaskCardDraft,
   issues: CodexAppServerRuntimeMvpTaskCardQaIssue[],
@@ -345,6 +418,68 @@ function chooseTaskCardQaRecommendation(
   }
 
   return 'approve_for_human_review';
+}
+
+function isValidTaskCardQaDraft(
+  qaDraft: CodexAppServerRuntimeMvpTaskCardQaDraft,
+): boolean {
+  return (
+    qaDraft.recommendation === 'approve_for_human_review'
+    && qaDraft.issues.length === 0
+    && Object.values(qaDraft.checks).every((check) => check.result === 'pass')
+  );
+}
+
+function hasTaskCardQaLinkageMismatch(
+  taskCardDraft: CodexAppServerRuntimeMvpTaskCardDraft,
+  qaDraft: CodexAppServerRuntimeMvpTaskCardQaDraft,
+): boolean {
+  return qaDraft.reviewed_task_id !== taskCardDraft.task_id;
+}
+
+function chooseHandoffCurrentStatus(
+  taskCardDraft: CodexAppServerRuntimeMvpTaskCardDraft,
+  qaDraft: CodexAppServerRuntimeMvpTaskCardQaDraft,
+): CodexAppServerRuntimeMvpHandoffDraft['current_status'] {
+  if (
+    hasTaskCardQaLinkageMismatch(taskCardDraft, qaDraft)
+    || taskCardDraft.status === 'blocked'
+    || qaDraft.recommendation === 'block'
+  ) {
+    return 'blocked';
+  }
+
+  if (qaDraft.recommendation === 'revise_task_card') {
+    return 'needs_revision';
+  }
+
+  if (isValidTaskCardQaDraft(qaDraft)) {
+    return 'waiting_for_human_approval';
+  }
+
+  return 'blocked';
+}
+
+function makeHandoffBlockers(
+  taskCardDraft: CodexAppServerRuntimeMvpTaskCardDraft,
+  qaDraft: CodexAppServerRuntimeMvpTaskCardQaDraft,
+  currentStatus: CodexAppServerRuntimeMvpHandoffDraft['current_status'],
+): string[] {
+  if (hasTaskCardQaLinkageMismatch(taskCardDraft, qaDraft)) {
+    return [
+      'taskcard_qa_linkage_mismatch: QA draft reviewed_task_id does not match TaskCard draft task_id.',
+    ];
+  }
+
+  if (currentStatus !== 'blocked') {
+    return ['none'];
+  }
+
+  return qaDraft.issues.length > 0
+    ? qaDraft.issues.map((issue) => (
+      `${issue.code}${issue.path ? ` at ${issue.path}` : ''}: ${issue.message}`
+    ))
+    : ['TaskCard draft or QA draft is blocked and requires human review.'];
 }
 
 export function makeCodexAppServerRuntimeMvpInspectionReport(
@@ -635,4 +770,79 @@ export function makeCodexAppServerRuntimeMvpTaskCardQaDraft(
   assertNoRestrictedContent(qaDraft, 'codexAppServerRuntimeMvpTaskCardQaDraft');
 
   return qaDraft;
+}
+
+export function makeCodexAppServerRuntimeMvpHandoffDraft(
+  taskCardDraft: CodexAppServerRuntimeMvpTaskCardDraft,
+  qaDraft: CodexAppServerRuntimeMvpTaskCardQaDraft,
+): CodexAppServerRuntimeMvpHandoffDraft {
+  const qaIsValid = isValidTaskCardQaDraft(qaDraft);
+  const linkageMismatch = hasTaskCardQaLinkageMismatch(taskCardDraft, qaDraft);
+  const currentStatus = chooseHandoffCurrentStatus(taskCardDraft, qaDraft);
+  const blockers = makeHandoffBlockers(taskCardDraft, qaDraft, currentStatus);
+  const qaFinding = linkageMismatch
+    ? 'TaskCard draft and QA draft linkage mismatch detected; the HANDOFF draft is blocked for human review.'
+    : qaIsValid
+    ? 'TaskCard QA draft passed all stdout-only, scope, status, autonomy, protected-surface, forbidden-next-step, and restricted-content checks.'
+    : currentStatus === 'needs_revision'
+      ? 'TaskCard QA draft requires revision; this is not treated as a blocker, but human review must inspect revision issues before accepting the handoff.'
+      : 'TaskCard QA draft is blocked or not fully approved; human review must inspect QA issues before accepting the handoff.';
+  const handoffDraft: CodexAppServerRuntimeMvpHandoffDraft = {
+    handoff_id: `codex-app-server-runtime-mvp-handoff-${normalizeTaskIdPart(taskCardDraft.task_id)}`,
+    handoff_version: TASK_HANDOFF_VERSION,
+    source_role: 'codex_app_server_runtime_reporter',
+    target_role: 'human_owner',
+    task_id: taskCardDraft.task_id,
+    current_status: currentStatus,
+    objective: taskCardDraft.objective,
+    what_has_been_done: [...HANDOFF_DRAFT_DONE],
+    key_findings: [
+      `TaskCard draft status is ${taskCardDraft.status}.`,
+      `TaskCard QA recommendation is ${qaDraft.recommendation}.`,
+      qaFinding,
+      'The only allowed next step remains human_review_only.',
+    ],
+    decisions_made: [...HANDOFF_DRAFT_DECISIONS],
+    open_questions: [
+      'Should the human owner accept the TaskCard and QA drafts for review, request revision, or archive them?',
+      ...(currentStatus === 'waiting_for_human_approval'
+        ? ['Are the referenced contracts sufficient for a later dedicated implementation request?']
+        : currentStatus === 'needs_revision'
+          ? ['Which non-blocking TaskCard revision should be made before the review artifact is accepted?']
+          : ['Which blocking QA issue must be revised before the review artifact can be accepted?']),
+    ],
+    blockers,
+    required_next_action: 'human_review_only',
+    inputs_passed: [
+      `TaskCard draft: ${taskCardDraft.task_id}`,
+      `TaskCard QA draft: ${qaDraft.qa_report_id}`,
+    ],
+    outputs_produced: [
+      'stdout-only HANDOFF draft JSON',
+      'no HANDOFF file created',
+      'no Task Board write performed',
+      'no file-writing automation performed',
+    ],
+    confidence: qaIsValid ? 0.86 : 0.62,
+    completeness: qaIsValid ? 0.82 : 0.55,
+    risks: [
+      ...HANDOFF_DRAFT_BASE_RISKS,
+      ...taskCardDraft.risks,
+      ...qaDraft.residual_risks,
+      ...(currentStatus === 'needs_revision'
+        ? ['TaskCard QA requested revision; reviewers must not treat this HANDOFF draft as approval-ready until the revision is reviewed.']
+        : []),
+      ...(linkageMismatch
+        ? ['TaskCard and QA linkage mismatch prevents approval posture until the referenced records are reconciled.']
+        : []),
+    ],
+    human_approval_required: true,
+    allowed_next_step: 'human_review_only',
+    forbidden_next_steps: makeHandoffForbiddenNextSteps(),
+    references: makeUniqueHandoffReferences(taskCardDraft, qaDraft),
+  };
+
+  assertNoRestrictedContent(handoffDraft, 'codexAppServerRuntimeMvpHandoffDraft');
+
+  return handoffDraft;
 }
