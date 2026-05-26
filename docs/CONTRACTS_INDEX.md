@@ -64,7 +64,7 @@ local-only、proposal-only、non-production、人間承認必須の metadata と
 連携、package/CI 変更、automation、production 昇格は追加しません。
 Codex App Server Runtime read-only stdout report layer は、その scaffold から
 read-only inspection report、operator summary、TaskCard draft、TaskCard QA draft、
-HANDOFF draft を stdout に出すだけの review-material layer です。Task Board write、
+PR #41 の HANDOFF draft を stdout に出すだけの review-material layer です。Task Board write、
 HANDOFF file creation、file-writing automation、API/DB/worker/scheduler、
 external integration、package/CI、GitHub automation、AI job execution、
 production promotion は追加しません。
@@ -147,6 +147,7 @@ forbidden operations、protected path boundary を維持して使います。
 | #38 | Codex App Server Runtime operator summary v0 | stdout-only operator summary helper と report script `--summary` | いいえ。summary のみ | いいえ。DB/API/worker/scheduler/package/CI/automation は未導入 | read-only report を短い human-review summary にする |
 | #39 | Codex App Server Runtime TaskCard draft stdout v0 | stdout-only TaskCard draft helper と report script `--taskcard` | いいえ。draft 出力のみ | いいえ。Task Board write、DB/API/worker/scheduler/package/CI/automation は未導入 | operator summary を Task Board review material に接続する |
 | #40 | Codex App Server Runtime TaskCard QA draft stdout v0 | stdout-only TaskCard QA draft helper と report script `--taskcard-qa` | いいえ。QA draft 出力のみ | いいえ。Task Board write、DB/API/worker/scheduler/package/CI/automation は未導入 | TaskCard draft を human-review-only QA material として点検する |
+| #41 | Codex App Server Runtime HANDOFF draft stdout v0 | `lib/codex-app-server-runtime/report.ts` と `scripts/codex-app-server-runtime-report.mjs --handoff` による stdout-only HANDOFF draft | いいえ。stdout-only HANDOFF draft のみで、実装済み runtime は未導入 | いいえ。Task Board write、HANDOFF file creation、file-writing automation、API/DB/worker/scheduler、external integration、GitHub automation、AI job execution、production promotion は未導入。package/CI 変更も未導入 | TaskCard draft / QA draft を human-review-only HANDOFF draft にまとめる |
 
 ## Docs / Templates 用途表
 
