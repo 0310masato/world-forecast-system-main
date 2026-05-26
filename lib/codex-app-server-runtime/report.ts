@@ -290,7 +290,7 @@ function makeQaIssue(params: CodexAppServerRuntimeMvpTaskCardQaIssue): CodexAppS
   return { ...params };
 }
 
-function getRestrictedContentQaIssue(value: unknown): string | null {
+function getRestrictedContentQaNotice(value: unknown): string | null {
   try {
     assertNoRestrictedContent(value, 'codexAppServerRuntimeMvpTaskCardQaInput');
     return null;
@@ -473,7 +473,7 @@ export function makeCodexAppServerRuntimeMvpTaskCardQaDraft(
   options: MakeCodexAppServerRuntimeMvpTaskCardQaDraftOptions = {},
 ): CodexAppServerRuntimeMvpTaskCardQaDraft {
   const issues: CodexAppServerRuntimeMvpTaskCardQaIssue[] = [];
-  const restrictedContentIssue = getRestrictedContentQaIssue(taskCardDraft);
+  const restrictedContentNotice = getRestrictedContentQaNotice(taskCardDraft);
   const protectedSurface = findProtectedSurface(taskCardDraft);
   const requiredForbiddenNextStepsPresent = hasRequiredForbiddenNextSteps(taskCardDraft);
   const stdoutBoundaryPresent = taskCardDraft.acceptance_criteria.some((criterion) => (
@@ -540,11 +540,11 @@ export function makeCodexAppServerRuntimeMvpTaskCardQaDraft(
     }));
   }
 
-  if (restrictedContentIssue) {
+  if (restrictedContentNotice) {
     issues.push(makeQaIssue({
       code: 'restricted_content_detected',
       severity: 'blocking',
-      message: restrictedContentIssue,
+      message: restrictedContentNotice,
     }));
   }
 
@@ -608,9 +608,9 @@ export function makeCodexAppServerRuntimeMvpTaskCardQaDraft(
           : 'One or more required Task Board forbidden next steps are missing.',
       ),
       restricted_content_check: makeCheck(
-        restrictedContentIssue ? 'block' : 'pass',
-        restrictedContentIssue
-          ? restrictedContentIssue
+        restrictedContentNotice ? 'block' : 'pass',
+        restrictedContentNotice
+          ? restrictedContentNotice
           : 'No restricted content detected in the reviewed TaskCard draft.',
       ),
       stdout_only_check: makeCheck(
