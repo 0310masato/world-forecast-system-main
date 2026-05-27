@@ -34,12 +34,16 @@ even propose write-capable behavior.
   results.
 - PR #46 added stdout-only approval decision validation for human-supplied
   decision records.
+- PR #47 added stdout-only metadata-only write plan draft generation from
+  approval decision validation results.
 
 No persistent write path exists yet.
 No Task Board write exists yet.
 No HANDOFF file creation exists yet.
 No approval has been granted by the approval request draft.
 No approval has been granted by the approval decision validator itself.
+No approval has been granted by the write plan draft.
+No write executor exists yet.
 No API route exists yet.
 No DB integration exists yet.
 No worker runtime exists yet.
@@ -61,8 +65,9 @@ A later, separately approved implementation may define a tool that can:
 - create or update a HANDOFF record in an approved Handoff store
 - record audit metadata
 
-This PR only defines the boundary. This PR does not add the tool. This PR does
-not write any artifact.
+The PR #43 contract only defines the boundary. PR #47 adds only a stdout-only,
+metadata-only write plan draft for later separate implementation review. Neither
+PR adds the future write tool or writes any artifact.
 
 ## 4. Allowed Future Operations
 
@@ -236,8 +241,59 @@ dry_run_only
 }
 ```
 
-For this PR, `wrote_anything` remains conceptual because no tool is
-implemented.
+For the current stdout-only chain, `wrote_anything` remains conceptual because
+no write tool is implemented.
+
+PR #47 adds a separate stdout-only write plan draft shape for future
+implementation review. It is metadata-only and does not authorize or execute
+writes:
+
+```json
+{
+  "write_plan_id": "string",
+  "write_plan_version": 1,
+  "generated_at": "string",
+  "source_approval_request_id": "string",
+  "source_approval_decision_validation_id": "string",
+  "source_approval_decision_validation_status": "needs_human_decision | blocked | decision_validated",
+  "source_decision": "not_decided | approved | rejected | needs_revision",
+  "source_decision_accepted": false,
+  "source_approval_valid_for_future_write": false,
+  "plan_status": "needs_human_decision | blocked | write_plan_ready_for_separate_implementation",
+  "target_kind": "string",
+  "target_path_or_target_id": "string",
+  "proposed_write_mode": "write_after_human_approval_separate_scope",
+  "write_authorized_by_this_pr": false,
+  "wrote_anything": false,
+  "write_executor_present": false,
+  "executed_write_count": 0,
+  "required_human_approval": true,
+  "required_next_action": "human_decision_required | revise_or_reject_request | resolve_blockers_then_restart_approval | separate_write_implementation_required",
+  "allowed_next_step": "human_review_only | revise_or_reject_request | separate_write_implementation_required",
+  "validation_summary": {},
+  "proposed_write_artifacts": [],
+  "audit_preview": {},
+  "rollback_plan": [],
+  "forbidden_operations": [],
+  "references": [],
+  "safety_summary": []
+}
+```
+
+`proposed_write_artifacts` is metadata only. It may include artifact kind,
+repository-relative target path, intended operation, source packet hash or
+source reference, preview summary, and validation notes. It must not include
+full future file contents, restricted content, raw local paths, NAS paths,
+private network details, secrets, tokens, passwords, API keys, `.env` values,
+production logs, or real operational data.
+
+The default PR #47 script must not supply a real human decision record and must
+therefore output `needs_human_decision` or `blocked`, not
+`write_plan_ready_for_separate_implementation`. Synthetic approved fixtures may
+produce `write_plan_ready_for_separate_implementation`, but they still must keep
+`write_authorized_by_this_pr: false`, `wrote_anything: false`,
+`write_executor_present: false`, and `executed_write_count: 0`; the allowed next
+step is separate implementation, not actual write.
 
 ## 10. Validation Rules
 
@@ -453,4 +509,6 @@ This contract does not add, authorize, or request:
 - `scripts/codex-app-server-runtime-write-dry-run.mjs`
 - `scripts/codex-app-server-runtime-write-approval-request.mjs`
 - `scripts/codex-app-server-runtime-write-approval-decision-validator.mjs`
+- `lib/codex-app-server-runtime/write-plan.ts`
+- `scripts/codex-app-server-runtime-write-plan.mjs`
 - `scripts/codex-app-server-runtime-smoke.mjs`
