@@ -152,3 +152,61 @@ external integration, GitHub automation, file-writing automation, package, or CI
 changes for routine template work. If execution becomes necessary later, stop
 for human approval and use a dedicated implementation PR with its own scope,
 checks, and rollback plan.
+
+## Applied AI Dev Relay Kit: v0.1.0
+
+This repository applies AI Dev Relay Kit v0.1.0 as an operating layer for
+Web GPT, Codex app, GitHub, and human review. This section adds review and
+handoff requirements. It does not weaken any protected core, human approval,
+secret handling, docs stewardship, or runtime boundary rule above.
+
+Codex app must produce a PR Review Packet before asking for review. The packet
+must include:
+
+- Summary of the change and why it was requested.
+- Exact changed files.
+- Requested scope, completed scope, and non-goals.
+- CI, lint, test, build, and smoke evidence.
+- Skipped checks with the reason and remaining risk.
+- High-risk change inventory.
+- Known risks, rollback notes, and follow-up work when relevant.
+- Human approval status for commit, push, merge, deploy, or production
+  promotion.
+
+Web GPT should review whether:
+
+- The change matches the requested scope.
+- The changed files match the PR Review Packet.
+- CI, lint, test, build, and smoke evidence is present, or skipped checks are
+  justified.
+- High-risk areas are declared and isolated.
+- The PR does not imply merge, deploy, release, external publishing, or
+  production promotion without explicit human approval.
+- Existing world-forecast safety labels, mock/simulated/estimated disclaimers,
+  secret handling, and proposal-only boundaries remain intact.
+
+Codex app must not commit or push unless the human explicitly approves that
+action for the current task, repository, and branch. When commit or push is
+approved, stage only the approved files and summarize the staged diff before
+committing. Do not force push.
+
+Merge, deploy, release, external publishing, and production promotion are
+blocked until explicit human approval is given for that exact action.
+
+Treat these world-forecast-system-main areas as high-risk:
+
+- API: `app/api/forecast`, `app/api/hormuz`, `app/api/hormuz/news`.
+- DB / memory: `lib/db.ts`, `lib/memory/*`, and `better-sqlite3`.
+- File-writing: `lib/nas.ts`, `lib/memory/write.ts`, and write-related
+  runtime helpers.
+- Package: `package.json` and `package-lock.json`.
+- CI: `.github/workflows/ci.yml`.
+- App/runtime: `app/`, `components/`, and `lib/codex-app-server-runtime/*`.
+- Secrets/env: `.env*`, `process.env`, and external provider keys.
+- Production promotion, deploy, release, external publishing, and operational
+  decision paths.
+
+For high-risk changes, stop for explicit scope confirmation unless the current
+task already names the exact high-risk files and action. Keep such changes
+small, include stronger validation evidence, and document rollback or
+mitigation in the PR Review Packet.
