@@ -108,6 +108,38 @@ const REQUIRED_APPROVAL_DECISION_FORBIDDEN_OPERATIONS = [
   'navigation_guidance',
   'military_guidance',
 ];
+const REQUIRED_WRITE_PLAN_FORBIDDEN_OPERATIONS = [
+  'create_pr',
+  'merge_pr',
+  'direct_deploy',
+  'production_write',
+  'production_promotion',
+  'api_forecast_update',
+  'api_hormuz_update',
+  'api_hormuz_news_update',
+  'api_route_creation',
+  'db_read',
+  'db_write',
+  'db_migration',
+  'worker_runtime',
+  'scheduler_runtime',
+  'external_api_integration',
+  'package_change',
+  'ci_change',
+  'github_automation',
+  'file_writing_automation',
+  'file_writing_automation_without_approval',
+  'handoff_file_creation',
+  'handoff_file_creation_without_approval',
+  'task_board_write',
+  'task_board_write_without_approval',
+  'ai_job_execution',
+  'external_publish',
+  'automated_trading',
+  'investment_advice',
+  'navigation_guidance',
+  'military_guidance',
+];
 
 function sanitize(message) {
   const buildDirUrlPath = buildDir.replaceAll(path.sep, '/');
@@ -302,6 +334,72 @@ function assertApprovalDecisionDoesNotWrite(result, label) {
   );
 }
 
+function assertWritePlanForbidsRequiredOperations(result, label) {
+  for (const operation of REQUIRED_WRITE_PLAN_FORBIDDEN_OPERATIONS) {
+    assert(
+      result.forbidden_operations.includes(operation),
+      `${label} must forbid ${operation}.`,
+    );
+  }
+}
+
+function assertWritePlanDoesNotWrite(result, label) {
+  assert(
+    result.write_authorized_by_this_pr === false,
+    `${label} must keep write_authorized_by_this_pr false.`,
+  );
+  assert(
+    result.wrote_anything === false,
+    `${label} must keep wrote_anything false.`,
+  );
+  assert(
+    result.write_executor_present === false,
+    `${label} must keep write_executor_present false.`,
+  );
+  assert(
+    result.executed_write_count === 0,
+    `${label} must keep executed_write_count 0.`,
+  );
+  assert(
+    result.required_human_approval === true,
+    `${label} must keep required_human_approval true.`,
+  );
+  assert(
+    result.proposed_write_mode === 'write_after_human_approval_separate_scope',
+    `${label} must keep proposed_write_mode in separate scope.`,
+  );
+  assert(
+    result.allowed_next_step !== 'actual_write',
+    `${label} must not allow actual_write.`,
+  );
+}
+
+function assertWritePlanArtifactsAreMetadataOnly(result, label) {
+  assert(
+    Array.isArray(result.proposed_write_artifacts),
+    `${label} must include proposed write artifacts metadata.`,
+  );
+  assert(
+    result.proposed_write_artifacts.length > 0,
+    `${label} must include at least one proposed write artifact metadata item.`,
+  );
+
+  for (const artifact of result.proposed_write_artifacts) {
+    assert(
+      artifact.metadata_only === true,
+      `${label} artifact must be metadata-only.`,
+    );
+    assert(
+      artifact.includes_full_future_file_contents === false,
+      `${label} artifact must not include full future file contents.`,
+    );
+    assert(
+      artifact.intended_operation === 'future_write_after_explicit_human_approval_in_separate_scope',
+      `${label} artifact must stay in separate future write scope.`,
+    );
+  }
+}
+
 function makeApprovalDecisionRecord(approvalRequestDraft, overrides = {}) {
   return {
     approval_decision_id: 'codex-app-server-runtime-write-approval-decision-fixture-001',
@@ -379,6 +477,7 @@ async function compileCodexAppServerRuntimeHelpers() {
     'lib/codex-app-server-runtime/write-dry-run.ts',
     'lib/codex-app-server-runtime/write-approval-request.ts',
     'lib/codex-app-server-runtime/write-approval-decision.ts',
+    'lib/codex-app-server-runtime/write-plan.ts',
   ], {
     cwd: projectRoot,
     encoding: 'utf8',
@@ -436,6 +535,9 @@ async function main() {
   const {
     validateTaskBoardHandoffWriteApprovalDecision,
   } = require(path.join(buildDir, 'lib', 'codex-app-server-runtime', 'write-approval-decision.js'));
+  const {
+    makeTaskBoardHandoffWritePlanDraft,
+  } = require(path.join(buildDir, 'lib', 'codex-app-server-runtime', 'write-plan.js'));
 
   const boundary = makeCodexAppServerRuntimeMvpBoundary();
   assert(boundary.proposal_only === true, 'Boundary must be proposal-only.');
@@ -1278,6 +1380,185 @@ async function main() {
   );
   assertSafeReportOutput(JSON.stringify(approvedDecisionValidation));
   log('Accepted approved approval decision fixture validation coverage.');
+
+  const missingDecisionWritePlan = makeTaskBoardHandoffWritePlanDraft(
+    missingApprovalDecisionValidation,
+    {
+      approvalRequestDraft,
+      dryRunResult,
+      generatedAt: 1_800_000_000,
+    },
+  );
+  assert(
+    missingDecisionWritePlan.plan_status === 'needs_human_decision',
+    'Missing approval decision write plan must need a human decision.',
+  );
+  assert(
+    missingDecisionWritePlan.source_decision === 'not_decided',
+    'Missing approval decision write plan must not decide approval.',
+  );
+  assert(
+    missingDecisionWritePlan.source_decision_accepted === false,
+    'Missing approval decision write plan must not accept a decision.',
+  );
+  assert(
+    missingDecisionWritePlan.source_approval_valid_for_future_write === false,
+    'Missing approval decision write plan must not be valid for future write.',
+  );
+  assert(
+    missingDecisionWritePlan.required_next_action === 'human_decision_required',
+    'Missing approval decision write plan must require a human decision.',
+  );
+  assert(
+    missingDecisionWritePlan.allowed_next_step === 'human_review_only',
+    'Missing approval decision write plan allowed next step must be human review only.',
+  );
+  assertWritePlanDoesNotWrite(
+    missingDecisionWritePlan,
+    'Missing approval decision write plan',
+  );
+  assertWritePlanForbidsRequiredOperations(
+    missingDecisionWritePlan,
+    'Missing approval decision write plan',
+  );
+  assertWritePlanArtifactsAreMetadataOnly(
+    missingDecisionWritePlan,
+    'Missing approval decision write plan',
+  );
+  assertSafeReportOutput(JSON.stringify(missingDecisionWritePlan));
+  log('Accepted missing approval decision write plan coverage.');
+
+  const rejectedDecisionWritePlan = makeTaskBoardHandoffWritePlanDraft(
+    rejectedDecisionValidation,
+    {
+      approvalRequestDraft,
+      dryRunResult,
+      generatedAt: 1_800_000_000,
+    },
+  );
+  assert(
+    rejectedDecisionWritePlan.plan_status === 'blocked',
+    'Rejected decision write plan must be blocked.',
+  );
+  assert(
+    rejectedDecisionWritePlan.required_next_action === 'revise_or_reject_request',
+    'Rejected decision write plan must require revise_or_reject_request.',
+  );
+  assert(
+    rejectedDecisionWritePlan.allowed_next_step === 'revise_or_reject_request',
+    'Rejected decision write plan allowed next step must stay in revise_or_reject_request.',
+  );
+  assertWritePlanDoesNotWrite(
+    rejectedDecisionWritePlan,
+    'Rejected decision write plan',
+  );
+  assertWritePlanForbidsRequiredOperations(
+    rejectedDecisionWritePlan,
+    'Rejected decision write plan',
+  );
+  assertWritePlanArtifactsAreMetadataOnly(
+    rejectedDecisionWritePlan,
+    'Rejected decision write plan',
+  );
+  assertSafeReportOutput(JSON.stringify(rejectedDecisionWritePlan));
+  log('Accepted rejected decision write plan coverage.');
+
+  const needsRevisionDecisionWritePlan = makeTaskBoardHandoffWritePlanDraft(
+    needsRevisionDecisionValidation,
+    {
+      approvalRequestDraft,
+      dryRunResult,
+      generatedAt: 1_800_000_000,
+    },
+  );
+  assert(
+    needsRevisionDecisionWritePlan.plan_status === 'blocked',
+    'Needs-revision decision write plan must be blocked.',
+  );
+  assert(
+    needsRevisionDecisionWritePlan.required_next_action === 'revise_or_reject_request',
+    'Needs-revision decision write plan must require revise_or_reject_request.',
+  );
+  assertWritePlanDoesNotWrite(
+    needsRevisionDecisionWritePlan,
+    'Needs-revision decision write plan',
+  );
+  assertWritePlanForbidsRequiredOperations(
+    needsRevisionDecisionWritePlan,
+    'Needs-revision decision write plan',
+  );
+  assertWritePlanArtifactsAreMetadataOnly(
+    needsRevisionDecisionWritePlan,
+    'Needs-revision decision write plan',
+  );
+  assertSafeReportOutput(JSON.stringify(needsRevisionDecisionWritePlan));
+  log('Accepted needs-revision decision write plan coverage.');
+
+  const approvedDecisionWritePlan = makeTaskBoardHandoffWritePlanDraft(
+    approvedDecisionValidation,
+    {
+      approvalRequestDraft,
+      dryRunResult,
+      generatedAt: 1_800_000_000,
+    },
+  );
+  assert(
+    approvedDecisionWritePlan.plan_status === 'write_plan_ready_for_separate_implementation',
+    'Approved fixture write plan may be ready for separate implementation.',
+  );
+  assert(
+    approvedDecisionWritePlan.required_next_action === 'separate_write_implementation_required',
+    'Approved fixture write plan must require separate write implementation.',
+  );
+  assert(
+    approvedDecisionWritePlan.allowed_next_step === 'separate_write_implementation_required',
+    'Approved fixture write plan allowed next step must require separate write implementation.',
+  );
+  assertWritePlanDoesNotWrite(
+    approvedDecisionWritePlan,
+    'Approved fixture write plan',
+  );
+  assertWritePlanForbidsRequiredOperations(
+    approvedDecisionWritePlan,
+    'Approved fixture write plan',
+  );
+  assertWritePlanArtifactsAreMetadataOnly(
+    approvedDecisionWritePlan,
+    'Approved fixture write plan',
+  );
+  assertSafeReportOutput(JSON.stringify(approvedDecisionWritePlan));
+  log('Accepted approved fixture write plan coverage.');
+
+  const blockedDecisionWritePlan = makeTaskBoardHandoffWritePlanDraft(
+    blockedApprovalDecisionValidation,
+    {
+      approvalRequestDraft: blockedApprovalRequestDraft,
+      dryRunResult: blockedApprovalDryRunResult,
+      generatedAt: 1_800_000_000,
+    },
+  );
+  assert(
+    blockedDecisionWritePlan.plan_status === 'blocked',
+    'Blocked approval decision validation write plan must be blocked.',
+  );
+  assert(
+    blockedDecisionWritePlan.required_next_action === 'resolve_blockers_then_restart_approval',
+    'Blocked approval decision validation write plan must require blocker resolution.',
+  );
+  assertWritePlanDoesNotWrite(
+    blockedDecisionWritePlan,
+    'Blocked approval decision validation write plan',
+  );
+  assertWritePlanForbidsRequiredOperations(
+    blockedDecisionWritePlan,
+    'Blocked approval decision validation write plan',
+  );
+  assertWritePlanArtifactsAreMetadataOnly(
+    blockedDecisionWritePlan,
+    'Blocked approval decision validation write plan',
+  );
+  assertSafeReportOutput(JSON.stringify(blockedDecisionWritePlan));
+  log('Accepted blocked approval decision write plan coverage.');
 
   const mismatchedDecisionValidation =
     validateTaskBoardHandoffWriteApprovalDecision(
@@ -2611,6 +2892,80 @@ async function main() {
     'Write approval decision validator script output must not accept a decision by default.',
   );
   log('Accepted stdout-only write approval decision validator script output.');
+
+  const writePlanScriptResult = spawnSync(process.execPath, [
+    'scripts/codex-app-server-runtime-write-plan.mjs',
+  ], {
+    cwd: projectRoot,
+    encoding: 'utf8',
+    stdio: ['ignore', 'pipe', 'pipe'],
+    windowsHide: true,
+  });
+  if (writePlanScriptResult.status !== 0) {
+    throw new Error([
+      'Codex App Server runtime write plan script failed.',
+      sanitize(writePlanScriptResult.stdout),
+      sanitize(writePlanScriptResult.stderr),
+    ].filter(Boolean).join('\n'));
+  }
+
+  assert(
+    writePlanScriptResult.stderr.trim().length === 0,
+    'Write plan script must write JSON to stdout without stderr output.',
+  );
+  const writePlanScriptOutput = writePlanScriptResult.stdout.trim();
+  assertSafeReportOutput(writePlanScriptOutput);
+  const writePlanScriptJson = JSON.parse(writePlanScriptOutput);
+  assert(
+    writePlanScriptJson.plan_status === 'needs_human_decision'
+      || writePlanScriptJson.plan_status === 'blocked',
+    'Write plan script default output must need a human decision or be blocked.',
+  );
+  assert(
+    writePlanScriptJson.plan_status !== 'write_plan_ready_for_separate_implementation',
+    'Write plan script default output must not be ready for separate implementation.',
+  );
+  assert(
+    writePlanScriptJson.source_decision === 'not_decided',
+    'Write plan script default output must not decide approval.',
+  );
+  assert(
+    writePlanScriptJson.source_decision_accepted === false,
+    'Write plan script default output must not accept a decision.',
+  );
+  assert(
+    writePlanScriptJson.source_approval_valid_for_future_write === false,
+    'Write plan script default output must not validate approval for future write.',
+  );
+  assertWritePlanDoesNotWrite(
+    writePlanScriptJson,
+    'Write plan script output',
+  );
+  assertWritePlanForbidsRequiredOperations(
+    writePlanScriptJson,
+    'Write plan script output',
+  );
+  assertWritePlanArtifactsAreMetadataOnly(
+    writePlanScriptJson,
+    'Write plan script output',
+  );
+  assert(
+    !writePlanScriptOutput.includes('"source_decision":"approved"'),
+    'Write plan script output must not contain an approved source decision by default.',
+  );
+  assert(
+    !writePlanScriptOutput.includes('"source_decision_accepted":true'),
+    'Write plan script output must not accept a decision by default.',
+  );
+  assert(
+    !writePlanScriptOutput.includes('"write_authorized_by_this_pr":true'),
+    'Write plan script output must not authorize writes.',
+  );
+  assert(
+    !writePlanScriptOutput.includes('"wrote_anything":true'),
+    'Write plan script output must not report writes.',
+  );
+  log('Accepted stdout-only write plan script output.');
 
   log('Codex App Server runtime MVP scaffold smoke checks passed.');
 }

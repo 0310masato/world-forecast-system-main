@@ -339,6 +339,15 @@ authorize write in this PR, keeps `write_authorized_by_this_pr: false` and
 `wrote_anything: false`, writes nothing, creates no Task Board record or
 HANDOFF file, and does not add file-writing automation, API, DB, worker,
 scheduler, package, CI, automation, or production promotion.
+PR #47 adds a stdout-only, metadata-only write plan draft derived from that
+approval decision validation result. The write plan draft does not grant
+approval, does not authorize write in this PR, keeps
+`write_authorized_by_this_pr: false`, `wrote_anything: false`,
+`write_executor_present: false`, and `executed_write_count: 0`, writes nothing,
+creates no Task Board record or HANDOFF file, and does not add file-writing
+automation, API, DB, worker, scheduler, package, CI, automation, or production
+promotion. The default path remains `needs_human_decision` or `blocked`; an
+approved fixture may only point to separate write implementation scope.
 
 ## Acceptance Criteria For Next Implementation PR
 

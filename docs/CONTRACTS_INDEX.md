@@ -88,6 +88,11 @@ stdout-only で検証するだけです。validator 自体は approval を付与
 write を承認せず、何も書かず、Task Board write、HANDOFF file creation、
 file-writing automation、API、DB、worker、scheduler、package、CI、automation、
 production promotion は追加しません。
+Task Board / HANDOFF Write Plan stdout v0 は、approval decision validation result
+から metadata-only の write plan draft を stdout に出すだけです。approval を
+付与せず、この PR で write を承認せず、write executor を追加せず、何も書かず、
+Task Board write、HANDOFF file creation、file-writing automation、API、DB、
+worker、scheduler、package、CI、automation、production promotion は追加しません。
 これらはいずれも正本契約や実行許可ではありません。
 
 1. Memory Layer
@@ -111,6 +116,7 @@ production promotion は追加しません。
 19. Task Board / HANDOFF Write Dry-Run Validator v0
 20. Task Board / HANDOFF Write Approval Request stdout v0
 21. Task Board / HANDOFF Write Approval Decision Validator stdout v0
+22. Task Board / HANDOFF Write Plan stdout v0
 
 矢印で表すと、次の流れです。
 
@@ -136,6 +142,7 @@ Memory Layer
 -> Task Board / HANDOFF Write Dry-Run Validator v0
 -> Task Board / HANDOFF Write Approval Request stdout v0
 -> Task Board / HANDOFF Write Approval Decision Validator stdout v0
+-> Task Board / HANDOFF Write Plan stdout v0
 ```
 
 各レイヤーは前段を上書きしません。後段の docs や template は、
@@ -181,13 +188,14 @@ forbidden operations、protected path boundary を維持して使います。
 | #44 | Task Board / HANDOFF write dry-run validator v0 | `lib/codex-app-server-runtime/write-dry-run.ts` と stdout-only dry-run script | いいえ。dry-run result 出力のみ | いいえ。Task Board write、HANDOFF file creation、file-writing automation、API/DB/worker/scheduler、package/CI、GitHub automation、AI job execution、production promotion は未導入 | review packet から future write request を検討する前に、human-review-only の dry-run validation result を stdout で確認する |
 | #45 | Task Board / HANDOFF write approval request stdout v0 | dry-run result から stdout-only approval request draft を生成する helper と script | いいえ。approval request draft 出力のみで approval は付与しない | いいえ。Task Board write、HANDOFF file creation、file-writing automation、API/DB/worker/scheduler、package/CI、GitHub automation、AI job execution、production promotion は未導入 | dry-run passed / blocked を human-review material に整える。approval_record.approved は false のままで、future write は別 scope と明示承認が必要 |
 | #46 | Task Board / HANDOFF write approval decision validator stdout v0 | PR #45 の approval request draft に対して、人間が供給した approval decision record を検証する helper と stdout-only script | いいえ。decision validation 出力のみで approval は自動付与しない | いいえ。Task Board write、HANDOFF file creation、file-writing automation、API/DB/worker/scheduler、package/CI、GitHub automation、AI job execution、production promotion は未導入 | missing decision は `needs_human_decision` に留め、valid approved fixture でも `write_authorized_by_this_pr: false` / `wrote_anything: false` のまま separate write implementation を要求する |
+| #47 | Task Board / HANDOFF write plan stdout v0 | approval decision validation result から metadata-only write plan draft を生成する helper と stdout-only script | いいえ。write plan draft 出力のみで approval は付与せず、write executor もない | いいえ。Task Board write、HANDOFF file creation、file-writing automation、API/DB/worker/scheduler、package/CI、GitHub automation、AI job execution、production promotion は未導入 | default は `needs_human_decision` または `blocked` に留め、approved fixture でも `write_authorized_by_this_pr: false` / `wrote_anything: false` / `write_executor_present: false` / `executed_write_count: 0` のまま separate write implementation を要求する |
 
 ## Docs / Templates 用途表
 
 | ドキュメント名 | 主な読者 | 使う場面 | 正本として扱う内容 | 使ってはいけない用途 |
 | --- | --- | --- | --- | --- |
 | `AGENTS.md` | CodexApp Worker、AI worker、human reviewer | リポジトリ内で作業を始める前 | protected core、human approval、Codex App Server policy、Task Board / Handoff boundary、routine boundary | runtime/API/DB/automation の実装許可として扱わない |
-| `docs/CONTRACTS_INDEX.md` | 全読者 | 契約・運用 docs の入口を確認するとき | PR #12-#43 の地図、読む順番、用途、未導入領域、停止条件 | 実行、PR 作成、file-writing automation、production apply の許可として扱わない |
+| `docs/CONTRACTS_INDEX.md` | 全読者 | 契約・運用 docs の入口を確認するとき | PR #12-#47 の地図、読む順番、用途、未導入領域、停止条件 | 実行、PR 作成、file-writing automation、production apply の許可として扱わない |
 | `docs/CONTEXT_PACKS.md` | AI Analysis Reviewer、CodexApp Worker | AI 分析に渡す context pack の入力境界を確認するとき | context pack の定義、allowed/excluded inputs、sanitization、versioning | secrets、raw local path、production write instruction、live source of record を入れる根拠にしない |
 | `docs/AI_ANALYSIS_JOBS.md` | AI Analysis Reviewer、CodexApp Worker | AI job の allowed/forbidden scope、intake、result contract を確認するとき | AI job の proposal-only 入出力、preflight、result contract、人間レビュー前提 | AI job 実行処理、prompt execution、worker runtime、storage path の仕様として扱わない |
 | `docs/HUMAN_APPROVAL.md` | Human Owner、AI Analysis Reviewer、Risk / Safety Reviewer | AI output を承認、却下、revision、archive する境界を確認するとき | approval principle、decision outcome、implementation proposal への接続 | approval を production apply、deploy、DB write、API update の自動許可にしない |
