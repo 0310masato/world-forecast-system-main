@@ -140,6 +140,38 @@ const REQUIRED_WRITE_PLAN_FORBIDDEN_OPERATIONS = [
   'navigation_guidance',
   'military_guidance',
 ];
+const REQUIRED_APPLY_PREFLIGHT_FORBIDDEN_OPERATIONS = [
+  'create_pr',
+  'merge_pr',
+  'direct_deploy',
+  'production_write',
+  'production_promotion',
+  'api_forecast_update',
+  'api_hormuz_update',
+  'api_hormuz_news_update',
+  'api_route_creation',
+  'db_read',
+  'db_write',
+  'db_migration',
+  'worker_runtime',
+  'scheduler_runtime',
+  'external_api_integration',
+  'package_change',
+  'ci_change',
+  'github_automation',
+  'file_writing_automation',
+  'file_writing_automation_without_approval',
+  'handoff_file_creation',
+  'handoff_file_creation_without_approval',
+  'task_board_write',
+  'task_board_write_without_approval',
+  'ai_job_execution',
+  'external_publish',
+  'automated_trading',
+  'investment_advice',
+  'navigation_guidance',
+  'military_guidance',
+];
 
 function sanitize(message) {
   const buildDirUrlPath = buildDir.replaceAll(path.sep, '/');
@@ -400,6 +432,80 @@ function assertWritePlanArtifactsAreMetadataOnly(result, label) {
   }
 }
 
+function assertApplyPreflightForbidsRequiredOperations(result, label) {
+  for (const operation of REQUIRED_APPLY_PREFLIGHT_FORBIDDEN_OPERATIONS) {
+    assert(
+      result.forbidden_operations.includes(operation),
+      `${label} must forbid ${operation}.`,
+    );
+  }
+}
+
+function assertApplyPreflightDoesNotWriteOrApply(result, label) {
+  assert(
+    result.write_authorized_by_this_pr === false,
+    `${label} must keep write_authorized_by_this_pr false.`,
+  );
+  assert(
+    result.apply_authorized_by_this_pr === false,
+    `${label} must keep apply_authorized_by_this_pr false.`,
+  );
+  assert(
+    result.wrote_anything === false,
+    `${label} must keep wrote_anything false.`,
+  );
+  assert(
+    result.write_executor_present === false,
+    `${label} must keep write_executor_present false.`,
+  );
+  assert(
+    result.apply_executor_present === false,
+    `${label} must keep apply_executor_present false.`,
+  );
+  assert(
+    result.executed_write_count === 0,
+    `${label} must keep executed_write_count 0.`,
+  );
+  assert(
+    result.required_human_approval === true,
+    `${label} must keep required_human_approval true.`,
+  );
+  assert(
+    result.proposed_apply_mode === 'apply_after_separate_executor_implementation_and_explicit_human_approval',
+    `${label} must keep proposed_apply_mode in separate executor scope.`,
+  );
+  assert(
+    result.allowed_next_step !== 'actual_write',
+    `${label} must not allow actual_write.`,
+  );
+}
+
+function assertApplyPreflightArtifactsAreMetadataOnly(result, label) {
+  assert(
+    Array.isArray(result.proposed_apply_artifacts),
+    `${label} must include proposed apply artifacts metadata.`,
+  );
+  assert(
+    result.proposed_apply_artifacts.length > 0,
+    `${label} must include at least one proposed apply artifact metadata item.`,
+  );
+
+  for (const artifact of result.proposed_apply_artifacts) {
+    assert(
+      artifact.metadata_only === true,
+      `${label} artifact must be metadata-only.`,
+    );
+    assert(
+      artifact.includes_full_future_file_contents === false,
+      `${label} artifact must not include full future file contents.`,
+    );
+    assert(
+      artifact.intended_operation === 'future_apply_after_separate_executor_implementation_and_explicit_human_approval',
+      `${label} artifact must stay in separate future executor scope.`,
+    );
+  }
+}
+
 function makeApprovalDecisionRecord(approvalRequestDraft, overrides = {}) {
   return {
     approval_decision_id: 'codex-app-server-runtime-write-approval-decision-fixture-001',
@@ -478,6 +584,7 @@ async function compileCodexAppServerRuntimeHelpers() {
     'lib/codex-app-server-runtime/write-approval-request.ts',
     'lib/codex-app-server-runtime/write-approval-decision.ts',
     'lib/codex-app-server-runtime/write-plan.ts',
+    'lib/codex-app-server-runtime/write-apply-preflight.ts',
   ], {
     cwd: projectRoot,
     encoding: 'utf8',
@@ -538,6 +645,9 @@ async function main() {
   const {
     makeTaskBoardHandoffWritePlanDraft,
   } = require(path.join(buildDir, 'lib', 'codex-app-server-runtime', 'write-plan.js'));
+  const {
+    makeTaskBoardHandoffWriteApplyPreflight,
+  } = require(path.join(buildDir, 'lib', 'codex-app-server-runtime', 'write-apply-preflight.js'));
 
   const boundary = makeCodexAppServerRuntimeMvpBoundary();
   assert(boundary.proposal_only === true, 'Boundary must be proposal-only.');
@@ -1559,6 +1669,166 @@ async function main() {
   );
   assertSafeReportOutput(JSON.stringify(blockedDecisionWritePlan));
   log('Accepted blocked approval decision write plan coverage.');
+
+  const missingDecisionApplyPreflight =
+    makeTaskBoardHandoffWriteApplyPreflight(
+      missingDecisionWritePlan,
+      { generatedAt: 1_800_000_000 },
+    );
+  assert(
+    missingDecisionApplyPreflight.preflight_status === 'needs_human_decision',
+    'Missing decision apply preflight must need a human decision.',
+  );
+  assert(
+    missingDecisionApplyPreflight.source_write_plan_id === missingDecisionWritePlan.write_plan_id,
+    'Missing decision apply preflight must cite the source write plan id.',
+  );
+  assert(
+    missingDecisionApplyPreflight.source_write_plan_status === 'needs_human_decision',
+    'Missing decision apply preflight must preserve source write plan status.',
+  );
+  assert(
+    missingDecisionApplyPreflight.required_next_action === 'human_decision_required',
+    'Missing decision apply preflight must require a human decision.',
+  );
+  assert(
+    missingDecisionApplyPreflight.allowed_next_step === 'human_review_only',
+    'Missing decision apply preflight allowed next step must be human review only.',
+  );
+  assertApplyPreflightDoesNotWriteOrApply(
+    missingDecisionApplyPreflight,
+    'Missing decision apply preflight',
+  );
+  assertApplyPreflightForbidsRequiredOperations(
+    missingDecisionApplyPreflight,
+    'Missing decision apply preflight',
+  );
+  assertApplyPreflightArtifactsAreMetadataOnly(
+    missingDecisionApplyPreflight,
+    'Missing decision apply preflight',
+  );
+  assertSafeReportOutput(JSON.stringify(missingDecisionApplyPreflight));
+  log('Accepted missing decision apply preflight coverage.');
+
+  const rejectedDecisionApplyPreflight =
+    makeTaskBoardHandoffWriteApplyPreflight(
+      rejectedDecisionWritePlan,
+      { generatedAt: 1_800_000_000 },
+    );
+  assert(
+    rejectedDecisionApplyPreflight.preflight_status === 'blocked',
+    'Rejected decision apply preflight must be blocked.',
+  );
+  assert(
+    rejectedDecisionApplyPreflight.required_next_action === 'revise_or_reject_request',
+    'Rejected decision apply preflight must require revise_or_reject_request.',
+  );
+  assert(
+    rejectedDecisionApplyPreflight.allowed_next_step === 'revise_or_reject_request',
+    'Rejected decision apply preflight allowed next step must stay in revise_or_reject_request.',
+  );
+  assertApplyPreflightDoesNotWriteOrApply(
+    rejectedDecisionApplyPreflight,
+    'Rejected decision apply preflight',
+  );
+  assertApplyPreflightForbidsRequiredOperations(
+    rejectedDecisionApplyPreflight,
+    'Rejected decision apply preflight',
+  );
+  assertApplyPreflightArtifactsAreMetadataOnly(
+    rejectedDecisionApplyPreflight,
+    'Rejected decision apply preflight',
+  );
+  assertSafeReportOutput(JSON.stringify(rejectedDecisionApplyPreflight));
+  log('Accepted rejected decision apply preflight coverage.');
+
+  const needsRevisionDecisionApplyPreflight =
+    makeTaskBoardHandoffWriteApplyPreflight(
+      needsRevisionDecisionWritePlan,
+      { generatedAt: 1_800_000_000 },
+    );
+  assert(
+    needsRevisionDecisionApplyPreflight.preflight_status === 'blocked',
+    'Needs-revision decision apply preflight must be blocked.',
+  );
+  assert(
+    needsRevisionDecisionApplyPreflight.required_next_action === 'revise_or_reject_request',
+    'Needs-revision decision apply preflight must require revise_or_reject_request.',
+  );
+  assertApplyPreflightDoesNotWriteOrApply(
+    needsRevisionDecisionApplyPreflight,
+    'Needs-revision decision apply preflight',
+  );
+  assertApplyPreflightForbidsRequiredOperations(
+    needsRevisionDecisionApplyPreflight,
+    'Needs-revision decision apply preflight',
+  );
+  assertApplyPreflightArtifactsAreMetadataOnly(
+    needsRevisionDecisionApplyPreflight,
+    'Needs-revision decision apply preflight',
+  );
+  assertSafeReportOutput(JSON.stringify(needsRevisionDecisionApplyPreflight));
+  log('Accepted needs-revision decision apply preflight coverage.');
+
+  const approvedDecisionApplyPreflight =
+    makeTaskBoardHandoffWriteApplyPreflight(
+      approvedDecisionWritePlan,
+      { generatedAt: 1_800_000_000 },
+    );
+  assert(
+    approvedDecisionApplyPreflight.preflight_status === 'apply_preflight_ready_for_separate_executor_implementation',
+    'Approved fixture apply preflight may be ready for separate executor implementation.',
+  );
+  assert(
+    approvedDecisionApplyPreflight.required_next_action === 'separate_write_executor_implementation_required',
+    'Approved fixture apply preflight must require separate write executor implementation.',
+  );
+  assert(
+    approvedDecisionApplyPreflight.allowed_next_step === 'separate_write_executor_implementation_required',
+    'Approved fixture apply preflight allowed next step must require separate write executor implementation.',
+  );
+  assertApplyPreflightDoesNotWriteOrApply(
+    approvedDecisionApplyPreflight,
+    'Approved fixture apply preflight',
+  );
+  assertApplyPreflightForbidsRequiredOperations(
+    approvedDecisionApplyPreflight,
+    'Approved fixture apply preflight',
+  );
+  assertApplyPreflightArtifactsAreMetadataOnly(
+    approvedDecisionApplyPreflight,
+    'Approved fixture apply preflight',
+  );
+  assertSafeReportOutput(JSON.stringify(approvedDecisionApplyPreflight));
+  log('Accepted approved fixture apply preflight coverage.');
+
+  const blockedDecisionApplyPreflight =
+    makeTaskBoardHandoffWriteApplyPreflight(
+      blockedDecisionWritePlan,
+      { generatedAt: 1_800_000_000 },
+    );
+  assert(
+    blockedDecisionApplyPreflight.preflight_status === 'blocked',
+    'Blocked decision apply preflight must be blocked.',
+  );
+  assert(
+    blockedDecisionApplyPreflight.required_next_action === 'resolve_blockers_then_restart_approval',
+    'Blocked decision apply preflight must require blocker resolution.',
+  );
+  assertApplyPreflightDoesNotWriteOrApply(
+    blockedDecisionApplyPreflight,
+    'Blocked decision apply preflight',
+  );
+  assertApplyPreflightForbidsRequiredOperations(
+    blockedDecisionApplyPreflight,
+    'Blocked decision apply preflight',
+  );
+  assertApplyPreflightArtifactsAreMetadataOnly(
+    blockedDecisionApplyPreflight,
+    'Blocked decision apply preflight',
+  );
+  assertSafeReportOutput(JSON.stringify(blockedDecisionApplyPreflight));
+  log('Accepted blocked decision apply preflight coverage.');
 
   const mismatchedDecisionValidation =
     validateTaskBoardHandoffWriteApprovalDecision(
@@ -2966,6 +3236,95 @@ async function main() {
     'Write plan script output must not report writes.',
   );
   log('Accepted stdout-only write plan script output.');
+
+  const writeApplyPreflightScriptResult = spawnSync(process.execPath, [
+    'scripts/codex-app-server-runtime-write-apply-preflight.mjs',
+  ], {
+    cwd: projectRoot,
+    encoding: 'utf8',
+    stdio: ['ignore', 'pipe', 'pipe'],
+    windowsHide: true,
+  });
+  if (writeApplyPreflightScriptResult.status !== 0) {
+    throw new Error([
+      'Codex App Server runtime write apply preflight script failed.',
+      sanitize(writeApplyPreflightScriptResult.stdout),
+      sanitize(writeApplyPreflightScriptResult.stderr),
+    ].filter(Boolean).join('\n'));
+  }
+
+  assert(
+    writeApplyPreflightScriptResult.stderr.trim().length === 0,
+    'Write apply preflight script must write JSON to stdout without stderr output.',
+  );
+  const writeApplyPreflightScriptOutput =
+    writeApplyPreflightScriptResult.stdout.trim();
+  assertSafeReportOutput(writeApplyPreflightScriptOutput);
+  const writeApplyPreflightScriptJson =
+    JSON.parse(writeApplyPreflightScriptOutput);
+  assert(
+    writeApplyPreflightScriptJson.preflight_status === 'needs_human_decision'
+      || writeApplyPreflightScriptJson.preflight_status === 'blocked',
+    'Write apply preflight script default output must need a human decision or be blocked.',
+  );
+  assert(
+    writeApplyPreflightScriptJson.preflight_status
+      !== 'apply_preflight_ready_for_separate_executor_implementation',
+    'Write apply preflight script default output must not be ready for separate executor implementation.',
+  );
+  assert(
+    writeApplyPreflightScriptJson.source_write_plan_id,
+    'Write apply preflight script output must include source_write_plan_id.',
+  );
+  assert(
+    writeApplyPreflightScriptJson.source_write_plan_status,
+    'Write apply preflight script output must include source_write_plan_status.',
+  );
+  assert(
+    writeApplyPreflightScriptJson.source_decision === 'not_decided',
+    'Write apply preflight script default output must not decide approval.',
+  );
+  assert(
+    writeApplyPreflightScriptJson.source_decision_accepted === false,
+    'Write apply preflight script default output must not accept a decision.',
+  );
+  assert(
+    writeApplyPreflightScriptJson.source_approval_valid_for_future_write === false,
+    'Write apply preflight script default output must not validate approval for future write.',
+  );
+  assertApplyPreflightDoesNotWriteOrApply(
+    writeApplyPreflightScriptJson,
+    'Write apply preflight script output',
+  );
+  assertApplyPreflightForbidsRequiredOperations(
+    writeApplyPreflightScriptJson,
+    'Write apply preflight script output',
+  );
+  assertApplyPreflightArtifactsAreMetadataOnly(
+    writeApplyPreflightScriptJson,
+    'Write apply preflight script output',
+  );
+  assert(
+    !writeApplyPreflightScriptOutput.includes('"source_decision":"approved"'),
+    'Write apply preflight script output must not contain an approved source decision by default.',
+  );
+  assert(
+    !writeApplyPreflightScriptOutput.includes('"source_decision_accepted":true'),
+    'Write apply preflight script output must not accept a decision by default.',
+  );
+  assert(
+    !writeApplyPreflightScriptOutput.includes('"write_authorized_by_this_pr":true'),
+    'Write apply preflight script output must not authorize writes.',
+  );
+  assert(
+    !writeApplyPreflightScriptOutput.includes('"apply_authorized_by_this_pr":true'),
+    'Write apply preflight script output must not authorize apply.',
+  );
+  assert(
+    !writeApplyPreflightScriptOutput.includes('"wrote_anything":true'),
+    'Write apply preflight script output must not report writes.',
+  );
+  log('Accepted stdout-only write apply preflight script output.');
 
   log('Codex App Server runtime MVP scaffold smoke checks passed.');
 }
