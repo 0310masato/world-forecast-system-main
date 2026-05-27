@@ -348,6 +348,17 @@ creates no Task Board record or HANDOFF file, and does not add file-writing
 automation, API, DB, worker, scheduler, package, CI, automation, or production
 promotion. The default path remains `needs_human_decision` or `blocked`; an
 approved fixture may only point to separate write implementation scope.
+PR #48 adds a stdout-only, metadata-only write apply preflight result derived
+from the write plan draft. The apply preflight does not grant approval, does
+not authorize write or apply in this PR, keeps
+`write_authorized_by_this_pr: false`, `apply_authorized_by_this_pr: false`,
+`wrote_anything: false`, `write_executor_present: false`,
+`apply_executor_present: false`, and `executed_write_count: 0`, writes nothing,
+creates no Task Board record or HANDOFF file, and does not add file-writing
+automation, API, DB, worker, scheduler, package, CI, automation, or production
+promotion. The default path remains `needs_human_decision` or `blocked`; an
+approved write-plan fixture may only point to separate write executor
+implementation scope.
 
 ## Acceptance Criteria For Next Implementation PR
 
