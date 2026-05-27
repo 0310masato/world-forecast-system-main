@@ -76,6 +76,38 @@ const REQUIRED_APPROVAL_REQUEST_APPROVER_ROLES = [
   'security_reviewer',
   'contract_compliance_reviewer',
 ];
+const REQUIRED_APPROVAL_DECISION_FORBIDDEN_OPERATIONS = [
+  'create_pr',
+  'merge_pr',
+  'direct_deploy',
+  'production_write',
+  'production_promotion',
+  'api_forecast_update',
+  'api_hormuz_update',
+  'api_hormuz_news_update',
+  'api_route_creation',
+  'db_read',
+  'db_write',
+  'db_migration',
+  'worker_runtime',
+  'scheduler_runtime',
+  'external_api_integration',
+  'package_change',
+  'ci_change',
+  'github_automation',
+  'file_writing_automation',
+  'file_writing_automation_without_approval',
+  'handoff_file_creation',
+  'handoff_file_creation_without_approval',
+  'task_board_write',
+  'task_board_write_without_approval',
+  'ai_job_execution',
+  'external_publish',
+  'automated_trading',
+  'investment_advice',
+  'navigation_guidance',
+  'military_guidance',
+];
 
 function sanitize(message) {
   const buildDirUrlPath = buildDir.replaceAll(path.sep, '/');
@@ -246,6 +278,53 @@ function assertApprovalRequestDoesNotApprove(draft, label) {
   );
 }
 
+function assertApprovalDecisionForbidsRequiredOperations(result, label) {
+  for (const operation of REQUIRED_APPROVAL_DECISION_FORBIDDEN_OPERATIONS) {
+    assert(
+      result.forbidden_operations.includes(operation),
+      `${label} must forbid ${operation}.`,
+    );
+  }
+}
+
+function assertApprovalDecisionDoesNotWrite(result, label) {
+  assert(
+    result.write_authorized_by_this_pr === false,
+    `${label} must keep write_authorized_by_this_pr false.`,
+  );
+  assert(
+    result.wrote_anything === false,
+    `${label} must keep wrote_anything false.`,
+  );
+  assert(
+    result.required_human_approval === true,
+    `${label} must keep required_human_approval true.`,
+  );
+}
+
+function makeApprovalDecisionRecord(approvalRequestDraft, overrides = {}) {
+  return {
+    approval_decision_id: 'codex-app-server-runtime-write-approval-decision-fixture-001',
+    approval_request_id: approvalRequestDraft.approval_request_id,
+    approval_request_version: approvalRequestDraft.approval_request_version,
+    decision: 'approved',
+    decided_by: 'human_owner_review_fixture',
+    decided_at: '2027-01-15T08:01:00.000Z',
+    approver_role: 'human_owner',
+    approval_scope: 'task_board_handoff_write_after_human_approval',
+    approval_reason: 'Synthetic human-supplied fixture for validator coverage only.',
+    reviewed_artifacts: [
+      approvalRequestDraft.approval_request_id,
+      'scripts/codex-app-server-runtime-write-approval-request.mjs',
+    ],
+    conditions: [
+      'Separate write implementation PR required before any write.',
+    ],
+    expires_at: '2027-02-15T08:00:00.000Z',
+    ...overrides,
+  };
+}
+
 function assertSanitizesRawPath(rawPath) {
   const sanitized = sanitize(rawPath);
 
@@ -299,6 +378,7 @@ async function compileCodexAppServerRuntimeHelpers() {
     'lib/codex-app-server-runtime/report.ts',
     'lib/codex-app-server-runtime/write-dry-run.ts',
     'lib/codex-app-server-runtime/write-approval-request.ts',
+    'lib/codex-app-server-runtime/write-approval-decision.ts',
   ], {
     cwd: projectRoot,
     encoding: 'utf8',
@@ -353,6 +433,9 @@ async function main() {
   const {
     makeTaskBoardHandoffWriteApprovalRequestDraft,
   } = require(path.join(buildDir, 'lib', 'codex-app-server-runtime', 'write-approval-request.js'));
+  const {
+    validateTaskBoardHandoffWriteApprovalDecision,
+  } = require(path.join(buildDir, 'lib', 'codex-app-server-runtime', 'write-approval-decision.js'));
 
   const boundary = makeCodexAppServerRuntimeMvpBoundary();
   assert(boundary.proposal_only === true, 'Boundary must be proposal-only.');
@@ -972,6 +1055,296 @@ async function main() {
     );
   }
   log('Accepted blocked approval request and no-auto-approval coverage.');
+
+  const missingApprovalDecisionValidation =
+    validateTaskBoardHandoffWriteApprovalDecision(
+      approvalRequestDraft,
+      null,
+      { generatedAt: 1_800_000_000 },
+    );
+  const missingApprovalDecisionValidationOutput =
+    JSON.stringify(missingApprovalDecisionValidation);
+  assert(
+    missingApprovalDecisionValidation.status === 'needs_human_decision',
+    'Missing approval decision record must need a human decision.',
+  );
+  assert(
+    missingApprovalDecisionValidation.decision === 'not_decided',
+    'Missing approval decision record must not decide approval.',
+  );
+  assert(
+    missingApprovalDecisionValidation.decision_accepted === false,
+    'Missing approval decision record must not be accepted.',
+  );
+  assert(
+    missingApprovalDecisionValidation.approval_valid_for_future_write === false,
+    'Missing approval decision record must not be valid for future write.',
+  );
+  assertApprovalDecisionDoesNotWrite(
+    missingApprovalDecisionValidation,
+    'Missing approval decision validation',
+  );
+  assert(
+    missingApprovalDecisionValidation.required_next_action === 'human_review_only',
+    'Missing approval decision validation must require human review only.',
+  );
+  assert(
+    missingApprovalDecisionValidation.allowed_next_step === 'human_review_only',
+    'Missing approval decision validation allowed next step must be human_review_only.',
+  );
+  assert(
+    missingApprovalDecisionValidation.validation.passed === false,
+    'Missing approval decision validation must not pass.',
+  );
+  assert(
+    hasIssue(missingApprovalDecisionValidation.validation, 'E_APPROVAL_DECISION_MISSING'),
+    'Missing approval decision validation must include E_APPROVAL_DECISION_MISSING.',
+  );
+  assertApprovalDecisionForbidsRequiredOperations(
+    missingApprovalDecisionValidation,
+    'Missing approval decision validation',
+  );
+  assertSafeReportOutput(missingApprovalDecisionValidationOutput);
+  log('Accepted missing approval decision validation coverage.');
+
+  const blockedApprovalDecisionValidation =
+    validateTaskBoardHandoffWriteApprovalDecision(
+      blockedApprovalRequestDraft,
+      makeApprovalDecisionRecord(blockedApprovalRequestDraft),
+      { generatedAt: 1_800_000_000 },
+    );
+  assert(
+    blockedApprovalDecisionValidation.status === 'blocked',
+    'Blocked approval request must block approval decision validation.',
+  );
+  assert(
+    blockedApprovalDecisionValidation.decision_accepted === false,
+    'Blocked approval request must not accept an approval decision.',
+  );
+  assert(
+    blockedApprovalDecisionValidation.approval_valid_for_future_write === false,
+    'Blocked approval request must not be valid for future write.',
+  );
+  assertApprovalDecisionDoesNotWrite(
+    blockedApprovalDecisionValidation,
+    'Blocked approval decision validation',
+  );
+  assert(
+    blockedApprovalDecisionValidation.validation.passed === false,
+    'Blocked approval decision validation must not pass.',
+  );
+  assert(
+    hasIssue(blockedApprovalDecisionValidation.validation, 'E_APPROVAL_REQUEST_BLOCKED')
+      || hasIssue(blockedApprovalDecisionValidation.validation, 'E_DRY_RUN_NOT_PASSED'),
+    'Blocked approval decision validation must include a blocked request or dry-run issue.',
+  );
+  assertSafeReportOutput(JSON.stringify(blockedApprovalDecisionValidation));
+  log('Accepted blocked approval decision validation coverage.');
+
+  const rejectedDecisionRecord = makeApprovalDecisionRecord(
+    approvalRequestDraft,
+    {
+      approval_decision_id: 'codex-app-server-runtime-write-approval-decision-rejected-fixture-001',
+      decision: 'rejected',
+      approver_role: 'qa_reviewer',
+      approval_scope: 'none',
+      approval_reason: 'Synthetic human reviewer rejected the request fixture.',
+      conditions: [],
+      expires_at: null,
+    },
+  );
+  const rejectedDecisionValidation =
+    validateTaskBoardHandoffWriteApprovalDecision(
+      approvalRequestDraft,
+      rejectedDecisionRecord,
+      { generatedAt: 1_800_000_000 },
+    );
+  assert(
+    rejectedDecisionValidation.status === 'decision_validated',
+    'Rejected approval decision fixture must validate as a decision.',
+  );
+  assert(
+    rejectedDecisionValidation.decision === 'rejected',
+    'Rejected approval decision fixture must retain rejected decision.',
+  );
+  assert(
+    rejectedDecisionValidation.decision_accepted === true,
+    'Rejected approval decision fixture must be accepted as a human decision.',
+  );
+  assert(
+    rejectedDecisionValidation.approval_valid_for_future_write === false,
+    'Rejected approval decision fixture must not be valid for future write.',
+  );
+  assert(
+    rejectedDecisionValidation.required_next_action === 'revise_or_reject_request',
+    'Rejected approval decision fixture must require revise_or_reject_request.',
+  );
+  assertApprovalDecisionDoesNotWrite(
+    rejectedDecisionValidation,
+    'Rejected approval decision validation',
+  );
+  assertSafeReportOutput(JSON.stringify(rejectedDecisionValidation));
+  log('Accepted rejected approval decision validation coverage.');
+
+  const needsRevisionDecisionValidation =
+    validateTaskBoardHandoffWriteApprovalDecision(
+      approvalRequestDraft,
+      makeApprovalDecisionRecord(approvalRequestDraft, {
+        approval_decision_id: 'codex-app-server-runtime-write-approval-decision-revision-fixture-001',
+        decision: 'needs_revision',
+        approver_role: 'contract_compliance_reviewer',
+        approval_scope: 'none',
+        approval_reason: 'Synthetic human reviewer requested revision before any future write.',
+        reviewed_artifacts: [
+          approvalRequestDraft.approval_request_id,
+          'docs/tool-contracts/TASK_BOARD_HANDOFF_WRITE_TOOL_CONTRACT.md',
+        ],
+        conditions: [
+          'Revise the request before any separate write implementation is considered.',
+        ],
+        expires_at: null,
+      }),
+      { generatedAt: 1_800_000_000 },
+    );
+  assert(
+    needsRevisionDecisionValidation.status === 'decision_validated',
+    'Needs-revision approval decision fixture must validate as a decision.',
+  );
+  assert(
+    needsRevisionDecisionValidation.decision === 'needs_revision',
+    'Needs-revision approval decision fixture must retain needs_revision decision.',
+  );
+  assert(
+    needsRevisionDecisionValidation.decision_accepted === true,
+    'Needs-revision approval decision fixture must be accepted as a human decision.',
+  );
+  assert(
+    needsRevisionDecisionValidation.approval_valid_for_future_write === false,
+    'Needs-revision approval decision fixture must not be valid for future write.',
+  );
+  assert(
+    needsRevisionDecisionValidation.required_next_action === 'revise_or_reject_request',
+    'Needs-revision approval decision fixture must require revise_or_reject_request.',
+  );
+  assertApprovalDecisionDoesNotWrite(
+    needsRevisionDecisionValidation,
+    'Needs-revision approval decision validation',
+  );
+  assertSafeReportOutput(JSON.stringify(needsRevisionDecisionValidation));
+  log('Accepted needs-revision approval decision validation coverage.');
+
+  const approvedDecisionRecord = makeApprovalDecisionRecord(approvalRequestDraft);
+  const approvedDecisionValidation =
+    validateTaskBoardHandoffWriteApprovalDecision(
+      approvalRequestDraft,
+      approvedDecisionRecord,
+      { generatedAt: 1_800_000_000 },
+    );
+  assert(
+    approvedDecisionValidation.status === 'decision_validated',
+    'Approved approval decision fixture must validate as a decision.',
+  );
+  assert(
+    approvedDecisionValidation.decision === 'approved',
+    'Approved approval decision fixture must retain approved decision.',
+  );
+  assert(
+    approvedDecisionValidation.decision_accepted === true,
+    'Approved approval decision fixture must be accepted as a human decision.',
+  );
+  assert(
+    approvedDecisionValidation.approval_valid_for_future_write === true,
+    'Approved approval decision fixture may be valid for a separate future write implementation.',
+  );
+  assertApprovalDecisionDoesNotWrite(
+    approvedDecisionValidation,
+    'Approved approval decision validation',
+  );
+  assert(
+    approvedDecisionValidation.required_next_action === 'separate_write_implementation_required',
+    'Approved approval decision fixture must require separate write implementation.',
+  );
+  assert(
+    approvedDecisionValidation.allowed_next_step === 'separate_write_implementation_required',
+    'Approved approval decision fixture allowed next step must require separate write implementation.',
+  );
+  assert(
+    approvedDecisionValidation.validation.passed === true,
+    'Approved approval decision fixture validation must pass.',
+  );
+  assertApprovalDecisionForbidsRequiredOperations(
+    approvedDecisionValidation,
+    'Approved approval decision validation',
+  );
+  assertSafeReportOutput(JSON.stringify(approvedDecisionValidation));
+  log('Accepted approved approval decision fixture validation coverage.');
+
+  const mismatchedDecisionValidation =
+    validateTaskBoardHandoffWriteApprovalDecision(
+      approvalRequestDraft,
+      makeApprovalDecisionRecord(approvalRequestDraft, {
+        approval_request_id: 'mismatched-approval-request-id',
+      }),
+      { generatedAt: 1_800_000_000 },
+    );
+  assert(
+    mismatchedDecisionValidation.status === 'blocked',
+    'Mismatched approval request id must block decision validation.',
+  );
+  assert(
+    hasIssue(mismatchedDecisionValidation.validation, 'E_APPROVAL_REQUEST_ID_MISMATCH'),
+    'Mismatched approval request id must include E_APPROVAL_REQUEST_ID_MISMATCH.',
+  );
+  assertApprovalDecisionDoesNotWrite(
+    mismatchedDecisionValidation,
+    'Mismatched approval decision validation',
+  );
+
+  const invalidRoleDecisionValidation =
+    validateTaskBoardHandoffWriteApprovalDecision(
+      approvalRequestDraft,
+      makeApprovalDecisionRecord(approvalRequestDraft, {
+        approver_role: 'automation_bot',
+      }),
+      { generatedAt: 1_800_000_000 },
+    );
+  assert(
+    invalidRoleDecisionValidation.status === 'blocked',
+    'Invalid approver role must block decision validation.',
+  );
+  assert(
+    hasIssue(invalidRoleDecisionValidation.validation, 'E_APPROVER_ROLE_INVALID'),
+    'Invalid approver role must include E_APPROVER_ROLE_INVALID.',
+  );
+  assertApprovalDecisionDoesNotWrite(
+    invalidRoleDecisionValidation,
+    'Invalid role approval decision validation',
+  );
+
+  const missingArtifactsDecisionValidation =
+    validateTaskBoardHandoffWriteApprovalDecision(
+      approvalRequestDraft,
+      makeApprovalDecisionRecord(approvalRequestDraft, {
+        reviewed_artifacts: [],
+      }),
+      { generatedAt: 1_800_000_000 },
+    );
+  assert(
+    missingArtifactsDecisionValidation.status === 'blocked',
+    'Missing reviewed artifacts must block decision validation.',
+  );
+  assert(
+    hasIssue(missingArtifactsDecisionValidation.validation, 'E_REVIEWED_ARTIFACTS_MISSING'),
+    'Missing reviewed artifacts must include E_REVIEWED_ARTIFACTS_MISSING.',
+  );
+  assertApprovalDecisionDoesNotWrite(
+    missingArtifactsDecisionValidation,
+    'Missing artifacts approval decision validation',
+  );
+  assertSafeReportOutput(JSON.stringify(mismatchedDecisionValidation));
+  assertSafeReportOutput(JSON.stringify(invalidRoleDecisionValidation));
+  assertSafeReportOutput(JSON.stringify(missingArtifactsDecisionValidation));
+  log('Accepted malformed approval decision validation coverage.');
 
   const nonJsonBigIntRequest = {
     ...dryRunRequest,
@@ -2163,6 +2536,81 @@ async function main() {
     'Write approval request script output must not contain approved true.',
   );
   log('Accepted stdout-only write approval request script output.');
+
+  const writeApprovalDecisionScriptResult = spawnSync(process.execPath, [
+    'scripts/codex-app-server-runtime-write-approval-decision-validator.mjs',
+  ], {
+    cwd: projectRoot,
+    encoding: 'utf8',
+    stdio: ['ignore', 'pipe', 'pipe'],
+    windowsHide: true,
+  });
+  if (writeApprovalDecisionScriptResult.status !== 0) {
+    throw new Error([
+      'Codex App Server runtime write approval decision validator script failed.',
+      sanitize(writeApprovalDecisionScriptResult.stdout),
+      sanitize(writeApprovalDecisionScriptResult.stderr),
+    ].filter(Boolean).join('\n'));
+  }
+
+  assert(
+    writeApprovalDecisionScriptResult.stderr.trim().length === 0,
+    'Write approval decision validator script must write JSON to stdout without stderr output.',
+  );
+  const writeApprovalDecisionScriptOutput =
+    writeApprovalDecisionScriptResult.stdout.trim();
+  assertSafeReportOutput(writeApprovalDecisionScriptOutput);
+  const writeApprovalDecisionScriptJson =
+    JSON.parse(writeApprovalDecisionScriptOutput);
+  assert(
+    writeApprovalDecisionScriptJson.status === 'needs_human_decision',
+    'Write approval decision validator script output must need a human decision.',
+  );
+  assert(
+    writeApprovalDecisionScriptJson.decision === 'not_decided',
+    'Write approval decision validator script output must not decide approval.',
+  );
+  assert(
+    writeApprovalDecisionScriptJson.decision_accepted === false,
+    'Write approval decision validator script output must not accept a decision.',
+  );
+  assert(
+    writeApprovalDecisionScriptJson.approval_valid_for_future_write === false,
+    'Write approval decision validator script output must not validate approval for future write by default.',
+  );
+  assertApprovalDecisionDoesNotWrite(
+    writeApprovalDecisionScriptJson,
+    'Write approval decision validator script output',
+  );
+  assert(
+    writeApprovalDecisionScriptJson.required_next_action === 'human_review_only',
+    'Write approval decision validator script output must require human review only.',
+  );
+  assert(
+    writeApprovalDecisionScriptJson.allowed_next_step === 'human_review_only',
+    'Write approval decision validator script output allowed next step must be human_review_only.',
+  );
+  assert(
+    writeApprovalDecisionScriptJson.validation.passed === false,
+    'Write approval decision validator script output validation must not pass without a decision.',
+  );
+  assert(
+    hasIssue(writeApprovalDecisionScriptJson.validation, 'E_APPROVAL_DECISION_MISSING'),
+    'Write approval decision validator script output must include E_APPROVAL_DECISION_MISSING.',
+  );
+  assertApprovalDecisionForbidsRequiredOperations(
+    writeApprovalDecisionScriptJson,
+    'Write approval decision validator script output',
+  );
+  assert(
+    !writeApprovalDecisionScriptOutput.includes('"decision":"approved"'),
+    'Write approval decision validator script output must not contain an approved decision by default.',
+  );
+  assert(
+    !writeApprovalDecisionScriptOutput.includes('"decision_accepted":true'),
+    'Write approval decision validator script output must not accept a decision by default.',
+  );
+  log('Accepted stdout-only write approval decision validator script output.');
 
   log('Codex App Server runtime MVP scaffold smoke checks passed.');
 }

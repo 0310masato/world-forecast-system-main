@@ -32,11 +32,14 @@ even propose write-capable behavior.
 - PR #44 added stdout-only write dry-run validation.
 - PR #45 added stdout-only approval request draft generation from dry-run
   results.
+- PR #46 added stdout-only approval decision validation for human-supplied
+  decision records.
 
 No persistent write path exists yet.
 No Task Board write exists yet.
 No HANDOFF file creation exists yet.
 No approval has been granted by the approval request draft.
+No approval has been granted by the approval decision validator itself.
 No API route exists yet.
 No DB integration exists yet.
 No worker runtime exists yet.
@@ -445,7 +448,9 @@ This contract does not add, authorize, or request:
 - `lib/codex-app-server-runtime/report.ts`
 - `lib/codex-app-server-runtime/write-dry-run.ts`
 - `lib/codex-app-server-runtime/write-approval-request.ts`
+- `lib/codex-app-server-runtime/write-approval-decision.ts`
 - `scripts/codex-app-server-runtime-report.mjs`
 - `scripts/codex-app-server-runtime-write-dry-run.mjs`
 - `scripts/codex-app-server-runtime-write-approval-request.mjs`
+- `scripts/codex-app-server-runtime-write-approval-decision-validator.mjs`
 - `scripts/codex-app-server-runtime-smoke.mjs`
