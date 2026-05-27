@@ -82,6 +82,12 @@ human-review-only の approval request draft を stdout に出すだけです。
 付与せず、何も書かず、Task Board write、HANDOFF file creation、
 file-writing automation、API、DB、worker、scheduler、package、CI、automation、
 production promotion は追加しません。
+Task Board / HANDOFF Write Approval Decision Validator stdout v0 は、PR #45 の
+approval request draft に対して人間が供給した approval decision record を
+stdout-only で検証するだけです。validator 自体は approval を付与せず、この PR で
+write を承認せず、何も書かず、Task Board write、HANDOFF file creation、
+file-writing automation、API、DB、worker、scheduler、package、CI、automation、
+production promotion は追加しません。
 これらはいずれも正本契約や実行許可ではありません。
 
 1. Memory Layer
@@ -104,6 +110,7 @@ production promotion は追加しません。
 18. Task Board / HANDOFF Write Tool Contract v0
 19. Task Board / HANDOFF Write Dry-Run Validator v0
 20. Task Board / HANDOFF Write Approval Request stdout v0
+21. Task Board / HANDOFF Write Approval Decision Validator stdout v0
 
 矢印で表すと、次の流れです。
 
@@ -128,6 +135,7 @@ Memory Layer
 -> Task Board / HANDOFF Write Tool Contract v0
 -> Task Board / HANDOFF Write Dry-Run Validator v0
 -> Task Board / HANDOFF Write Approval Request stdout v0
+-> Task Board / HANDOFF Write Approval Decision Validator stdout v0
 ```
 
 各レイヤーは前段を上書きしません。後段の docs や template は、
@@ -172,6 +180,7 @@ forbidden operations、protected path boundary を維持して使います。
 | #43 | Task Board / HANDOFF Write Tool Contract v0 | `docs/tool-contracts/TASK_BOARD_HANDOFF_WRITE_TOOL_CONTRACT.md` による future write/persistence 前の approval、validation、audit、rollback、forbidden-operation boundary | いいえ。docs-only contract のみ | いいえ。Task Board write、HANDOFF file creation、API、DB、worker、scheduler、package、CI、automation、production promotion は未実装のまま | stdout-only review packet から将来の persistence に進む前の gate を定義する。write implementation は別 PR と明示承認が必要 |
 | #44 | Task Board / HANDOFF write dry-run validator v0 | `lib/codex-app-server-runtime/write-dry-run.ts` と stdout-only dry-run script | いいえ。dry-run result 出力のみ | いいえ。Task Board write、HANDOFF file creation、file-writing automation、API/DB/worker/scheduler、package/CI、GitHub automation、AI job execution、production promotion は未導入 | review packet から future write request を検討する前に、human-review-only の dry-run validation result を stdout で確認する |
 | #45 | Task Board / HANDOFF write approval request stdout v0 | dry-run result から stdout-only approval request draft を生成する helper と script | いいえ。approval request draft 出力のみで approval は付与しない | いいえ。Task Board write、HANDOFF file creation、file-writing automation、API/DB/worker/scheduler、package/CI、GitHub automation、AI job execution、production promotion は未導入 | dry-run passed / blocked を human-review material に整える。approval_record.approved は false のままで、future write は別 scope と明示承認が必要 |
+| #46 | Task Board / HANDOFF write approval decision validator stdout v0 | PR #45 の approval request draft に対して、人間が供給した approval decision record を検証する helper と stdout-only script | いいえ。decision validation 出力のみで approval は自動付与しない | いいえ。Task Board write、HANDOFF file creation、file-writing automation、API/DB/worker/scheduler、package/CI、GitHub automation、AI job execution、production promotion は未導入 | missing decision は `needs_human_decision` に留め、valid approved fixture でも `write_authorized_by_this_pr: false` / `wrote_anything: false` のまま separate write implementation を要求する |
 
 ## Docs / Templates 用途表
 

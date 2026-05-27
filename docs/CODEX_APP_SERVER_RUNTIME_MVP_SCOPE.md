@@ -333,6 +333,12 @@ stdout-only approval request draft generated from the dry-run result. The
 approval request draft does not approve anything, writes nothing, creates no
 Task Board record or HANDOFF file, and does not add file-writing automation,
 API, DB, worker, scheduler, package, CI, automation, or production promotion.
+PR #46 adds stdout-only approval decision validation for a human-supplied
+decision record. The validator does not grant approval by itself, does not
+authorize write in this PR, keeps `write_authorized_by_this_pr: false` and
+`wrote_anything: false`, writes nothing, creates no Task Board record or
+HANDOFF file, and does not add file-writing automation, API, DB, worker,
+scheduler, package, CI, automation, or production promotion.
 
 ## Acceptance Criteria For Next Implementation PR
 
