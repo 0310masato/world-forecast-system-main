@@ -172,6 +172,17 @@ const REQUIRED_APPLY_PREFLIGHT_FORBIDDEN_OPERATIONS = [
   'navigation_guidance',
   'military_guidance',
 ];
+const REQUIRED_EXECUTOR_CONTRACT_FORBIDDEN_OPERATIONS = [
+  ...REQUIRED_APPLY_PREFLIGHT_FORBIDDEN_OPERATIONS,
+  'actual_write',
+  'write_executor_implementation_by_this_pr',
+  'apply_executor_implementation_by_this_pr',
+  'executable_write_logic',
+  'filesystem_write_code',
+  'api_route_code',
+  'db_code',
+  'worker_scheduler_code',
+];
 
 function sanitize(message) {
   const buildDirUrlPath = buildDir.replaceAll(path.sep, '/');
@@ -506,6 +517,94 @@ function assertApplyPreflightArtifactsAreMetadataOnly(result, label) {
   }
 }
 
+function assertExecutorContractForbidsRequiredOperations(result, label) {
+  for (const operation of REQUIRED_EXECUTOR_CONTRACT_FORBIDDEN_OPERATIONS) {
+    assert(
+      result.forbidden_operations.includes(operation),
+      `${label} must forbid ${operation}.`,
+    );
+  }
+}
+
+function assertExecutorContractDoesNotWriteOrImplement(result, label) {
+  assert(
+    result.write_authorized_by_this_pr === false,
+    `${label} must keep write_authorized_by_this_pr false.`,
+  );
+  assert(
+    result.apply_authorized_by_this_pr === false,
+    `${label} must keep apply_authorized_by_this_pr false.`,
+  );
+  assert(
+    result.executor_implemented_by_this_pr === false,
+    `${label} must keep executor_implemented_by_this_pr false.`,
+  );
+  assert(
+    result.wrote_anything === false,
+    `${label} must keep wrote_anything false.`,
+  );
+  assert(
+    result.write_executor_present === false,
+    `${label} must keep write_executor_present false.`,
+  );
+  assert(
+    result.apply_executor_present === false,
+    `${label} must keep apply_executor_present false.`,
+  );
+  assert(
+    result.executed_write_count === 0,
+    `${label} must keep executed_write_count 0.`,
+  );
+  assert(
+    result.required_human_approval === true,
+    `${label} must keep required_human_approval true.`,
+  );
+  assert(
+    result.proposed_executor_mode
+      === 'separate_write_executor_implementation_after_explicit_human_approval',
+    `${label} must keep proposed_executor_mode in separate executor scope.`,
+  );
+  assert(
+    result.allowed_next_step !== 'actual_write',
+    `${label} must not allow actual_write.`,
+  );
+}
+
+function assertExecutorContractIsMetadataOnly(result, label) {
+  assert(
+    result.proposed_executor_contract
+      && typeof result.proposed_executor_contract === 'object',
+    `${label} must include proposed executor contract metadata.`,
+  );
+  assert(
+    result.proposed_executor_contract.metadata_only === true,
+    `${label} proposed executor contract must be metadata-only.`,
+  );
+  assert(
+    result.proposed_executor_contract.includes_executable_write_logic
+      === false,
+    `${label} proposed executor contract must not include executable write logic.`,
+  );
+  assert(
+    result.proposed_executor_contract.includes_filesystem_write_code
+      === false,
+    `${label} proposed executor contract must not include filesystem write code.`,
+  );
+  assert(
+    result.proposed_executor_contract.includes_api_route_code === false,
+    `${label} proposed executor contract must not include API route code.`,
+  );
+  assert(
+    result.proposed_executor_contract.includes_db_code === false,
+    `${label} proposed executor contract must not include DB code.`,
+  );
+  assert(
+    result.proposed_executor_contract.includes_worker_scheduler_code
+      === false,
+    `${label} proposed executor contract must not include worker or scheduler code.`,
+  );
+}
+
 function makeApprovalDecisionRecord(approvalRequestDraft, overrides = {}) {
   return {
     approval_decision_id: 'codex-app-server-runtime-write-approval-decision-fixture-001',
@@ -585,6 +684,7 @@ async function compileCodexAppServerRuntimeHelpers() {
     'lib/codex-app-server-runtime/write-approval-decision.ts',
     'lib/codex-app-server-runtime/write-plan.ts',
     'lib/codex-app-server-runtime/write-apply-preflight.ts',
+    'lib/codex-app-server-runtime/write-executor-contract.ts',
   ], {
     cwd: projectRoot,
     encoding: 'utf8',
@@ -648,6 +748,9 @@ async function main() {
   const {
     makeTaskBoardHandoffWriteApplyPreflight,
   } = require(path.join(buildDir, 'lib', 'codex-app-server-runtime', 'write-apply-preflight.js'));
+  const {
+    makeTaskBoardHandoffWriteExecutorContractDraft,
+  } = require(path.join(buildDir, 'lib', 'codex-app-server-runtime', 'write-executor-contract.js'));
 
   const boundary = makeCodexAppServerRuntimeMvpBoundary();
   assert(boundary.proposal_only === true, 'Boundary must be proposal-only.');
@@ -1829,6 +1932,176 @@ async function main() {
   );
   assertSafeReportOutput(JSON.stringify(blockedDecisionApplyPreflight));
   log('Accepted blocked decision apply preflight coverage.');
+
+  const missingDecisionExecutorContract =
+    makeTaskBoardHandoffWriteExecutorContractDraft(
+      missingDecisionApplyPreflight,
+      { generatedAt: 1_800_000_000 },
+    );
+  assert(
+    missingDecisionExecutorContract.contract_status === 'needs_human_decision',
+    'Missing decision executor contract must need a human decision.',
+  );
+  assert(
+    missingDecisionExecutorContract.source_apply_preflight_id
+      === missingDecisionApplyPreflight.apply_preflight_id,
+    'Missing decision executor contract must cite the source apply preflight id.',
+  );
+  assert(
+    missingDecisionExecutorContract.source_apply_preflight_status
+      === 'needs_human_decision',
+    'Missing decision executor contract must preserve source apply preflight status.',
+  );
+  assert(
+    missingDecisionExecutorContract.required_next_action
+      === 'human_decision_required',
+    'Missing decision executor contract must require a human decision.',
+  );
+  assert(
+    missingDecisionExecutorContract.allowed_next_step === 'human_review_only',
+    'Missing decision executor contract allowed next step must be human review only.',
+  );
+  assertExecutorContractDoesNotWriteOrImplement(
+    missingDecisionExecutorContract,
+    'Missing decision executor contract',
+  );
+  assertExecutorContractForbidsRequiredOperations(
+    missingDecisionExecutorContract,
+    'Missing decision executor contract',
+  );
+  assertExecutorContractIsMetadataOnly(
+    missingDecisionExecutorContract,
+    'Missing decision executor contract',
+  );
+  assertSafeReportOutput(JSON.stringify(missingDecisionExecutorContract));
+  log('Accepted missing decision executor contract coverage.');
+
+  const rejectedDecisionExecutorContract =
+    makeTaskBoardHandoffWriteExecutorContractDraft(
+      rejectedDecisionApplyPreflight,
+      { generatedAt: 1_800_000_000 },
+    );
+  assert(
+    rejectedDecisionExecutorContract.contract_status === 'blocked',
+    'Rejected decision executor contract must be blocked.',
+  );
+  assert(
+    rejectedDecisionExecutorContract.required_next_action
+      === 'revise_or_reject_request',
+    'Rejected decision executor contract must require revise_or_reject_request.',
+  );
+  assert(
+    rejectedDecisionExecutorContract.allowed_next_step
+      === 'revise_or_reject_request',
+    'Rejected decision executor contract allowed next step must stay in revise_or_reject_request.',
+  );
+  assertExecutorContractDoesNotWriteOrImplement(
+    rejectedDecisionExecutorContract,
+    'Rejected decision executor contract',
+  );
+  assertExecutorContractForbidsRequiredOperations(
+    rejectedDecisionExecutorContract,
+    'Rejected decision executor contract',
+  );
+  assertExecutorContractIsMetadataOnly(
+    rejectedDecisionExecutorContract,
+    'Rejected decision executor contract',
+  );
+  assertSafeReportOutput(JSON.stringify(rejectedDecisionExecutorContract));
+  log('Accepted rejected decision executor contract coverage.');
+
+  const needsRevisionDecisionExecutorContract =
+    makeTaskBoardHandoffWriteExecutorContractDraft(
+      needsRevisionDecisionApplyPreflight,
+      { generatedAt: 1_800_000_000 },
+    );
+  assert(
+    needsRevisionDecisionExecutorContract.contract_status === 'blocked',
+    'Needs-revision decision executor contract must be blocked.',
+  );
+  assert(
+    needsRevisionDecisionExecutorContract.required_next_action
+      === 'revise_or_reject_request',
+    'Needs-revision decision executor contract must require revise_or_reject_request.',
+  );
+  assertExecutorContractDoesNotWriteOrImplement(
+    needsRevisionDecisionExecutorContract,
+    'Needs-revision decision executor contract',
+  );
+  assertExecutorContractForbidsRequiredOperations(
+    needsRevisionDecisionExecutorContract,
+    'Needs-revision decision executor contract',
+  );
+  assertExecutorContractIsMetadataOnly(
+    needsRevisionDecisionExecutorContract,
+    'Needs-revision decision executor contract',
+  );
+  assertSafeReportOutput(JSON.stringify(needsRevisionDecisionExecutorContract));
+  log('Accepted needs-revision decision executor contract coverage.');
+
+  const approvedDecisionExecutorContract =
+    makeTaskBoardHandoffWriteExecutorContractDraft(
+      approvedDecisionApplyPreflight,
+      { generatedAt: 1_800_000_000 },
+    );
+  assert(
+    approvedDecisionExecutorContract.contract_status
+      === 'executor_contract_ready_for_separate_implementation',
+    'Approved fixture executor contract may be ready for separate implementation.',
+  );
+  assert(
+    approvedDecisionExecutorContract.required_next_action
+      === 'separate_write_executor_implementation_required',
+    'Approved fixture executor contract must require separate write executor implementation.',
+  );
+  assert(
+    approvedDecisionExecutorContract.allowed_next_step
+      === 'separate_write_executor_implementation_required',
+    'Approved fixture executor contract allowed next step must require separate write executor implementation.',
+  );
+  assertExecutorContractDoesNotWriteOrImplement(
+    approvedDecisionExecutorContract,
+    'Approved fixture executor contract',
+  );
+  assertExecutorContractForbidsRequiredOperations(
+    approvedDecisionExecutorContract,
+    'Approved fixture executor contract',
+  );
+  assertExecutorContractIsMetadataOnly(
+    approvedDecisionExecutorContract,
+    'Approved fixture executor contract',
+  );
+  assertSafeReportOutput(JSON.stringify(approvedDecisionExecutorContract));
+  log('Accepted approved fixture executor contract coverage.');
+
+  const blockedDecisionExecutorContract =
+    makeTaskBoardHandoffWriteExecutorContractDraft(
+      blockedDecisionApplyPreflight,
+      { generatedAt: 1_800_000_000 },
+    );
+  assert(
+    blockedDecisionExecutorContract.contract_status === 'blocked',
+    'Blocked decision executor contract must be blocked.',
+  );
+  assert(
+    blockedDecisionExecutorContract.required_next_action
+      === 'resolve_blockers_then_restart_approval',
+    'Blocked decision executor contract must require blocker resolution.',
+  );
+  assertExecutorContractDoesNotWriteOrImplement(
+    blockedDecisionExecutorContract,
+    'Blocked decision executor contract',
+  );
+  assertExecutorContractForbidsRequiredOperations(
+    blockedDecisionExecutorContract,
+    'Blocked decision executor contract',
+  );
+  assertExecutorContractIsMetadataOnly(
+    blockedDecisionExecutorContract,
+    'Blocked decision executor contract',
+  );
+  assertSafeReportOutput(JSON.stringify(blockedDecisionExecutorContract));
+  log('Accepted blocked decision executor contract coverage.');
 
   const mismatchedDecisionValidation =
     validateTaskBoardHandoffWriteApprovalDecision(
@@ -3325,6 +3598,100 @@ async function main() {
     'Write apply preflight script output must not report writes.',
   );
   log('Accepted stdout-only write apply preflight script output.');
+
+  const writeExecutorContractScriptResult = spawnSync(process.execPath, [
+    'scripts/codex-app-server-runtime-write-executor-contract.mjs',
+  ], {
+    cwd: projectRoot,
+    encoding: 'utf8',
+    stdio: ['ignore', 'pipe', 'pipe'],
+    windowsHide: true,
+  });
+  if (writeExecutorContractScriptResult.status !== 0) {
+    throw new Error([
+      'Codex App Server runtime write executor contract script failed.',
+      sanitize(writeExecutorContractScriptResult.stdout),
+      sanitize(writeExecutorContractScriptResult.stderr),
+    ].filter(Boolean).join('\n'));
+  }
+
+  assert(
+    writeExecutorContractScriptResult.stderr.trim().length === 0,
+    'Write executor contract script must write JSON to stdout without stderr output.',
+  );
+  const writeExecutorContractScriptOutput =
+    writeExecutorContractScriptResult.stdout.trim();
+  assertSafeReportOutput(writeExecutorContractScriptOutput);
+  const writeExecutorContractScriptJson =
+    JSON.parse(writeExecutorContractScriptOutput);
+  assert(
+    writeExecutorContractScriptJson.contract_status === 'needs_human_decision'
+      || writeExecutorContractScriptJson.contract_status === 'blocked',
+    'Write executor contract script default output must need a human decision or be blocked.',
+  );
+  assert(
+    writeExecutorContractScriptJson.contract_status
+      !== 'executor_contract_ready_for_separate_implementation',
+    'Write executor contract script default output must not be ready for separate implementation.',
+  );
+  assert(
+    writeExecutorContractScriptJson.source_apply_preflight_id,
+    'Write executor contract script output must include source_apply_preflight_id.',
+  );
+  assert(
+    writeExecutorContractScriptJson.source_apply_preflight_status,
+    'Write executor contract script output must include source_apply_preflight_status.',
+  );
+  assert(
+    writeExecutorContractScriptJson.source_decision === 'not_decided',
+    'Write executor contract script default output must not decide approval.',
+  );
+  assert(
+    writeExecutorContractScriptJson.source_decision_accepted === false,
+    'Write executor contract script default output must not accept a decision.',
+  );
+  assert(
+    writeExecutorContractScriptJson.source_approval_valid_for_future_write
+      === false,
+    'Write executor contract script default output must not validate approval for future write.',
+  );
+  assertExecutorContractDoesNotWriteOrImplement(
+    writeExecutorContractScriptJson,
+    'Write executor contract script output',
+  );
+  assertExecutorContractForbidsRequiredOperations(
+    writeExecutorContractScriptJson,
+    'Write executor contract script output',
+  );
+  assertExecutorContractIsMetadataOnly(
+    writeExecutorContractScriptJson,
+    'Write executor contract script output',
+  );
+  assert(
+    !writeExecutorContractScriptOutput.includes('"source_decision":"approved"'),
+    'Write executor contract script output must not contain an approved source decision by default.',
+  );
+  assert(
+    !writeExecutorContractScriptOutput.includes('"source_decision_accepted":true'),
+    'Write executor contract script output must not accept a decision by default.',
+  );
+  assert(
+    !writeExecutorContractScriptOutput.includes('"write_authorized_by_this_pr":true'),
+    'Write executor contract script output must not authorize writes.',
+  );
+  assert(
+    !writeExecutorContractScriptOutput.includes('"apply_authorized_by_this_pr":true'),
+    'Write executor contract script output must not authorize apply.',
+  );
+  assert(
+    !writeExecutorContractScriptOutput.includes('"executor_implemented_by_this_pr":true'),
+    'Write executor contract script output must not implement an executor.',
+  );
+  assert(
+    !writeExecutorContractScriptOutput.includes('"wrote_anything":true'),
+    'Write executor contract script output must not report writes.',
+  );
+  log('Accepted stdout-only write executor contract script output.');
 
   log('Codex App Server runtime MVP scaffold smoke checks passed.');
 }
