@@ -29,10 +29,14 @@ even propose write-capable behavior.
 - PR #40 added stdout-only TaskCard QA draft.
 - PR #41 added stdout-only HANDOFF draft.
 - PR #42 added stdout-only review packet.
+- PR #44 added stdout-only write dry-run validation.
+- PR #45 added stdout-only approval request draft generation from dry-run
+  results.
 
 No persistent write path exists yet.
 No Task Board write exists yet.
 No HANDOFF file creation exists yet.
+No approval has been granted by the approval request draft.
 No API route exists yet.
 No DB integration exists yet.
 No worker runtime exists yet.
@@ -439,5 +443,9 @@ This contract does not add, authorize, or request:
 - `lib/task-board/types.ts`
 - `lib/task-board/handoff.ts`
 - `lib/codex-app-server-runtime/report.ts`
+- `lib/codex-app-server-runtime/write-dry-run.ts`
+- `lib/codex-app-server-runtime/write-approval-request.ts`
 - `scripts/codex-app-server-runtime-report.mjs`
+- `scripts/codex-app-server-runtime-write-dry-run.mjs`
+- `scripts/codex-app-server-runtime-write-approval-request.mjs`
 - `scripts/codex-app-server-runtime-smoke.mjs`

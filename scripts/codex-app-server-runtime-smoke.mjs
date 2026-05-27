@@ -41,6 +41,41 @@ const REQUIRED_PACKET_FORBIDDEN_OPERATIONS = [
   'navigation_guidance',
   'military_guidance',
 ];
+const REQUIRED_APPROVAL_REQUEST_FORBIDDEN_OPERATIONS = [
+  'create_pr',
+  'merge_pr',
+  'direct_deploy',
+  'production_write',
+  'production_promotion',
+  'api_forecast_update',
+  'api_hormuz_update',
+  'api_hormuz_news_update',
+  'api_route_creation',
+  'db_read',
+  'db_write',
+  'db_migration',
+  'worker_runtime',
+  'scheduler_runtime',
+  'external_api_integration',
+  'package_change',
+  'ci_change',
+  'github_automation',
+  'file_writing_automation_without_approval',
+  'handoff_file_creation_without_approval',
+  'task_board_write_without_approval',
+  'ai_job_execution',
+  'external_publish',
+  'automated_trading',
+  'investment_advice',
+  'navigation_guidance',
+  'military_guidance',
+];
+const REQUIRED_APPROVAL_REQUEST_APPROVER_ROLES = [
+  'human_owner',
+  'qa_reviewer',
+  'security_reviewer',
+  'contract_compliance_reviewer',
+];
 
 function sanitize(message) {
   const buildDirUrlPath = buildDir.replaceAll(path.sep, '/');
@@ -158,6 +193,59 @@ function assertPacketForbidsRequiredOperations(packet, label) {
   }
 }
 
+function assertApprovalRequestForbidsRequiredOperations(draft, label) {
+  for (const operation of REQUIRED_APPROVAL_REQUEST_FORBIDDEN_OPERATIONS) {
+    assert(
+      draft.forbidden_operations.includes(operation),
+      `${label} must forbid ${operation}.`,
+    );
+  }
+}
+
+function assertApprovalRequestRequiresApproverRoles(draft, label) {
+  for (const role of REQUIRED_APPROVAL_REQUEST_APPROVER_ROLES) {
+    assert(
+      draft.required_approver_roles.includes(role),
+      `${label} must require approver role ${role}.`,
+    );
+  }
+}
+
+function assertApprovalRequestDoesNotApprove(draft, label) {
+  assert(
+    draft.decision === 'not_decided',
+    `${label} must not decide approval.`,
+  );
+  assert(
+    draft.approval_record.approved === false,
+    `${label} must keep approval_record.approved false.`,
+  );
+  assert(
+    draft.approval_record.approved_by === null,
+    `${label} must keep approval_record.approved_by null.`,
+  );
+  assert(
+    draft.approval_record.approved_at === null,
+    `${label} must keep approval_record.approved_at null.`,
+  );
+  assert(
+    draft.approval_record.approval_scope === 'none',
+    `${label} must keep approval_scope none.`,
+  );
+  assert(
+    draft.required_next_action === 'human_review_only',
+    `${label} required_next_action must remain human_review_only.`,
+  );
+  assert(
+    draft.allowed_next_step === 'human_review_only',
+    `${label} allowed_next_step must remain human_review_only.`,
+  );
+  assert(
+    draft.wrote_anything === false,
+    `${label} must report wrote_anything false.`,
+  );
+}
+
 function assertSanitizesRawPath(rawPath) {
   const sanitized = sanitize(rawPath);
 
@@ -210,6 +298,7 @@ async function compileCodexAppServerRuntimeHelpers() {
     'lib/codex-app-server-runtime/scaffold.ts',
     'lib/codex-app-server-runtime/report.ts',
     'lib/codex-app-server-runtime/write-dry-run.ts',
+    'lib/codex-app-server-runtime/write-approval-request.ts',
   ], {
     cwd: projectRoot,
     encoding: 'utf8',
@@ -261,6 +350,9 @@ async function main() {
     runTaskBoardHandoffWriteDryRun,
     validateTaskBoardHandoffWriteDryRunRequest,
   } = require(path.join(buildDir, 'lib', 'codex-app-server-runtime', 'write-dry-run.js'));
+  const {
+    makeTaskBoardHandoffWriteApprovalRequestDraft,
+  } = require(path.join(buildDir, 'lib', 'codex-app-server-runtime', 'write-approval-request.js'));
 
   const boundary = makeCodexAppServerRuntimeMvpBoundary();
   assert(boundary.proposal_only === true, 'Boundary must be proposal-only.');
@@ -731,6 +823,155 @@ async function main() {
   );
   assertSafeReportOutput(dryRunResultOutput);
   log('Accepted Task Board / HANDOFF write dry-run validation helper.');
+
+  const approvalRequestDraft =
+    makeTaskBoardHandoffWriteApprovalRequestDraft(dryRunResult, {
+      generatedAt: 1_800_000_000,
+    });
+  const approvalRequestDraftOutput = JSON.stringify(approvalRequestDraft);
+  assert(
+    approvalRequestDraft.approval_request_id === 'codex-app-server-runtime-write-approval-request-001',
+    'Approval request draft must use the expected id.',
+  );
+  assert(
+    approvalRequestDraft.approval_request_version === 1,
+    'Approval request draft version must be 1.',
+  );
+  assert(
+    approvalRequestDraft.generated_at === '2027-01-15T08:00:00.000Z',
+    'Approval request draft timestamp must be ISO formatted.',
+  );
+  assert(
+    approvalRequestDraft.source_request_id === dryRunResult.request_id,
+    'Approval request draft must cite the source dry-run request id.',
+  );
+  assert(
+    approvalRequestDraft.source_command === 'node scripts/codex-app-server-runtime-write-dry-run.mjs',
+    'Approval request draft must cite the dry-run command.',
+  );
+  assert(
+    approvalRequestDraft.status === 'pending_human_approval',
+    'Valid dry-run result must create a pending_human_approval request.',
+  );
+  assertApprovalRequestDoesNotApprove(approvalRequestDraft, 'Approval request draft');
+  assert(
+    approvalRequestDraft.requested_write_mode === 'write_after_human_approval',
+    'Approval request draft must request write_after_human_approval only for later review.',
+  );
+  assert(
+    approvalRequestDraft.dry_run_status === 'dry_run_passed',
+    'Approval request draft must preserve the dry-run status.',
+  );
+  assert(
+    approvalRequestDraft.dry_run_passed === true,
+    'Approval request draft must mark the valid dry run as passed.',
+  );
+  assert(
+    approvalRequestDraft.source_dry_run_result.wrote_anything === false,
+    'Approval request draft must preserve source wrote_anything false.',
+  );
+  assert(
+    approvalRequestDraft.validation_summary.passed === true,
+    'Approval request draft validation summary must pass for a valid dry run.',
+  );
+  assert(
+    approvalRequestDraft.validation_summary.issues.length === 0,
+    'Approval request draft validation summary must have no issues for a valid dry run.',
+  );
+  assert(
+    approvalRequestDraft.approval_record.approved === false,
+    'Approval request draft must not auto-approve.',
+  );
+  assertApprovalRequestRequiresApproverRoles(approvalRequestDraft, 'Approval request draft');
+  assertApprovalRequestForbidsRequiredOperations(approvalRequestDraft, 'Approval request draft');
+  assert(
+    approvalRequestDraft.safety_summary.some((entry) => (
+      entry.includes('does not grant approval')
+    )),
+    'Approval request draft safety summary must say it does not grant approval.',
+  );
+  assert(
+    approvalRequestDraft.rollback_plan.includes('No rollback required because no write has occurred.'),
+    'Approval request draft rollback plan must say no write occurred.',
+  );
+  assert(
+    approvalRequestDraft.references.includes('lib/codex-app-server-runtime/write-approval-request.ts'),
+    'Approval request draft must cite its helper.',
+  );
+  assertSafeReportOutput(approvalRequestDraftOutput);
+  log('Accepted Task Board / HANDOFF write approval request draft helper.');
+
+  const blockedApprovalDryRunRequest = cloneValue(dryRunRequest);
+  delete blockedApprovalDryRunRequest.idempotency_key;
+  const blockedApprovalDryRunResult =
+    runTaskBoardHandoffWriteDryRun(blockedApprovalDryRunRequest);
+  const blockedApprovalRequestDraft =
+    makeTaskBoardHandoffWriteApprovalRequestDraft(blockedApprovalDryRunResult, {
+      generatedAt: 1_800_000_000,
+    });
+  const blockedApprovalRequestDraftOutput =
+    JSON.stringify(blockedApprovalRequestDraft);
+  assert(
+    blockedApprovalDryRunResult.status === 'blocked',
+    'Blocked approval request fixture dry run must be blocked.',
+  );
+  assert(
+    blockedApprovalRequestDraft.status === 'blocked',
+    'Blocked dry-run result must create a blocked approval request.',
+  );
+  assertApprovalRequestDoesNotApprove(
+    blockedApprovalRequestDraft,
+    'Blocked approval request draft',
+  );
+  assert(
+    blockedApprovalRequestDraft.dry_run_passed === false,
+    'Blocked approval request draft must mark dry_run_passed false.',
+  );
+  assert(
+    blockedApprovalRequestDraft.source_dry_run_result.status === 'blocked',
+    'Blocked approval request draft must preserve the source blocked status.',
+  );
+  assert(
+    blockedApprovalRequestDraft.validation_summary.passed === false,
+    'Blocked approval request draft validation summary must not pass.',
+  );
+  assert(
+    blockedApprovalRequestDraft.validation_summary.issues.length > 0,
+    'Blocked approval request draft validation summary must include dry-run issues.',
+  );
+  assert(
+    hasIssue(blockedApprovalRequestDraft.validation_summary, 'E_IDEMPOTENCY_MISSING'),
+    'Blocked approval request draft must include dry-run issue codes.',
+  );
+  assert(
+    blockedApprovalRequestDraft.safety_summary.some((entry) => (
+      entry.includes('Write approval cannot be considered because dry-run validation failed')
+    )),
+    'Blocked approval request draft safety summary must explain write approval cannot be considered.',
+  );
+  assertApprovalRequestRequiresApproverRoles(
+    blockedApprovalRequestDraft,
+    'Blocked approval request draft',
+  );
+  assertApprovalRequestForbidsRequiredOperations(
+    blockedApprovalRequestDraft,
+    'Blocked approval request draft',
+  );
+  assertSafeReportOutput(blockedApprovalRequestDraftOutput);
+  for (const output of [
+    approvalRequestDraftOutput,
+    blockedApprovalRequestDraftOutput,
+  ]) {
+    assert(
+      !output.includes('"decision":"approved"'),
+      'Approval request output must not contain an approved decision.',
+    );
+    assert(
+      !output.includes('"approved":true'),
+      'Approval request output must not contain approval_record.approved true.',
+    );
+  }
+  log('Accepted blocked approval request and no-auto-approval coverage.');
 
   const nonJsonBigIntRequest = {
     ...dryRunRequest,
@@ -1859,6 +2100,69 @@ async function main() {
     'Write dry-run script output validation must pass.',
   );
   log('Accepted stdout-only write dry-run script output.');
+
+  const writeApprovalRequestScriptResult = spawnSync(process.execPath, [
+    'scripts/codex-app-server-runtime-write-approval-request.mjs',
+  ], {
+    cwd: projectRoot,
+    encoding: 'utf8',
+    stdio: ['ignore', 'pipe', 'pipe'],
+    windowsHide: true,
+  });
+  if (writeApprovalRequestScriptResult.status !== 0) {
+    throw new Error([
+      'Codex App Server runtime write approval request script failed.',
+      sanitize(writeApprovalRequestScriptResult.stdout),
+      sanitize(writeApprovalRequestScriptResult.stderr),
+    ].filter(Boolean).join('\n'));
+  }
+
+  assert(
+    writeApprovalRequestScriptResult.stderr.trim().length === 0,
+    'Write approval request script must write JSON to stdout without stderr output.',
+  );
+  const writeApprovalRequestScriptOutput =
+    writeApprovalRequestScriptResult.stdout.trim();
+  assertSafeReportOutput(writeApprovalRequestScriptOutput);
+  const writeApprovalRequestScriptJson =
+    JSON.parse(writeApprovalRequestScriptOutput);
+  assert(
+    writeApprovalRequestScriptJson.status === 'pending_human_approval',
+    'Write approval request script output must wait for human approval.',
+  );
+  assertApprovalRequestDoesNotApprove(
+    writeApprovalRequestScriptJson,
+    'Write approval request script output',
+  );
+  assert(
+    writeApprovalRequestScriptJson.requested_write_mode === 'write_after_human_approval',
+    'Write approval request script output must request write_after_human_approval only.',
+  );
+  assert(
+    writeApprovalRequestScriptJson.dry_run_passed === true,
+    'Write approval request script output must mark the dry run as passed.',
+  );
+  assert(
+    writeApprovalRequestScriptJson.source_dry_run_result.status === 'dry_run_passed',
+    'Write approval request script output must include the source dry-run result.',
+  );
+  assertApprovalRequestRequiresApproverRoles(
+    writeApprovalRequestScriptJson,
+    'Write approval request script output',
+  );
+  assertApprovalRequestForbidsRequiredOperations(
+    writeApprovalRequestScriptJson,
+    'Write approval request script output',
+  );
+  assert(
+    !writeApprovalRequestScriptOutput.includes('"decision":"approved"'),
+    'Write approval request script output must not contain an approved decision.',
+  );
+  assert(
+    !writeApprovalRequestScriptOutput.includes('"approved":true'),
+    'Write approval request script output must not contain approved true.',
+  );
+  log('Accepted stdout-only write approval request script output.');
 
   log('Codex App Server runtime MVP scaffold smoke checks passed.');
 }
