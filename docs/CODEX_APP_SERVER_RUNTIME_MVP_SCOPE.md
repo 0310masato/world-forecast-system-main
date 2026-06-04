@@ -327,6 +327,10 @@ returns a concise JSON boundary summary. It does not replace the underlying
 commands, does not persist review artifacts, and does not authorize
 write-capable executor behavior.
 
+For the review procedure, expected pass markers, covered command IDs, and
+failure checklist, see
+`docs/CODEX_APP_SERVER_RUNTIME_LOCAL_MVP_REVIEW_CHAIN.md`.
+
 After the stdout-only review packet, any move toward Task Board, HANDOFF, or
 repository artifact persistence must pass through
 `docs/tool-contracts/TASK_BOARD_HANDOFF_WRITE_TOOL_CONTRACT.md`. PR #43 is
