@@ -16,9 +16,10 @@ publish externally, or promote anything to production.
   - PR #52 `docs: record post-merge local MVP readiness`
   - PR #53 `docs: add project context PR gates`
   - PR #54 `feat: add local MVP review chain`
-- Source branch: `codex/local-mvp-review-chain-runbook-v0`
-- Review basis: GitHub `main` was at PR #54 merge commit `ae6d241` before this
-  follow-up branch was created. PR #54 merged after PR #53.
+  - PR #55 `docs: add local MVP review chain runbook`
+- Source branch: `codex/local-mvp-review-bundle-v0`
+- Review basis: GitHub `main` was at PR #55 merge commit `b7b3e90` before this
+  follow-up branch was created. PR #55 merged after PR #54.
 
 ## Current Phase
 
@@ -29,7 +30,7 @@ publish externally, or promote anything to production.
   baseline. PR #53 added Project Context Pack read-order guidance and PR Review
   Packet Project Context Impact checks. PR #54 added a one-command local MVP
   review chain that aggregates existing stdout-only review commands into a JSON
-  boundary summary.
+  boundary summary. PR #55 added a runbook for reviewing that command.
 - AI Dev Relay Kit v0.1.0: Applied.
 - AI Dev Relay Kit v0.2.0 Project Context Pack: Applied through PR #51.
 - Local MVP readiness chain: PR #49 landed as metadata-only, stdout-only,
@@ -78,11 +79,15 @@ publish externally, or promote anything to production.
   files, add write-capable executor behavior, connect to API or DB surfaces,
   enable worker or scheduler runtime, change package or CI files, automate
   GitHub work, deploy, release, publish externally, or promote production state.
+- PR #55 was merged into `main` on 2026-06-04.
+- PR #55 added `docs/CODEX_APP_SERVER_RUNTIME_LOCAL_MVP_REVIEW_CHAIN.md`,
+  linked it from the contracts index and MVP scope doc, and kept the local MVP
+  review chain as review evidence only.
 
 ## In Progress
 
-- Current task: Document the PR #54 local MVP review chain as a review runbook
-  and make it discoverable from the contracts index and MVP scope doc.
+- Current task: Add a local MVP review bundle command that wraps the PR #54
+  review chain result into one stdout-only JSON object for GPT / human review.
 - Working tree status: must be checked by the active Codex app session before
   editing, commit, push, merge, or any follow-up PR.
 - These context files are introduced by the Project Context Pack application
@@ -90,22 +95,24 @@ publish externally, or promote anything to production.
 
 ## Next Actions
 
-- Next safe action: Review this local MVP review chain runbook PR, then ask GPT
-  or a human reviewer to review the local MVP readiness bundle with emphasis on
-  PR #54 and this runbook follow-up.
+- Next safe action: Review the local MVP review bundle output, then decide
+  whether to continue with read-only/stdout-only helper improvements or write a
+  separate explicit scope for any future write-capable executor work.
 - Next decision needed: Decide whether the next local-MVP slice should stay
   read-only/stdout-only or whether to explicitly scope a future write-capable
   executor PR.
 - Optional later step, if approved separately: keep the next local-MVP slice
   read-only/stdout-only, or draft a separate explicit plan for a future
   write-capable executor PR with tests and rollback / disable criteria.
-- Verification for local MVP review chain follow-up:
+- Verification for local MVP review bundle follow-up:
   - `git status --short`
-  - `git diff -- docs/CODEX_APP_SERVER_RUNTIME_LOCAL_MVP_REVIEW_CHAIN.md docs/CONTRACTS_INDEX.md docs/CODEX_APP_SERVER_RUNTIME_MVP_SCOPE.md docs/project/STATUS.md`
+  - `git diff -- scripts/codex-app-server-runtime-local-mvp-review-bundle.mjs scripts/codex-app-server-runtime-smoke.mjs docs/CODEX_APP_SERVER_RUNTIME_LOCAL_MVP_REVIEW_BUNDLE.md docs/CODEX_APP_SERVER_RUNTIME_LOCAL_MVP_REVIEW_CHAIN.md docs/CONTRACTS_INDEX.md docs/CODEX_APP_SERVER_RUNTIME_MVP_SCOPE.md docs/project/STATUS.md`
   - `git diff --check`
-  - Confirm the diff is limited to the local MVP review chain runbook and
-    related docs.
+  - Confirm the diff is limited to the local MVP review bundle command, local
+    smoke coverage, and related docs.
   - `node scripts/codex-app-server-runtime-local-mvp-review-chain.mjs`
+  - `node scripts/codex-app-server-runtime-local-mvp-review-bundle.mjs`
+  - `node scripts/codex-app-server-runtime-smoke.mjs`
 
 ## Blockers / Risks
 
@@ -134,6 +141,7 @@ publish externally, or promote anything to production.
   - PR #53 merged after PR #52 and added Project Context Pack read-order and PR
     template gates.
   - PR #54 merged after PR #53 and added the local MVP review chain command.
+  - PR #55 merged after PR #54 and added the local MVP review chain runbook.
   - This file does not itself approve merge, deploy, release, production
     promotion, or any protected-surface change.
 
