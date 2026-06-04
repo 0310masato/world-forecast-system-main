@@ -337,8 +337,25 @@ function runCommand(command) {
     windowsHide: true,
   });
 
-  const stdout = sanitize(result.stdout || '');
-  const stderr = sanitize(result.stderr || '');
+  const rawStdout = result.stdout || '';
+  const rawStderr = result.stderr || '';
+  const stdout = sanitize(rawStdout);
+  const stderr = sanitize(rawStderr);
+
+  try {
+    assertSafeOutput(rawStdout);
+    assertSafeOutput(rawStderr);
+    assertSafeOutput(stdout);
+    assertSafeOutput(stderr);
+  } catch (error) {
+    return {
+      id: command.id,
+      status: 'failed',
+      exit_code: result.status,
+      error: 'restricted_content_detected',
+      detail: sanitize(error.message || error),
+    };
+  }
 
   if (result.status !== 0) {
     return {
