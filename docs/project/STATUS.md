@@ -9,25 +9,27 @@ publish externally, or promote anything to production.
 ## Last Reviewed
 
 - Date: 2026-06-04
-- Reviewed by: Codex app review-fix pass
-- Related PR: PR #51 `docs: apply Project Context Pack v0.2.0`
-- Source branch: `chore/apply-project-context-pack-v0.2.0`
-- Review basis: PR #51 was open, non-draft, mergeable, and CI-passing before
-  this status-doc review fix. Check GitHub PR state or `main` history for the
-  current merge state before acting on this file.
+- Reviewed by: Codex app post-merge readiness pass
+- Related PRs:
+  - PR #51 `docs: apply Project Context Pack v0.2.0`
+  - PR #49 `feat: add task board handoff write executor contract stdout v0`
+- Source branch: `codex/local-mvp-readiness-v0`
+- Review basis: GitHub `main` was at PR #49 merge commit `4af1d57` before this
+  follow-up branch was created. PR #51 merged before PR #49.
 
 ## Current Phase
 
-- Phase: AI Dev Relay Kit v0.2.0 Project Context Pack application.
-- Current status: Project Context Pack files are introduced through PR #51 for
-  human and GitHub review. After PR #51 is merged to `main`, treat
-  `docs/project/*.md` as the active restart context for this repository.
+- Phase: Local-confirmable MVP readiness after Project Context Pack merge.
+- Current status: Project Context Pack files are active on `main`. PR #49 also
+  landed the stdout-only write executor contract draft layer for local review.
 - AI Dev Relay Kit v0.1.0: Applied.
-- AI Dev Relay Kit v0.2.0 Project Context Pack: Introduced by PR #51; verify
-  the live PR or `main` state before assuming it has landed.
+- AI Dev Relay Kit v0.2.0 Project Context Pack: Applied through PR #51.
+- Local MVP readiness chain: PR #49 landed as metadata-only, stdout-only,
+  non-production review material.
 - Production promotion approval: Not approved.
 - Merge approval: Not granted by this file.
 - Deploy/release approval: Not approved.
+- Write-capable executor approval: Not approved by this file.
 
 ## Completed
 
@@ -46,10 +48,18 @@ publish externally, or promote anything to production.
   - `docs/project/STATUS.md`
 - Existing AI Dev Relay Kit v0.1.0 rules were confirmed in `AGENTS.md` and
   `.github/pull_request_template.md`.
+- PR #51 was merged into `main` on 2026-06-04.
+- PR #49 was merged into `main` on 2026-06-04.
+- PR #49 added the stdout-only write executor contract draft layer. It does not
+  implement a write executor, apply executor, Task Board write, HANDOFF file
+  creation, file-writing automation, runtime, worker, scheduler, API route, DB
+  integration, package change, CI change, deploy, release, or production
+  promotion.
 
 ## In Progress
 
-- Current task: Complete human and GitHub review of PR #51.
+- Current task: Keep project context aligned with the post-merge local MVP
+  baseline.
 - Working tree status: must be checked by the active Codex app session before
   editing, commit, push, merge, or any follow-up PR.
 - These context files are introduced by the Project Context Pack application
@@ -57,14 +67,15 @@ publish externally, or promote anything to production.
 
 ## Next Actions
 
-- Next safe action: Re-check PR #51 changed files, CI status, and review
-  threads after any review-fix commit.
-- Next decision needed: Human decision on whether PR #51 is ready to merge.
+- Next safe action: Review this post-merge context alignment PR.
+- Next decision needed: Decide whether the next local-MVP slice should stay
+  read-only/stdout-only or whether to explicitly scope a future write-capable
+  executor PR.
 - Optional later step, if approved separately: Update `AGENTS.md` reading order
   and `.github/pull_request_template.md` Project Context Impact section.
 - Verification for Markdown-only Project Context Pack follow-up:
   - `git status --short`
-  - `git diff -- docs/project`
+  - `git diff -- docs/project/CONTEXT.md docs/project/STATUS.md`
   - `git diff --check`
   - Confirm the diff is Markdown-only and limited to approved files.
 
@@ -77,6 +88,9 @@ publish externally, or promote anything to production.
 - `docs/project/CONTEXT.md` must not be confused with `docs/CONTEXT_PACKS.md`.
 - Existing contract and safety docs remain the source of truth.
 - Avoid duplicating large source-of-truth sections from existing docs.
+- The PR #49 executor contract draft must not be treated as permission to write
+  files, create Task Board records, create HANDOFF files, run automation, or
+  promote anything to production.
 
 ## Latest PRs
 
@@ -84,7 +98,9 @@ publish externally, or promote anything to production.
   - PR #50 applied AI Dev Relay Kit v0.1.0 to `world-forecast-system-main`.
 - AI Dev Relay Kit v0.2.0 Project Context Pack:
   - PR #51 introduces the four `docs/project/*.md` files.
-  - Check PR #51 or `main` history for the current review and merge state.
+  - PR #51 merged into `main` on 2026-06-04.
+  - PR #49 merged after PR #51 and added the stdout-only write executor
+    contract draft layer.
   - This file does not itself approve merge, deploy, release, production
     promotion, or any protected-surface change.
 
