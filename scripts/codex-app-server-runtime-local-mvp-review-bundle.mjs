@@ -72,8 +72,27 @@ function runChain() {
     stdio: ['ignore', 'pipe', 'pipe'],
     windowsHide: true,
   });
-  const stdout = sanitize(result.stdout || '');
-  const stderr = sanitize(result.stderr || '');
+  const rawStdout = result.stdout || '';
+  const rawStderr = result.stderr || '';
+  const stdout = sanitize(rawStdout);
+  const stderr = sanitize(rawStderr);
+
+  try {
+    assertSafeOutput(rawStdout);
+    assertSafeOutput(rawStderr);
+    assertSafeOutput(stdout);
+    assertSafeOutput(stderr);
+  } catch (error) {
+    return {
+      exit_code: result.status,
+      stderr_empty: stderr.trim().length === 0,
+      stderr_excerpt: stderr.trim().slice(0, 500),
+      parsed_output: null,
+      parse_error: null,
+      restricted_content_error: 'restricted_content_detected',
+      restricted_content_detail: sanitize(error.message || error),
+    };
+  }
 
   let parsedOutput = null;
   let parseError = null;
@@ -134,6 +153,8 @@ function makeBundle(chainResult) {
       exit_code: chainResult.exit_code,
       stderr_empty: chainResult.stderr_empty,
       parse_error: chainResult.parse_error,
+      restricted_content_error: chainResult.restricted_content_error ?? null,
+      restricted_content_detail: chainResult.restricted_content_detail ?? null,
       chain_status: chainOutput?.chain_status ?? 'unavailable',
       command_summary: commandSummary,
       required_forbidden_operations_checked:
@@ -224,6 +245,8 @@ function makeBundle(chainResult) {
     chain_error_detail: chainPassed
       ? null
       : {
+        restricted_content_error: chainResult.restricted_content_error ?? null,
+        restricted_content_detail: chainResult.restricted_content_detail ?? null,
         stderr_excerpt: chainResult.stderr_excerpt,
         stdout_excerpt: chainResult.stdout_excerpt,
       },
