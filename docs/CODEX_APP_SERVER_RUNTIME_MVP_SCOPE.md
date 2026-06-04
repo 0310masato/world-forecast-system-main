@@ -331,6 +331,17 @@ For the review procedure, expected pass markers, covered command IDs, and
 failure checklist, see
 `docs/CODEX_APP_SERVER_RUNTIME_LOCAL_MVP_REVIEW_CHAIN.md`.
 
+For a GPT / human review bundle built from that chain result, the review helper
+may also be checked with:
+
+- `node scripts/codex-app-server-runtime-local-mvp-review-bundle.mjs`
+
+The bundle remains stdout-only review evidence. It does not persist review
+artifacts, create Task Board records, create HANDOFF files, implement or
+authorize write/apply executors, connect to APIs or DB, add worker or scheduler
+runtime, automate GitHub work, change package or CI configuration, deploy,
+publish externally, or promote proposal data to production.
+
 After the stdout-only review packet, any move toward Task Board, HANDOFF, or
 repository artifact persistence must pass through
 `docs/tool-contracts/TASK_BOARD_HANDOFF_WRITE_TOOL_CONTRACT.md`. PR #43 is

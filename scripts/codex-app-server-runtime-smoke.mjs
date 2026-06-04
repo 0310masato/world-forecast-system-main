@@ -3693,6 +3693,122 @@ async function main() {
   );
   log('Accepted stdout-only write executor contract script output.');
 
+  const localMvpReviewChainScriptResult = spawnSync(process.execPath, [
+    'scripts/codex-app-server-runtime-local-mvp-review-chain.mjs',
+  ], {
+    cwd: projectRoot,
+    encoding: 'utf8',
+    stdio: ['ignore', 'pipe', 'pipe'],
+    windowsHide: true,
+  });
+  if (localMvpReviewChainScriptResult.status !== 0) {
+    throw new Error([
+      'Codex App Server runtime local MVP review chain script failed.',
+      sanitize(localMvpReviewChainScriptResult.stdout),
+      sanitize(localMvpReviewChainScriptResult.stderr),
+    ].filter(Boolean).join('\n'));
+  }
+
+  assert(
+    localMvpReviewChainScriptResult.stderr.trim().length === 0,
+    'Local MVP review chain script must write JSON to stdout without stderr output.',
+  );
+  const localMvpReviewChainOutput =
+    localMvpReviewChainScriptResult.stdout.trim();
+  assertSafeReportOutput(localMvpReviewChainOutput);
+  const localMvpReviewChainJson = JSON.parse(localMvpReviewChainOutput);
+  assert(
+    localMvpReviewChainJson.chain_status === 'passed',
+    'Local MVP review chain output must pass.',
+  );
+  assert(
+    localMvpReviewChainJson.stdout_only === true,
+    'Local MVP review chain output must remain stdout-only.',
+  );
+  assert(
+    localMvpReviewChainJson.wrote_anything === false,
+    'Local MVP review chain output must not report writes.',
+  );
+  assert(
+    localMvpReviewChainJson.required_next_action === 'human_review_only',
+    'Local MVP review chain required next action must be human_review_only.',
+  );
+  assert(
+    localMvpReviewChainJson.allowed_next_step === 'human_review_only',
+    'Local MVP review chain allowed next step must be human_review_only.',
+  );
+  assert(
+    localMvpReviewChainJson.commands.every((command) => command.status === 'passed'),
+    'Local MVP review chain must pass every command entry.',
+  );
+  log('Accepted stdout-only local MVP review chain script output.');
+
+  const localMvpReviewBundleScriptResult = spawnSync(process.execPath, [
+    'scripts/codex-app-server-runtime-local-mvp-review-bundle.mjs',
+  ], {
+    cwd: projectRoot,
+    encoding: 'utf8',
+    stdio: ['ignore', 'pipe', 'pipe'],
+    windowsHide: true,
+  });
+  if (localMvpReviewBundleScriptResult.status !== 0) {
+    throw new Error([
+      'Codex App Server runtime local MVP review bundle script failed.',
+      sanitize(localMvpReviewBundleScriptResult.stdout),
+      sanitize(localMvpReviewBundleScriptResult.stderr),
+    ].filter(Boolean).join('\n'));
+  }
+
+  assert(
+    localMvpReviewBundleScriptResult.stderr.trim().length === 0,
+    'Local MVP review bundle script must write JSON to stdout without stderr output.',
+  );
+  const localMvpReviewBundleOutput =
+    localMvpReviewBundleScriptResult.stdout.trim();
+  assertSafeReportOutput(localMvpReviewBundleOutput);
+  const localMvpReviewBundleJson = JSON.parse(localMvpReviewBundleOutput);
+  assert(
+    localMvpReviewBundleJson.bundle_status === 'ready_for_gpt_or_human_review',
+    'Local MVP review bundle output must be ready for GPT or human review.',
+  );
+  assert(
+    localMvpReviewBundleJson.source_chain.chain_status === 'passed',
+    'Local MVP review bundle source chain must pass.',
+  );
+  assert(
+    localMvpReviewBundleJson.source_chain.command_summary.failed_count === 0,
+    'Local MVP review bundle must not include failed command entries.',
+  );
+  assert(
+    localMvpReviewBundleJson.stdout_only === true,
+    'Local MVP review bundle output must remain stdout-only.',
+  );
+  assert(
+    localMvpReviewBundleJson.wrote_anything === false,
+    'Local MVP review bundle output must not report writes.',
+  );
+  assert(
+    localMvpReviewBundleJson.required_next_action === 'human_review_only',
+    'Local MVP review bundle required next action must be human_review_only.',
+  );
+  assert(
+    localMvpReviewBundleJson.allowed_next_step === 'human_review_only',
+    'Local MVP review bundle allowed next step must be human_review_only.',
+  );
+  assert(
+    localMvpReviewBundleJson.safety_boundary_summary.task_board_write_enabled === false,
+    'Local MVP review bundle must not enable Task Board writes.',
+  );
+  assert(
+    localMvpReviewBundleJson.safety_boundary_summary.handoff_file_creation_enabled === false,
+    'Local MVP review bundle must not enable HANDOFF file creation.',
+  );
+  assert(
+    localMvpReviewBundleJson.safety_boundary_summary.write_executor_present === false,
+    'Local MVP review bundle must not include a write executor.',
+  );
+  log('Accepted stdout-only local MVP review bundle script output.');
+
   log('Codex App Server runtime MVP scaffold smoke checks passed.');
 }
 

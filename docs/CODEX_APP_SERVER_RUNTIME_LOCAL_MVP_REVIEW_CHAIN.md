@@ -25,6 +25,10 @@ Use it as review evidence only. If a future task needs durable Task Board or
 HANDOFF persistence, stop and review
 `docs/tool-contracts/TASK_BOARD_HANDOFF_WRITE_TOOL_CONTRACT.md` first.
 
+If a reviewer wants a single JSON object that includes the chain result plus
+GPT / human review focus, use
+`docs/CODEX_APP_SERVER_RUNTIME_LOCAL_MVP_REVIEW_BUNDLE.md`.
+
 ## Command
 
 Run from the repository root:
