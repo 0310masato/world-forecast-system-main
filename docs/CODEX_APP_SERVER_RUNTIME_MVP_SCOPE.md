@@ -314,12 +314,18 @@ the report script may also be checked with:
 - `node scripts/codex-app-server-runtime-report.mjs --taskcard-qa`
 - `node scripts/codex-app-server-runtime-report.mjs --handoff`
 - `node scripts/codex-app-server-runtime-report.mjs --packet`
+- `node scripts/codex-app-server-runtime-local-mvp-review-chain.mjs`
 
 These outputs must remain stdout-only review material. They must not write to
 the Task Board, create a HANDOFF file, automate file writes, connect to APIs or
 DB, add worker or scheduler runtime, call external services, change package or
 CI configuration, create PRs or issues, execute AI jobs, deploy, publish
 externally, or promote proposal data to production.
+
+The local MVP review chain script aggregates existing stdout-only commands and
+returns a concise JSON boundary summary. It does not replace the underlying
+commands, does not persist review artifacts, and does not authorize
+write-capable executor behavior.
 
 After the stdout-only review packet, any move toward Task Board, HANDOFF, or
 repository artifact persistence must pass through

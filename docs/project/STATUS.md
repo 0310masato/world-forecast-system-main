@@ -14,9 +14,10 @@ publish externally, or promote anything to production.
   - PR #51 `docs: apply Project Context Pack v0.2.0`
   - PR #49 `feat: add task board handoff write executor contract stdout v0`
   - PR #52 `docs: record post-merge local MVP readiness`
-- Source branch: `codex/project-context-gates-v0`
-- Review basis: GitHub `main` was at PR #52 merge commit `f03ca11` before this
-  follow-up branch was created. PR #52 merged after PR #49 and PR #51.
+  - PR #53 `docs: add project context PR gates`
+- Source branch: `codex/local-mvp-review-chain-v0`
+- Review basis: GitHub `main` was at PR #53 merge commit `baff087` before this
+  follow-up branch was created. PR #53 merged after PR #52.
 
 ## Current Phase
 
@@ -24,7 +25,8 @@ publish externally, or promote anything to production.
 - Current status: Project Context Pack files are active on `main`. PR #49 also
   landed the stdout-only write executor contract draft layer for local review.
   PR #52 aligned the Project Context Pack with the post-merge local MVP
-  baseline.
+  baseline. PR #53 added Project Context Pack read-order guidance and PR Review
+  Packet Project Context Impact checks.
 - AI Dev Relay Kit v0.1.0: Applied.
 - AI Dev Relay Kit v0.2.0 Project Context Pack: Applied through PR #51.
 - Local MVP readiness chain: PR #49 landed as metadata-only, stdout-only,
@@ -63,11 +65,15 @@ publish externally, or promote anything to production.
   that write-capable executor behavior, file-writing automation, API routes, DB
   integration, workers, schedulers, deployment, release, and production
   promotion remain outside the approved scope.
+- PR #53 was merged into `main` on 2026-06-04.
+- PR #53 added Project Context Pack read-order guidance to `AGENTS.md` and a
+  Project Context Impact section to the PR Review Packet template.
 
 ## In Progress
 
-- Current task: Add Project Context Pack read-order guidance to `AGENTS.md` and
-  Project Context Impact checks to the PR Review Packet template.
+- Current task: Add a local MVP review chain script that aggregates existing
+  stdout-only Codex App Server runtime review commands into a concise JSON
+  boundary summary.
 - Working tree status: must be checked by the active Codex app session before
   editing, commit, push, merge, or any follow-up PR.
 - These context files are introduced by the Project Context Pack application
@@ -75,18 +81,20 @@ publish externally, or promote anything to production.
 
 ## Next Actions
 
-- Next safe action: Review this Project Context gates PR.
+- Next safe action: Review this local MVP review chain PR.
 - Next decision needed: Decide whether the next local-MVP slice should stay
   read-only/stdout-only or whether to explicitly scope a future write-capable
   executor PR.
 - Optional later step, if approved separately: keep the next local-MVP slice
   read-only/stdout-only, or draft a separate explicit plan for a future
   write-capable executor PR with tests and rollback / disable criteria.
-- Verification for Markdown-only Project Context Pack follow-up:
+- Verification for local MVP review chain follow-up:
   - `git status --short`
-  - `git diff -- AGENTS.md .github/pull_request_template.md docs/project/STATUS.md`
+  - `git diff -- scripts/codex-app-server-runtime-local-mvp-review-chain.mjs docs/CODEX_APP_SERVER_RUNTIME_MVP_SCOPE.md docs/project/STATUS.md`
   - `git diff --check`
-  - Confirm the diff is Markdown-only and limited to approved files.
+  - Confirm the diff is limited to the local stdout-only review script and
+    related docs.
+  - `node scripts/codex-app-server-runtime-local-mvp-review-chain.mjs`
 
 ## Blockers / Risks
 
@@ -112,6 +120,8 @@ publish externally, or promote anything to production.
     contract draft layer.
   - PR #52 merged after PR #49 and recorded the post-merge local MVP readiness
     baseline.
+  - PR #53 merged after PR #52 and added Project Context Pack read-order and PR
+    template gates.
   - This file does not itself approve merge, deploy, release, production
     promotion, or any protected-surface change.
 
