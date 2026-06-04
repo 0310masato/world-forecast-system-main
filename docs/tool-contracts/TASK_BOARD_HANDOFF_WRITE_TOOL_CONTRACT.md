@@ -38,6 +38,8 @@ even propose write-capable behavior.
   approval decision validation results.
 - PR #48 added stdout-only metadata-only write apply preflight generation from
   write plan drafts.
+- PR #49 added stdout-only metadata-only write executor contract draft
+  generation from apply preflight results.
 
 No persistent write path exists yet.
 No Task Board write exists yet.
@@ -46,6 +48,7 @@ No approval has been granted by the approval request draft.
 No approval has been granted by the approval decision validator itself.
 No approval has been granted by the write plan draft.
 No approval has been granted by the apply preflight result.
+No approval has been granted by the executor contract draft.
 No write executor exists yet.
 No apply executor exists yet.
 No API route exists yet.
@@ -72,8 +75,10 @@ A later, separately approved implementation may define a tool that can:
 The PR #43 contract only defines the boundary. PR #47 adds only a stdout-only,
 metadata-only write plan draft for later separate implementation review. PR #48
 adds only a stdout-only, metadata-only apply preflight result for later separate
-executor implementation review. None of these PRs adds the future write tool,
-adds an apply executor, or writes any artifact.
+executor implementation review. PR #49 adds only a stdout-only, metadata-only
+executor contract draft for later separate executor implementation review. None
+of these PRs adds the future write tool, adds a write or apply executor, or
+writes any artifact.
 
 ## 4. Allowed Future Operations
 
@@ -360,6 +365,72 @@ must keep `write_authorized_by_this_pr: false`,
 `executed_write_count: 0`; the allowed next step is separate executor
 implementation, not actual write.
 
+PR #49 adds a separate stdout-only executor contract draft shape for future
+executor implementation review. It is metadata-only and does not authorize,
+implement, or execute writes:
+
+```json
+{
+  "executor_contract_id": "string",
+  "executor_contract_version": 1,
+  "generated_at": "string",
+  "source_apply_preflight_id": "string",
+  "source_apply_preflight_version": 1,
+  "source_apply_preflight_status": "needs_human_decision | blocked | apply_preflight_ready_for_separate_executor_implementation",
+  "source_write_plan_id": "string",
+  "source_approval_request_id": "string",
+  "source_approval_decision_validation_id": "string",
+  "source_decision": "not_decided | approved | rejected | needs_revision",
+  "source_decision_accepted": false,
+  "source_approval_valid_for_future_write": false,
+  "contract_status": "needs_human_decision | blocked | executor_contract_ready_for_separate_implementation",
+  "target_kind": "string",
+  "target_path_or_target_id": "string",
+  "proposed_executor_mode": "separate_write_executor_implementation_after_explicit_human_approval",
+  "write_authorized_by_this_pr": false,
+  "apply_authorized_by_this_pr": false,
+  "executor_implemented_by_this_pr": false,
+  "wrote_anything": false,
+  "write_executor_present": false,
+  "apply_executor_present": false,
+  "executed_write_count": 0,
+  "required_human_approval": true,
+  "required_next_action": "human_review_only | human_decision_required | revise_or_reject_request | resolve_blockers_then_restart_approval | separate_write_executor_implementation_required",
+  "allowed_next_step": "human_review_only | revise_or_reject_request | separate_write_executor_implementation_required",
+  "validation_summary": {},
+  "proposed_executor_contract": {},
+  "audit_preview": {},
+  "rollback_plan": [],
+  "forbidden_operations": [],
+  "references": [],
+  "safety_summary": []
+}
+```
+
+`proposed_executor_contract` is metadata only. It may include executor contract
+kind, target kind, repository-relative target path, required source artifacts,
+required approval and preflight gates, intended future operation name, proposed
+executor responsibilities as names only, forbidden operations, rollback
+requirement summary, disable / kill-switch requirement summary, and validation
+notes. It must not include executable write logic, filesystem write code, API
+route code, DB code, worker or scheduler code, full future file contents,
+restricted content, raw local paths, NAS paths, private network details,
+secrets, tokens, passwords, API keys, `.env` values, production logs, or real
+operational data.
+
+The default PR #49 script must build the default dry-run, approval request,
+approval decision validation without a real human decision record, write plan,
+apply preflight, and executor contract chain. It must output
+`needs_human_decision` or `blocked`, not
+`executor_contract_ready_for_separate_implementation`. Synthetic approved
+fixtures may produce `executor_contract_ready_for_separate_implementation`, but
+they still must keep `write_authorized_by_this_pr: false`,
+`apply_authorized_by_this_pr: false`,
+`executor_implemented_by_this_pr: false`, `wrote_anything: false`,
+`write_executor_present: false`, `apply_executor_present: false`, and
+`executed_write_count: 0`; the allowed next step is separate executor
+implementation, not actual write.
+
 ## 10. Validation Rules
 
 A future tool must validate:
@@ -536,6 +607,8 @@ This contract does not add, authorize, or request:
 
 - Task Board write
 - HANDOFF file creation
+- write executor implementation
+- apply executor implementation
 - file-writing automation
 - GitHub Issue automation
 - GitHub PR automation
@@ -578,4 +651,6 @@ This contract does not add, authorize, or request:
 - `scripts/codex-app-server-runtime-write-plan.mjs`
 - `lib/codex-app-server-runtime/write-apply-preflight.ts`
 - `scripts/codex-app-server-runtime-write-apply-preflight.mjs`
+- `lib/codex-app-server-runtime/write-executor-contract.ts`
+- `scripts/codex-app-server-runtime-write-executor-contract.mjs`
 - `scripts/codex-app-server-runtime-smoke.mjs`
