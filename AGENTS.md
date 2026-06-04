@@ -19,6 +19,30 @@ runtime boundary drift. Docs stewardship is not execution permission and does
 not authorize package, API, DB, runtime, worker, scheduler, automation, or CI
 changes.
 
+## Project Context Pack Read Order
+
+For most follow-up work, start with the Project Context Pack:
+
+1. `docs/project/CONTEXT.md`
+2. `docs/project/DESIGN.md`
+3. `docs/project/SPEC.md`
+4. `docs/project/STATUS.md`
+
+Then read this file, `docs/CONTRACTS_INDEX.md`,
+`.github/pull_request_template.md`, and any task-specific source docs listed
+in the contracts index.
+
+The Project Context Pack is orientation only. It does not override repository
+safety rules, source-of-truth docs, PR review packet requirements, or human
+approval gates, and it does not authorize commit, push, PR creation, merge,
+deploy, release, production promotion, protected-surface changes, runtime
+changes, worker changes, scheduler changes, DB changes, package changes, CI
+changes, file-writing automation, or external publishing.
+
+Keep `docs/project/CONTEXT.md` separate from `docs/CONTEXT_PACKS.md`.
+`docs/project/CONTEXT.md` is repository-level work-starting context.
+`docs/CONTEXT_PACKS.md` defines sanitized AI analysis input packs.
+
 ## Forecast Core Protection
 
 Do not change `/api/forecast`, `/api/hormuz`, `lib/db.ts`, package files, or

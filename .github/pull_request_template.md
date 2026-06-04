@@ -23,6 +23,20 @@
 - Completed scope:
 - Out of scope / non-goals:
 
+## Project Context Impact
+
+- Does this PR change durable project context? Yes / No
+- Project Context files updated, if applicable:
+  - [ ] `docs/project/CONTEXT.md`
+  - [ ] `docs/project/DESIGN.md`
+  - [ ] `docs/project/SPEC.md`
+  - [ ] `docs/project/STATUS.md`
+  - [ ] No Project Context update needed
+- If no Project Context update is included, why:
+- Approval boundary:
+  - [ ] Project Context wording does not grant commit, push, PR creation, merge, deploy, release, external publishing, production promotion, or protected-surface approval.
+  - [ ] `docs/project/CONTEXT.md` remains distinct from `docs/CONTEXT_PACKS.md`.
+
 ## Role Handoff
 
 - Codex app implementation notes:

@@ -9,19 +9,22 @@ publish externally, or promote anything to production.
 ## Last Reviewed
 
 - Date: 2026-06-04
-- Reviewed by: Codex app post-merge readiness pass
+- Reviewed by: Codex app project context gates pass
 - Related PRs:
   - PR #51 `docs: apply Project Context Pack v0.2.0`
   - PR #49 `feat: add task board handoff write executor contract stdout v0`
-- Source branch: `codex/local-mvp-readiness-v0`
-- Review basis: GitHub `main` was at PR #49 merge commit `4af1d57` before this
-  follow-up branch was created. PR #51 merged before PR #49.
+  - PR #52 `docs: record post-merge local MVP readiness`
+- Source branch: `codex/project-context-gates-v0`
+- Review basis: GitHub `main` was at PR #52 merge commit `f03ca11` before this
+  follow-up branch was created. PR #52 merged after PR #49 and PR #51.
 
 ## Current Phase
 
-- Phase: Local-confirmable MVP readiness after Project Context Pack merge.
+- Phase: Local-confirmable MVP readiness with Project Context PR gates.
 - Current status: Project Context Pack files are active on `main`. PR #49 also
   landed the stdout-only write executor contract draft layer for local review.
+  PR #52 aligned the Project Context Pack with the post-merge local MVP
+  baseline.
 - AI Dev Relay Kit v0.1.0: Applied.
 - AI Dev Relay Kit v0.2.0 Project Context Pack: Applied through PR #51.
 - Local MVP readiness chain: PR #49 landed as metadata-only, stdout-only,
@@ -55,11 +58,16 @@ publish externally, or promote anything to production.
   creation, file-writing automation, runtime, worker, scheduler, API route, DB
   integration, package change, CI change, deploy, release, or production
   promotion.
+- PR #52 was merged into `main` on 2026-06-04.
+- PR #52 recorded the post-merge local MVP readiness baseline and confirmed
+  that write-capable executor behavior, file-writing automation, API routes, DB
+  integration, workers, schedulers, deployment, release, and production
+  promotion remain outside the approved scope.
 
 ## In Progress
 
-- Current task: Keep project context aligned with the post-merge local MVP
-  baseline.
+- Current task: Add Project Context Pack read-order guidance to `AGENTS.md` and
+  Project Context Impact checks to the PR Review Packet template.
 - Working tree status: must be checked by the active Codex app session before
   editing, commit, push, merge, or any follow-up PR.
 - These context files are introduced by the Project Context Pack application
@@ -67,15 +75,16 @@ publish externally, or promote anything to production.
 
 ## Next Actions
 
-- Next safe action: Review this post-merge context alignment PR.
+- Next safe action: Review this Project Context gates PR.
 - Next decision needed: Decide whether the next local-MVP slice should stay
   read-only/stdout-only or whether to explicitly scope a future write-capable
   executor PR.
-- Optional later step, if approved separately: Update `AGENTS.md` reading order
-  and `.github/pull_request_template.md` Project Context Impact section.
+- Optional later step, if approved separately: keep the next local-MVP slice
+  read-only/stdout-only, or draft a separate explicit plan for a future
+  write-capable executor PR with tests and rollback / disable criteria.
 - Verification for Markdown-only Project Context Pack follow-up:
   - `git status --short`
-  - `git diff -- docs/project/CONTEXT.md docs/project/STATUS.md`
+  - `git diff -- AGENTS.md .github/pull_request_template.md docs/project/STATUS.md`
   - `git diff --check`
   - Confirm the diff is Markdown-only and limited to approved files.
 
@@ -101,6 +110,8 @@ publish externally, or promote anything to production.
   - PR #51 merged into `main` on 2026-06-04.
   - PR #49 merged after PR #51 and added the stdout-only write executor
     contract draft layer.
+  - PR #52 merged after PR #49 and recorded the post-merge local MVP readiness
+    baseline.
   - This file does not itself approve merge, deploy, release, production
     promotion, or any protected-surface change.
 
@@ -116,10 +127,12 @@ current `origin/main` or the active PR branch instead.
 Read before editing:
 
 1. `docs/project/CONTEXT.md`
-2. `docs/project/STATUS.md`
-3. `AGENTS.md`
-4. `docs/CONTRACTS_INDEX.md`
-5. `.github/pull_request_template.md`
+2. `docs/project/DESIGN.md`
+3. `docs/project/SPEC.md`
+4. `docs/project/STATUS.md`
+5. `AGENTS.md`
+6. `docs/CONTRACTS_INDEX.md`
+7. `.github/pull_request_template.md`
 
 Do not touch unrelated dirty checkout changes.
 
