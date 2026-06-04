@@ -24,8 +24,8 @@ docs, PR review requirements, or human approval gates.
 - AI Dev Relay Kit version: `v0.2.0`
 - Source repository: `0310masato/ai-dev-relay-kit`
 - Source tag or commit: `v0.2.0`
-- Applied date: TBD until merged
-- Application status: Draft until the Project Context Pack application PR is merged.
+- Applied date: 2026-06-04
+- Application status: Active on `main` after PR #51 was merged.
 
 ## Purpose
 
@@ -40,6 +40,22 @@ it must not become autonomous production behavior.
 
 This Project Context Pack exists to make the project restartable across Codex
 app, Web GPT, GitHub review, other PCs, and future threads.
+
+## Current Local MVP Baseline
+
+The current local-confirmable MVP baseline is a review-only AI sidecar chain:
+
+- PR #51 merged the Project Context Pack into `main`.
+- PR #49 merged the stdout-only Task Board / HANDOFF write executor contract
+  draft layer into `main`.
+- The runtime chain can be checked locally with the existing smoke scripts.
+- The write executor contract remains metadata-only and stdout-only.
+- No write executor, apply executor, Task Board write, HANDOFF file creation,
+  API route, DB integration, worker, scheduler, external integration, package
+  change, CI change, deploy, release, or production promotion is active.
+
+Any future write-capable behavior needs a separate explicit human-approved
+scope, dedicated PR, test plan, and rollback / disable plan.
 
 ## Read Order
 
