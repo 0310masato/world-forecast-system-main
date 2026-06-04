@@ -8,69 +8,65 @@ publish externally, or promote anything to production.
 
 ## Last Reviewed
 
-- Date: 2026-05-27
-- Reviewed by: Codex app draft preparation
-- Related PR: None yet for AI Dev Relay Kit v0.2.0 Project Context Pack
-- Local verification basis: clean clone of `main` matched `origin/main` at
-  `ef53cd05cd84cbb883086ef7776cbe77a58e5a22` during draft preparation.
+- Date: 2026-06-04
+- Reviewed by: Codex app review-fix pass
+- Related PR: PR #51 `docs: apply Project Context Pack v0.2.0`
+- Source branch: `chore/apply-project-context-pack-v0.2.0`
+- Review basis: PR #51 was open, non-draft, mergeable, and CI-passing before
+  this status-doc review fix. Check GitHub PR state or `main` history for the
+  current merge state before acting on this file.
 
 ## Current Phase
 
-- Phase: Preparing AI Dev Relay Kit v0.2.0 Project Context Pack application.
-- Current status: Drafting `docs/project/*.md` content for human/Web GPT review.
+- Phase: AI Dev Relay Kit v0.2.0 Project Context Pack application.
+- Current status: Project Context Pack files are introduced through PR #51 for
+  human and GitHub review. After PR #51 is merged to `main`, treat
+  `docs/project/*.md` as the active restart context for this repository.
 - AI Dev Relay Kit v0.1.0: Applied.
-- AI Dev Relay Kit v0.2.0 Project Context Pack: Not yet applied.
+- AI Dev Relay Kit v0.2.0 Project Context Pack: Introduced by PR #51; verify
+  the live PR or `main` state before assuming it has landed.
 - Production promotion approval: Not approved.
-- Merge approval: Not approved.
+- Merge approval: Not granted by this file.
 - Deploy/release approval: Not approved.
-- Commit approval for these draft files: Not approved.
-- Push approval for these draft files: Not approved.
-- PR creation approval for these draft files: Not approved.
 
 ## Completed
 
-- Clean work area prepared outside the existing dirty checkout.
-- `world-forecast-system-main` cloned from `main` for Project Context Pack
-  preparation.
-- `world-forecast-system-main` verified clean and synced with `origin/main`
-  before draft file creation.
-- `ai-dev-relay-kit` cloned and switched to tag `v0.2.0`.
-- AI Dev Relay Kit v0.2.0 Project Context Pack templates confirmed:
+- Clean work area was used for the Project Context Pack preparation.
+- AI Dev Relay Kit v0.2.0 Project Context Pack templates were confirmed:
   - `templates/project-context/CONTEXT.md`
   - `templates/project-context/DESIGN.md`
   - `templates/project-context/SPEC.md`
   - `templates/project-context/STATUS.md`
-- `docs/project/` confirmed absent before v0.2.0 application.
-- Existing AI Dev Relay Kit v0.1.0 rules confirmed in `AGENTS.md` and
-  `.github/pull_request_template.md`.
-
-## In Progress
-
-- Current task: Introduce Project Context Pack files for:
+- `docs/project/` was absent before the v0.2.0 Project Context Pack
+  application.
+- PR #51 introduces these four Project Context Pack files:
   - `docs/project/CONTEXT.md`
   - `docs/project/DESIGN.md`
   - `docs/project/SPEC.md`
   - `docs/project/STATUS.md`
-- Expected working branch: to be created from latest `origin/main`.
+- Existing AI Dev Relay Kit v0.1.0 rules were confirmed in `AGENTS.md` and
+  `.github/pull_request_template.md`.
+
+## In Progress
+
+- Current task: Complete human and GitHub review of PR #51.
 - Working tree status: must be checked by the active Codex app session before
-  editing, commit, push, or PR creation.
-- These context files are being introduced by the Project Context Pack
-  application PR.
+  editing, commit, push, merge, or any follow-up PR.
+- These context files are introduced by the Project Context Pack application
+  PR and should remain Markdown-only project context.
 
 ## Next Actions
 
-- Next safe action: Have human/Web GPT review the four Project Context Pack
-  files.
-- Next decision needed: Confirm whether the files are ready for commit and PR
-  preparation.
-- Next implementation step, if approved: commit only the four Markdown files
-  under `docs/project/`.
+- Next safe action: Re-check PR #51 changed files, CI status, and review
+  threads after any review-fix commit.
+- Next decision needed: Human decision on whether PR #51 is ready to merge.
 - Optional later step, if approved separately: Update `AGENTS.md` reading order
   and `.github/pull_request_template.md` Project Context Impact section.
-- Next verification step after file creation:
+- Verification for Markdown-only Project Context Pack follow-up:
   - `git status --short`
   - `git diff -- docs/project`
-  - Confirm the diff is Markdown-only and limited to the approved files.
+  - `git diff --check`
+  - Confirm the diff is Markdown-only and limited to approved files.
 
 ## Blockers / Risks
 
@@ -86,26 +82,18 @@ publish externally, or promote anything to production.
 
 - AI Dev Relay Kit v0.1.0 applied:
   - PR #50 applied AI Dev Relay Kit v0.1.0 to `world-forecast-system-main`.
-- AI Dev Relay Kit v0.2.0 not yet applied:
-  - No Project Context Pack PR has been created.
-  - No Project Context Pack commit has been created.
-  - `docs/project/*.md` files are still draft-only until reviewed and merged.
+- AI Dev Relay Kit v0.2.0 Project Context Pack:
+  - PR #51 introduces the four `docs/project/*.md` files.
+  - Check PR #51 or `main` history for the current review and merge state.
+  - This file does not itself approve merge, deploy, release, production
+    promotion, or any protected-surface change.
 
-## Dirty Checkout Warning
+## Checkout Hygiene
 
-Do not use the existing unrelated dirty checkout on this PC for this task.
-
-The existing OneDrive dirty checkout has unrelated dirty changes and must not be
-used for this Project Context Pack task.
-
-Known unrelated dirty files in that checkout:
-
-- `lib/maritime/mock.ts`
-- `lib/nas.ts`
-- `next.config.ts`
-
-Use the clean preparation clone or another clean worktree for Project Context
-Pack work.
+Use a clean branch and clean worktree for Project Context Pack follow-up. If an
+existing checkout has unrelated uncommitted changes, do not stage, stash, reset,
+overwrite, or include those changes. Create a separate clean worktree from the
+current `origin/main` or the active PR branch instead.
 
 ## Notes For The Next AI Session
 
@@ -139,7 +127,7 @@ Known risks:
 - Existing docs are broad; avoid creating competing source-of-truth language.
 - Context files should summarize and point to source docs, not replace them.
 - External provider availability and production deployment configuration are
-  unverified for this draft.
+  unverified for this Project Context Pack.
 
 Suggested verification after approved Markdown-only application:
 
